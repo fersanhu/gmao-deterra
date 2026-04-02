@@ -1,0 +1,3458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMAO · Deterra</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --green:       #275D3A;
+  --green-dark:  #1e4a2c;
+  --green-light: #3a7a50;
+  --red:         #C20019;
+  --red-bg:      #ffeef1;
+  --orange:      #E87146;
+  --orange-bg:   #fff4ee;
+  --yellow-bg:   #fffbea;
+  --yellow:      #b8860b;
+  --blue:        #1565c0;
+  --blue-bg:     #e3f2fd;
+  --gray-text:   #464646;
+  --gray-muted:  #888;
+  --gray-light:  #f0f0f0;
+  --surface:     #ffffff;
+  --bg:          #F2F4F3;
+  --border:      #e0e0e0;
+  --sidebar-w:   230px;
+  --topbar-h:    58px;
+  --radius:      10px;
+  --shadow:      0 1px 3px rgba(0,0,0,0.09), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--gray-text);background:var(--bg)}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:14px}
+ul{list-style:none}
+
+/* ── SCREEN MANAGEMENT ── */
+.screen{display:none!important}
+.screen.active{display:flex!important}
+
+/* ── IMPORT / SETUP SCREEN ── */
+#screen-import{
+  min-height:100vh;width:100%;
+  align-items:center;justify-content:center;flex-direction:column;
+  background:linear-gradient(145deg,#1e4a2c 0%,#275D3A 55%,#3a7a50 100%);
+}
+.setup-card{
+  background:var(--surface);border-radius:20px;
+  padding:48px 52px;width:480px;max-width:92vw;
+  box-shadow:0 24px 64px rgba(0,0,0,0.22);
+  display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;
+}
+.setup-logo{display:flex;flex-direction:column;align-items:center;gap:6px}
+.setup-logo svg{width:64px;height:64px}
+.setup-logo-name{font-size:26px;font-weight:700;letter-spacing:1px;color:var(--green)}
+.setup-logo-sub{font-size:12px;color:var(--gray-muted);letter-spacing:2px;text-transform:uppercase}
+.setup-title{font-size:18px;font-weight:600;color:var(--gray-text)}
+.setup-desc{font-size:13px;color:var(--gray-muted);line-height:1.6}
+.drop-zone{
+  width:100%;border:2px dashed var(--border);border-radius:var(--radius);
+  padding:32px 20px;cursor:pointer;transition:all .2s;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--green);background:#f0f7f2}
+.drop-zone svg{opacity:.4}
+.drop-zone span{font-size:13px;color:var(--gray-muted)}
+.drop-zone strong{color:var(--green);font-size:14px}
+#file-input{display:none}
+.progress-wrap{width:100%;display:flex;flex-direction:column;gap:8px}
+.progress-bar-bg{width:100%;height:8px;background:var(--gray-light);border-radius:99px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--green);border-radius:99px;transition:width .3s}
+.progress-msg{font-size:13px;color:var(--gray-muted);text-align:center}
+.import-results{display:flex;gap:12px;width:100%;justify-content:center;flex-wrap:wrap}
+.import-stat{background:var(--bg);border-radius:8px;padding:10px 18px;text-align:center}
+.import-stat strong{display:block;font-size:22px;font-weight:700;color:var(--green)}
+.import-stat span{font-size:11px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* ── USER SELECTION SCREEN ── */
+#screen-users{
+  min-height:100vh;width:100%;
+  align-items:flex-start;justify-content:center;
+  background:linear-gradient(145deg,#1e4a2c 0%,#275D3A 55%,#3a7a50 100%);
+  padding:40px 16px;
+  overflow-y:auto;
+}
+.users-card{
+  background:var(--surface);border-radius:20px;
+  width:860px;max-width:98vw;
+  box-shadow:0 24px 64px rgba(0,0,0,0.22);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.users-header{padding:32px 36px 20px;border-bottom:1px solid var(--border)}
+.users-header h2{font-size:22px;font-weight:700;color:var(--green)}
+.users-header p{font-size:13px;color:var(--gray-muted);margin-top:4px}
+.users-filters{display:flex;gap:12px;align-items:center;padding:16px 36px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.users-search{flex:1;min-width:180px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .2s}
+.users-search:focus{border-color:var(--green)}
+.almacen-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.almacen-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--gray-muted);transition:all .15s}
+.almacen-tab:hover{border-color:var(--green);color:var(--green)}
+.almacen-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;padding:24px 36px;max-height:440px;overflow-y:auto}
+.user-card{
+  border:2px solid var(--border);border-radius:var(--radius);padding:20px 14px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+  transition:all .18s;text-align:center;
+}
+.user-card:hover{border-color:var(--green);background:#f5fbf7;transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.user-avatar{
+  width:52px;height:52px;border-radius:50%;
+  background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;
+}
+.user-card[data-rol="Responsable"] .user-avatar{background:var(--orange)}
+.user-card[data-rol="Admin"] .user-avatar{background:var(--red)}
+.user-name{font-weight:600;font-size:13px}
+.user-rol-badge{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500}
+.user-almacen-tag{font-size:11px;color:var(--gray-muted)}
+.rol-Mecanico{background:#e8f5e9;color:#2e7d32}
+.rol-Responsable{background:var(--orange-bg);color:var(--orange)}
+.rol-Admin{background:var(--red-bg);color:var(--red)}
+
+/* ── APP SHELL ── */
+#screen-app{width:100%;height:100vh;flex-direction:row;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--green);
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:2px 0 8px rgba(0,0,0,0.12);
+}
+.sidebar-logo{
+  padding:20px 20px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,0.12);flex-shrink:0;
+}
+.sidebar-logo svg{width:34px;height:34px;flex-shrink:0}
+.sidebar-logo-text{display:flex;flex-direction:column}
+.sidebar-logo-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px}
+.sidebar-logo-sub{font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:1.5px;text-transform:uppercase}
+.sidebar-section-label{
+  font-size:10px;color:rgba(255,255,255,0.4);
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:16px 20px 6px;flex-shrink:0;
+}
+.nav-items{flex:1;overflow-y:auto;padding:4px 0}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;color:rgba(255,255,255,0.72);
+  cursor:pointer;transition:all .15s;
+  border-left:3px solid transparent;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.09);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.14);color:#fff;border-left-color:var(--orange)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.85}
+.nav-item.active svg{opacity:1}
+.nav-label{font-size:13px;font-weight:500}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:20px;text-align:center;
+}
+.sidebar-bottom{border-top:1px solid rgba(255,255,255,0.12);padding:14px 20px;flex-shrink:0}
+.sidebar-user{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.sidebar-user-info{flex:1;min-width:0}
+.sidebar-user-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user-rol{font-size:10px;color:rgba(255,255,255,0.5)}
+.sidebar-logout{color:rgba(255,255,255,0.45);transition:color .15s}
+.sidebar-logout:hover{color:#fff}
+
+/* MAIN PANEL */
+#main-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* TOPBAR */
+#topbar{
+  height:var(--topbar-h);background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  padding:0 28px;flex-shrink:0;
+  box-shadow:0 1px 4px rgba(0,0,0,0.05);
+}
+#topbar-title{font-size:17px;font-weight:600;flex:1}
+.almacen-select{
+  padding:6px 12px;border:1px solid var(--border);border-radius:8px;
+  background:var(--bg);color:var(--gray-text);cursor:pointer;
+  font-size:13px;outline:none;transition:border-color .2s;
+}
+.almacen-select:focus{border-color:var(--green)}
+.topbar-user{display:flex;align-items:center;gap:8px;cursor:pointer}
+.topbar-avatar{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.topbar-username{font-size:13px;font-weight:500}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:28px;background:var(--bg)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;display:flex;align-items:flex-start;gap:16px;transition:box-shadow .2s}
+.kpi-card:hover{box-shadow:var(--shadow-md)}
+.kpi-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon svg{width:22px;height:22px}
+.kpi-body{flex:1;min-width:0}
+.kpi-value{font-size:32px;font-weight:700;line-height:1;margin-bottom:4px}
+.kpi-label{font-size:12px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px}
+.kpi-sub{font-size:11px;color:var(--gray-muted);margin-top:4px}
+.kpi-red .kpi-icon{background:var(--red-bg)} .kpi-red .kpi-icon svg{stroke:var(--red)} .kpi-red .kpi-value{color:var(--red)}
+.kpi-orange .kpi-icon{background:var(--orange-bg)} .kpi-orange .kpi-icon svg{stroke:var(--orange)} .kpi-orange .kpi-value{color:var(--orange)}
+.kpi-green .kpi-icon{background:#e8f5e9} .kpi-green .kpi-icon svg{stroke:#2e7d32} .kpi-green .kpi-value{color:#2e7d32}
+.kpi-blue .kpi-icon{background:var(--blue-bg)} .kpi-blue .kpi-icon svg{stroke:var(--blue)} .kpi-blue .kpi-value{color:var(--blue)}
+
+/* ── CHARTS ROW ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+.chart-wrap{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:16px}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-muted);padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--bg)}
+td{padding:11px 14px;border-bottom:1px solid var(--gray-light);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fbfa}
+.table-clickable tr{cursor:pointer}
+.col-truncate{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-orange{background:var(--orange-bg);color:#c45a2a}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.badge-gray{background:#f0f0f0;color:#666}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;transition:all .15s;cursor:pointer;border:none}
+.btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+.btn-secondary{background:var(--bg);color:var(--gray-text);border:1px solid var(--border)}.btn-secondary:hover{background:#e9ede9}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#a30016}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:6px}
+.btn svg{width:15px;height:15px}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar-title{font-size:18px;font-weight:700;flex:1}
+.search-box{padding:8px 14px;border:1px solid var(--border);border-radius:8px;outline:none;width:240px;transition:border-color .2s;background:var(--surface)}
+.search-box:focus{border-color:var(--green)}
+.filter-select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);outline:none;color:var(--gray-text);cursor:pointer;font-size:13px}
+.filter-select:focus{border-color:var(--green)}
+
+/* ── MODALS ── */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+#modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:600px;max-width:96vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-header{padding:24px 28px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:17px;font-weight:600}
+.modal-close{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gray-muted);font-size:20px;cursor:pointer;transition:background .15s}
+.modal-close:hover{background:var(--gray-light)}
+.modal-body{padding:24px 28px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 28px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.detail-field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-muted);display:block;margin-bottom:3px}
+.detail-field p{font-size:13px;color:var(--gray-text)}
+.detail-field.full{grid-column:1/-1}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-muted)}
+.form-input{padding:9px 12px;border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .2s;background:var(--surface);color:var(--gray-text)}
+.form-input:focus{border-color:var(--green)}
+textarea.form-input{resize:vertical;min-height:80px}
+select.form-input{cursor:pointer}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray-muted)}
+.empty-state svg{width:48px;height:48px;margin:0 auto 12px;opacity:.3;display:block}
+.empty-state h3{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--gray-text)}
+.empty-state p{font-size:13px}
+
+/* ── PLACEHOLDER PAGE ── */
+.page-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;gap:16px}
+.placeholder-icon{width:72px;height:72px;background:var(--gray-light);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.placeholder-icon svg{width:32px;height:32px;stroke:var(--gray-muted)}
+.page-placeholder h2{font-size:20px;font-weight:700;color:var(--gray-text)}
+.page-placeholder p{font-size:14px;color:var(--gray-muted);max-width:400px;line-height:1.6}
+.phase-badge{background:var(--orange-bg);color:var(--orange);font-size:12px;font-weight:600;padding:4px 14px;border-radius:99px}
+
+/* ── LOADING ── */
+.loader{display:inline-block;width:20px;height:20px;border:2px solid rgba(39,93,58,.2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:var(--gray-muted)}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--gray-text);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;box-shadow:var(--shadow-md);animation:slideIn .25s ease;min-width:220px}
+.toast-success{background:var(--green)}
+.toast-error{background:var(--red)}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.25)}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.page-header h1{font-size:22px;font-weight:700}
+.page-subtitle{font-size:13px;color:var(--gray-muted);margin-top:2px}
+
+/* ── CONFIG PAGE ── */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.config-grid{grid-template-columns:1fr}}
+
+/* ── RESUMEN POR ALMACÉN ── */
+.almacen-bar{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-light)}
+.almacen-bar:last-child{border-bottom:none}
+.almacen-bar-label{width:90px;font-size:12px;font-weight:500}
+.almacen-bar-track{flex:1;height:8px;background:var(--gray-light);border-radius:99px;overflow:hidden}
+.almacen-bar-fill{height:100%;background:var(--green);border-radius:99px;transition:width .6s}
+.almacen-bar-count{width:30px;text-align:right;font-size:12px;font-weight:600;color:var(--gray-text)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     SCREEN 1 — SETUP / IMPORT
+════════════════════════════════════════════════════ -->
+<div id="screen-import" class="screen active">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="32" fill="#275D3A"/>
+        <path d="M32 14C32 14 20 24 20 34C20 40.627 25.373 46 32 46C38.627 46 44 40.627 44 34C44 24 32 14 32 14Z" fill="white" opacity="0.9"/>
+        <path d="M32 22C32 22 26 29 26 35C26 38.314 28.686 41 32 41" stroke="#275D3A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="32" cy="48" r="3" fill="white" opacity="0.5"/>
+      </svg>
+      <span class="setup-logo-name">DETERRA</span>
+      <span class="setup-logo-sub">GMAO · Gestión de Mantenimiento</span>
+    </div>
+    <div id="setup-step-1">
+      <p class="setup-title">Bienvenido al sistema GMAO</p>
+      <p class="setup-desc">Para comenzar, selecciona el fichero Excel con los datos de activos, averías e inventario.</p>
+      <div class="drop-zone" id="drop-zone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#275D3A" stroke-width="1.5" width="40" height="40"><path d="M9 12h6m-3-3v6M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        <strong>Arrastra el Excel aquí</strong>
+        <span>o haz clic para seleccionarlo</span>
+        <span style="font-size:11px;color:#bbb">Activos Appsheet.xlsx</span>
+      </div>
+      <input type="file" id="file-input" accept=".xlsx,.xls">
+    </div>
+    <div id="setup-step-2" style="width:100%;display:none;flex-direction:column;gap:16px">
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        <p class="progress-msg" id="progress-msg">Preparando importación...</p>
+      </div>
+    </div>
+    <div id="setup-step-3" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" width="48" height="48"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <p class="setup-title" style="color:#2e7d32">¡Datos importados!</p>
+      <div class="import-results" id="import-results"></div>
+      <button class="btn btn-primary" id="btn-continue" onclick="UserSelectScreen.show()" style="width:100%;justify-content:center">Continuar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     SCREEN 2 — USER SELECTION
+════════════════════════════════════════════════════ -->
+<div id="screen-users" class="screen">
+  <div class="users-card">
+    <div class="users-header">
+      <h2>¿Quién eres?</h2>
+      <p>Selecciona tu usuario para acceder al sistema</p>
+    </div>
+    <div class="users-filters">
+      <input type="search" class="users-search" id="user-search" placeholder="Buscar...">
+      <div class="almacen-tabs" id="user-almacen-tabs"></div>
+    </div>
+    <div class="users-grid" id="users-grid"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     SCREEN 3 — MAIN APP
+════════════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="rgba(255,255,255,0.15)"/>
+        <path d="M20 8C20 8 12 15.5 12 21.5C12 25.642 15.358 29 19.5 29S27 25.642 27 21.5C27 15.5 20 8 20 8Z" fill="white" opacity="0.9"/>
+        <path d="M20 14C20 14 16 18.5 16 22C16 24.209 17.791 26 20 26" stroke="#275D3A" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="sidebar-logo-text">
+        <span class="sidebar-logo-name">DETERRA</span>
+        <span class="sidebar-logo-sub">GMAO</span>
+      </div>
+    </div>
+    <nav class="nav-items">
+      <div class="nav-item active" data-route="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-route="activos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        <span class="nav-label">Activos</span>
+      </div>
+      <div class="nav-item" data-route="averias">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="nav-label">Averías</span>
+        <span class="nav-badge" id="badge-averias" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-route="incidencias">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="nav-label">Incidencias</span>
+        <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-route="inventario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="nav-label">Inventario</span>
+      </div>
+      <div class="nav-item" data-route="movimientos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+        <span class="nav-label">Movimientos</span>
+      </div>
+      <div class="nav-item" data-route="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        <span class="nav-label">Configuración</span>
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-username">—</div>
+          <div class="sidebar-user-rol" id="sidebar-userrole">—</div>
+        </div>
+        <svg class="sidebar-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN PANEL -->
+  <div id="main-panel">
+    <header id="topbar">
+      <span id="topbar-title">Dashboard</span>
+      <select class="almacen-select" id="global-almacen-filter">
+        <option value="">Todos los almacenes</option>
+        <option>Miramar</option>
+        <option>Xeresa</option>
+        <option>Murcia</option>
+        <option>Alcacer</option>
+        <option>Algemesi</option>
+      </select>
+      <div class="topbar-user" id="topbar-user-info">
+        <div class="topbar-avatar" id="topbar-avatar">?</div>
+        <span class="topbar-username" id="topbar-username">—</span>
+      </div>
+    </header>
+    <main id="content">
+      <div class="loading-overlay"><div class="loader"></div><span>Cargando...</span></div>
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Detalle</span>
+      <button class="modal-close" onclick="Modal.close()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════
+// DATABASE — Supabase (cloud)
+// ═══════════════════════════════════════════════════════════════════
+const { createClient } = supabase;
+const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function makeTable(tableName, pkField) {
+  return {
+    toArray: async () => {
+      const { data, error } = await sb.from(tableName).select('*');
+      if (error) throw new Error(`[${tableName}.toArray] ${error.message}`);
+      return data || [];
+    },
+    get: async (id) => {
+      const { data, error } = await sb.from(tableName).select('*').eq(pkField, id).maybeSingle();
+      if (error) throw new Error(`[${tableName}.get] ${error.message}`);
+      return data;
+    },
+    put: async (obj) => {
+      const { error } = await sb.from(tableName).upsert(obj, { onConflict: pkField });
+      if (error) throw new Error(`[${tableName}.put] ${error.message}`);
+    },
+    delete: async (id) => {
+      const { error } = await sb.from(tableName).delete().eq(pkField, id);
+      if (error) throw new Error(`[${tableName}.delete] ${error.message}`);
+    },
+    bulkPut: async (arr) => {
+      if (!arr || !arr.length) return;
+      // Deduplicar por PK antes de enviar: PostgreSQL lanza error si el mismo PK
+      // aparece dos veces en el mismo batch ("cannot affect a row a second time").
+      const deduped = [...new Map(arr.map(obj => [obj[pkField], obj])).values()];
+      for (let i = 0; i < deduped.length; i += 500) {
+        const chunk = deduped.slice(i, i + 500);
+        const { error } = await sb.from(tableName).upsert(chunk, { onConflict: pkField });
+        if (error) throw new Error(`[${tableName}.bulkPut chunk ${i}] ${error.message}`);
+      }
+    },
+    clear: async () => {
+      const { error } = await sb.from(tableName).delete().not(pkField, 'is', null);
+      if (error) throw new Error(`[${tableName}.clear] ${error.message}`);
+    },
+    where: (col) => ({
+      equals: (val) => {
+        const _fetch = async () => {
+          const { data, error } = await sb.from(tableName).select('*').eq(col, val);
+          if (error) throw new Error(`[${tableName}.where(${col}).equals] ${error.message}`);
+          return data || [];
+        };
+        const base = {
+          toArray: _fetch,
+          count: async () => (await _fetch()).length,
+          filter: (fn) => ({
+            toArray: async () => (await _fetch()).filter(fn),
+            count:   async () => (await _fetch()).filter(fn).length,
+          }),
+          // Dexie .and() is an alias for .filter()
+          and: (fn) => ({
+            toArray: async () => (await _fetch()).filter(fn),
+            count:   async () => (await _fetch()).filter(fn).length,
+          }),
+        };
+        return base;
+      }
+    }),
+    filter: (fn) => ({
+      toArray: async () => {
+        const { data, error } = await sb.from(tableName).select('*');
+        if (error) throw new Error(`[${tableName}.filter.toArray] ${error.message}`);
+        return (data || []).filter(fn);
+      },
+      count: async () => {
+        const { data, error } = await sb.from(tableName).select('*');
+        if (error) throw new Error(`[${tableName}.filter.count] ${error.message}`);
+        return (data || []).filter(fn).length;
+      }
+    }),
+    toCollection: () => ({
+      toArray: async () => {
+        const { data, error } = await sb.from(tableName).select('*');
+        if (error) throw new Error(`[${tableName}.toCollection] ${error.message}`);
+        return data || [];
+      }
+    }),
+  };
+}
+
+const db = {
+  activos:     makeTable('activos',     'id_activo'),
+  averias:     makeTable('averias',     'id'),
+  incidencias: makeTable('incidencias', 'id'),
+  tecnicos:    makeTable('tecnicos',    'id'),
+  sitios:      makeTable('sitios',      'id'),
+  productos:   makeTable('productos',   'id'),
+  inventario:  makeTable('inventario',  'id'),
+  movimientos: makeTable('movimientos', 'id'),
+  metadata:    makeTable('metadata',    'key'),
+  // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
+  // simplemente ejecutamos el callback
+  transaction: async (_mode, ...args) => {
+    const fn = args[args.length - 1];
+    if (typeof fn === 'function') await fn();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// IMPORT SERVICE — SheetJS parser
+// ═══════════════════════════════════════════════════════════════════
+const ImportService = {
+  async importExcel(file, onProgress) {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type:'array', cellDates:true, raw:false });
+
+    onProgress(5, 'Leyendo activos...');
+    const activos = this._parseActivos(wb.Sheets['Activos']);
+
+    onProgress(22, 'Leyendo averías...');
+    const averias = this._parseAverias(wb.Sheets['Averías']);
+
+    onProgress(42, 'Leyendo incidencias...');
+    const incidencias = this._parseIncidencias(wb.Sheets['Incidencias']);
+
+    onProgress(55, 'Leyendo técnicos...');
+    const tecnicos = this._parseTecnicos(wb.Sheets['Tecnicos']);
+
+    onProgress(65, 'Leyendo sitios...');
+    const sitios = this._parseSitios(wb.Sheets['Sitios']);
+
+    onProgress(72, 'Leyendo productos...');
+    const productos = this._parseProductos(wb.Sheets['Productos']);
+
+    // Construir mapa de resolución de sitios: ID numérico o nombre → nombre canónico
+    // Necesario porque AppSheet guarda el ID del sitio en las tablas relacionadas, no el nombre
+    const sitioMap = {};
+    sitios.forEach(s => {
+      const canon = normalizeAlmacen(s.nombre) || s.nombre;
+      if (s.id)    sitioMap[String(s.id)]            = canon;  // p.ej. "1" → "Miramar"
+      if (s.nombre) {
+        sitioMap[s.nombre.trim()]                    = canon;  // nombre exacto
+        sitioMap[s.nombre.trim().toLowerCase()]      = canon;  // lowercase
+        sitioMap[normalizeAlmacen(s.nombre)]         = canon;  // ya normalizado
+      }
+    });
+
+    onProgress(80, 'Leyendo inventario...');
+    const inventario = this._parseInventario(wb.Sheets['Inventario_Normalizado'], sitioMap);
+
+    onProgress(88, 'Leyendo movimientos históricos...');
+    const movimientos = this._parseMovimientos(wb.Sheets['Movimientos'], sitioMap);
+
+    onProgress(93, 'Guardando en base de datos...');
+    await db.transaction('rw', db.activos, db.averias, db.incidencias, db.tecnicos,
+      db.sitios, db.productos, db.inventario, db.movimientos, db.metadata, async () => {
+        // Limpiar inventario antes de reimportar para eliminar IDs obsoletos
+        await db.inventario.clear();
+        await db.activos.bulkPut(activos);
+        await db.averias.bulkPut(averias);
+        await db.incidencias.bulkPut(incidencias);
+        // Asegurar usuario Admin para Fernando
+        const adminUser = {
+          id: 'TEC-ADMIN', nombre: 'Fernando (Admin)', email: 'nandosanjuan@gmail.com',
+          telefono: '', rol: 'Admin', almacen: 'Todos', activo: true,
+        };
+        await db.tecnicos.put(adminUser);
+        await db.tecnicos.bulkPut(tecnicos);
+        await db.sitios.bulkPut(sitios);
+        await db.productos.bulkPut(productos);
+        await db.inventario.bulkPut(inventario);
+        await db.movimientos.bulkPut(movimientos);
+        await db.metadata.put({ key:'initialized', value:true, date: new Date().toISOString() });
+      });
+
+    onProgress(100, 'Completado');
+    return {
+      activos: activos.length, averias: averias.length, tecnicos: tecnicos.length,
+      productos: productos.length, inventario: inventario.length, movimientos: movimientos.length,
+    };
+  },
+
+  _parseDate(v) {
+    if (!v) return '';
+    if (v instanceof Date) {
+      if (isNaN(v.getTime())) return '';
+      return v.toISOString().slice(0,10);
+    }
+    const s = String(v);
+    const m = s.match(/\w{3} (\w{3}) (\d{1,2}) (\d{4})/);
+    if (m) {
+      const mo = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+      return `${m[3]}-${mo[m[1]]||'01'}-${m[2].padStart(2,'0')}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    return '';
+  },
+
+  _parseTime(v) {
+    if (!v) return '';
+    if (v instanceof Date) {
+      return `${String(v.getUTCHours()).padStart(2,'0')}:${String(v.getUTCMinutes()).padStart(2,'0')}:${String(v.getUTCSeconds()).padStart(2,'0')}`;
+    }
+    const s = String(v);
+    const m = s.match(/(\d{1,2}:\d{2}(?::\d{2})?)/);
+    return m ? m[1] : '';
+  },
+
+  _str(v) { return v == null ? '' : String(v).trim(); },
+
+  // Busca el valor de una columna probando múltiples nombres posibles.
+  // Útil para absorber variaciones de mayúsculas, tildes o espacios en los Excel.
+  _col(row, ...names) {
+    for (const name of names) {
+      if (row[name] != null && row[name] !== '') return String(row[name]).trim();
+    }
+    return '';
+  },
+
+  _parseActivos(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    const validEstados = new Set(['Operativo','Parado','Baja','En reparacion']);
+    return rows.map(r => {
+      const almacen = normalizeAlmacen(this._str(r['Almacen']));
+      const zona    = this._str(r['Zona']);
+      const linea   = this._str(r['Linea']);
+      const equipo  = this._str(r['Equipo']);
+      if (!almacen || !equipo) return null;
+      const id_activo = `${almacen}-${zona}-${linea}-${equipo}`;
+      const estadoRaw = this._str(r['Estado']);
+      return {
+        id_activo,
+        num: parseInt(r['Num']) || 0,
+        almacen, zona, linea,
+        codigo_zona:   this._str(r['Codigo Zona']),
+        tipo_maquina:  this._str(r['Tipo Máquina']),
+        equipo,
+        proveedor:     this._str(r['Proveedor']),
+        anio:          parseInt(r['Año']) || null,
+        estado:        validEstados.has(estadoRaw) ? estadoRaw : 'Operativo',
+        matricula:     this._str(r['Matricula']),
+        potencia_motor:this._str(r['Potencia motor']),
+        ancho:         this._str(r['Ancho']),
+        largo:         this._str(r['Largo']),
+        proteccion:    this._str(r['Protección']),
+      };
+    }).filter(Boolean);
+  },
+
+  _parseAverias(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'', raw:false, cellDates:true });
+    return rows.map(r => {
+      const id = this._str(r['ID_Averia']);
+      if (!id || !id.startsWith('AV-')) return null;
+      return {
+        id,
+        id_activo:  this._str(r['ID_Activo']),
+        fecha_inicio: this._parseDate(r['Fecha_Inicio']),
+        hora_inicio:  this._parseTime(r['Hora_Inicio']),
+        descripcion:  this._str(r['Descripcion_Averia']),
+        tecnico:      this._str(r['Tecnico_Asignado']),
+        tipo:         this._str(r['Tipo_Averia']),
+        criticidad:   this._str(r['Criticidad']),
+        estado:       this._str(r['Estado']) || 'Abierta',
+        fecha_fin:    this._parseDate(r['Fecha_Fin']),
+        hora_fin:     this._parseTime(r['Hora_Fin']),
+        solucion:     this._str(r['Solucion_Aplicada']),
+        materiales:   this._str(r['Materiales_Utilizados']),
+        coste:        parseFloat(r['Coste_Materiales']) || 0,
+        almacen:      normalizeAlmacen(this._str(r['Almacen_seleccionado'])),
+        zona:         this._str(r['Zona_seleccionada']),
+        linea:        this._str(r['Linea_seleccionada']),
+        equipo:       this._str(r['Equipo_seleccionado']),
+        duracion:     this._str(r['Duracion']),
+      };
+    }).filter(Boolean);
+  },
+
+  _parseIncidencias(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'', raw:false });
+    return rows.map(r => {
+      const id = this._str(r['ID_Incidencia']);
+      if (!id) return null;
+      return {
+        id,
+        fecha_registro:   this._parseDate(r['Fecha_Registro']),
+        hora_registro:    this._parseTime(r['Hora_Registro']),
+        almacen:          normalizeAlmacen(this._str(r['Almacen_seleccionado'])),
+        zona:             this._str(r['Zona_seleccionada']),
+        linea:            this._str(r['Linea_seleccionada']),
+        equipo:           this._str(r['Equipo_seleccionado']),
+        tipo:             this._str(r['Tipo_Incidencia']),
+        descripcion:      this._str(r['Descripcion']),
+        prioridad:        this._str(r['Prioridad']),
+        reportado_por:    this._str(r['Reportado_Por']),
+        estado:           this._str(r['Estado']) || 'Abierta',
+        fecha_resolucion: this._parseDate(r['Fecha_Resolucion']),
+        responsable:      this._str(r['Responsable_Asignado']),
+        solucion:         this._str(r['Solucion']),
+        observaciones:    this._str(r['Observaciones']),
+        id_activo:        this._str(r['ID_Activo']),
+      };
+    }).filter(Boolean);
+  },
+
+  _parseTecnicos(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    return rows.map((r, i) => ({
+      id:      `TEC-${String(i+1).padStart(3,'0')}`,
+      nombre:  this._str(r['Lista_tecnicos']),
+      email:   this._str(r['email']),
+      telefono:this._str(r['Telefono']),
+      rol:     this._str(r['Rol']) || 'Mecanico',
+      almacen: normalizeAlmacen(this._str(r['Almacen_tecnicos'])),
+      activo:  this._str(r['Activo']) !== 'N',
+    })).filter(t => t.nombre);
+  },
+
+  _parseSitios(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    return rows.map(r => ({
+      id:        parseInt(r['ID Sitio']) || 0,
+      nombre:    this._str(r['Nombre Sitio']),
+      ubicacion: this._str(r['Ubicación']),
+    })).filter(s => s.nombre);
+  },
+
+  _parseProductos(sheet) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    return rows.map(r => ({
+      id:          parseInt(r['ID']) || 0,
+      producto:    this._str(r['Producto']),
+      tamano:      this._str(r['Tamaño']),
+      tamano2:     this._str(r['Tamaño2']),
+      tamano3:     this._str(r['Tamaño3']),
+      tamano4:     this._str(r['Tamaño4']),
+      tipo:        this._str(r['Tipo']),
+      cod_producto:this._str(r['Cód. producto']),
+      familia:     this._str(r['Familia']),
+      precio:      parseFloat(r['Precio']) || 0,
+    })).filter(p => p.id);
+  },
+
+  // Resuelve un valor de sitio (puede ser ID numérico o nombre) al nombre canónico
+  _resolveSitio(raw, sitioMap) {
+    if (!raw) return '';
+    const t = String(raw).trim();
+    // Intentar resolución directa por ID o nombre
+    return sitioMap[t] || sitioMap[t.toLowerCase()] || normalizeAlmacen(t);
+  },
+
+  _parseInventario(sheet, sitioMap = {}) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    return rows.map((r, idx) => {
+      const cod = this._col(r,
+        'Cód. Producto', 'Cód. producto', 'Cod. Producto', 'Cod. producto',
+        'cod_producto', 'COD_PRODUCTO', 'Codigo', 'CODIGO', 'Cód.Producto', 'Cód.producto');
+      // Resolver sitio: puede llegar como ID numérico ("1") o nombre ("Miramar")
+      const sitioRaw = this._col(r, 'Sitio', 'SITIO', 'sitio', 'Almacen', 'Almacén', 'almacen', 'ALMACEN', 'Centro');
+      const alm = this._resolveSitio(sitioRaw, sitioMap);
+      const tipo = this._col(r,
+        'Tipo Consumible', 'Tipo_Consumible', 'TIPO CONSUMIBLE', 'Tipo', 'tipo', 'TIPO');
+      // IMPORTANTE: usar clave compuesta cod+almacen porque el Excel repite los IDs
+      // numéricos (1-400) en cada almacén, lo que haría que bulkPut sobrescriba filas.
+      const id = (cod && alm) ? `${cod}_${alm}` : (idx + 1) * -1;
+      return {
+        id,
+        cod_producto:  cod,
+        producto:      this._col(r, 'Producto', 'producto', 'PRODUCTO'),
+        familia:       this._col(r, 'Familia', 'familia', 'FAMILIA'),
+        unidad_medida: this._col(r, 'Cód. Ud. Medida', 'Cod. Ud. Medida', 'Ud. Medida', 'Unidad Medida', 'unidad_medida'),
+        tipo,
+        almacen:       alm,
+        unidades:      parseFloat(this._col(r, 'Unidades', 'unidades', 'UNIDADES', 'Stock', 'stock')) || 0,
+      };
+    }).filter(i => i.cod_producto);
+  },
+
+  _parseMovimientos(sheet, sitioMap = {}) {
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    return rows.map(r => {
+      const id = this._col(r, 'ID Movimiento', 'ID_Movimiento', 'Id Movimiento', 'id');
+      const cod = this._col(r,
+        'Cód. Producto', 'Cód. producto', 'Cod. Producto', 'Cod. producto', 'cod_producto');
+      if (!id || !cod) return null;
+      const sitioRaw = this._col(r, 'Sitio', 'Almacen', 'Almacén', 'almacen');
+      return {
+        id,
+        fecha:           this._parseDate(r['Fecha'] || r['fecha']),
+        cod_producto:    cod,
+        producto:        this._col(r, 'Producto', 'producto'),
+        almacen:         this._resolveSitio(sitioRaw, sitioMap),
+        cantidad:        parseFloat(this._col(r, 'Cantidad', 'cantidad')) || 0,
+        tipo_movimiento: this._col(r, 'Tipo Movimiento', 'Tipo_Movimiento', 'tipo_movimiento'),
+        usuario:         this._col(r, 'Usuario', 'usuario'),
+        notas:           this._col(r, 'Notas', 'notas', 'Observaciones'),
+      };
+    }).filter(Boolean);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// DATA SERVICE
+// ═══════════════════════════════════════════════════════════════════
+const DataService = {
+  async isInitialized() {
+    const m = await db.metadata.get('initialized');
+    return !!(m && m.value);
+  },
+  async getTecnicos(onlyActive = false) {
+    let q = db.tecnicos.toCollection();
+    const all = await q.toArray();
+    return onlyActive ? all.filter(t => t.activo) : all;
+  },
+  async getActivos(filters = {}) {
+    let arr = await db.activos.toArray();
+    if (filters.almacen) {
+      const f = normalizeAlmacen(filters.almacen);
+      arr = arr.filter(a => normalizeAlmacen(a.almacen) === f);
+    }
+    if (filters.zona)    arr = arr.filter(a => a.zona === filters.zona);
+    if (filters.estado)  arr = arr.filter(a => a.estado === filters.estado);
+    if (filters.tipo_maquina) arr = arr.filter(a => a.tipo_maquina === filters.tipo_maquina);
+    if (filters.search)  {
+      const s = filters.search.toLowerCase();
+      arr = arr.filter(a =>
+        (a.equipo||'').toLowerCase().includes(s) ||
+        (a.zona||'').toLowerCase().includes(s) ||
+        (a.tipo_maquina||'').toLowerCase().includes(s) ||
+        (a.almacen||'').toLowerCase().includes(s)
+      );
+    }
+    return arr;
+  },
+  async getActivo(id) { return db.activos.get(id); },
+  async saveActivo(data) { return db.activos.put(data); },
+  async deleteActivo(id) { return db.activos.delete(id); },
+
+  async getAverias(filters = {}) {
+    let arr = await db.averias.toArray();
+    if (filters.almacen) {
+      const f = normalizeAlmacen(filters.almacen);
+      arr = arr.filter(a => normalizeAlmacen(a.almacen) === f);
+    }
+    if (filters.estado)    arr = arr.filter(a => a.estado === filters.estado);
+    if (filters.criticidad)arr = arr.filter(a => a.criticidad === filters.criticidad);
+    if (filters.tecnico)   arr = arr.filter(a => a.tecnico === filters.tecnico);
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      arr = arr.filter(a =>
+        (a.descripcion||'').toLowerCase().includes(s) ||
+        (a.equipo||'').toLowerCase().includes(s) ||
+        (a.tecnico||'').toLowerCase().includes(s) ||
+        (a.almacen||'').toLowerCase().includes(s)
+      );
+    }
+    arr.sort((a,b) => (b.fecha_inicio||'').localeCompare(a.fecha_inicio||''));
+    return arr;
+  },
+  async getAveria(id) { return db.averias.get(id); },
+  async saveAveria(data) { return db.averias.put(data); },
+
+  async getIncidencias(filters = {}) {
+    let arr = await db.incidencias.toArray();
+    if (filters.almacen) {
+      const f = normalizeAlmacen(filters.almacen);
+      arr = arr.filter(i => normalizeAlmacen(i.almacen) === f);
+    }
+    if (filters.estado)  arr = arr.filter(i => i.estado === filters.estado);
+    arr.sort((a,b) => (b.fecha_registro||'').localeCompare(a.fecha_registro||''));
+    return arr;
+  },
+  async saveIncidencia(data) { return db.incidencias.put(data); },
+
+  async getInventario(filters = {}) {
+    let arr = await db.inventario.toArray();
+    if (filters.almacen) {
+      const f = normalizeAlmacen(filters.almacen);
+      arr = arr.filter(i => normalizeAlmacen(i.almacen) === f);
+    }
+    if (filters.tipo)    arr = arr.filter(i => i.tipo === filters.tipo);
+    return arr;
+  },
+
+  async getDashboardStats(almacen = '') {
+    const [allAverias, allIncidencias, allActivos, allInventario] = await Promise.all([
+      db.averias.toArray(), db.incidencias.toArray(),
+      db.activos.toArray(), db.inventario.toArray(),
+    ]);
+    const normAlm = normalizeAlmacen(almacen);
+    const filt = (arr, key) => normAlm ? arr.filter(a => normalizeAlmacen(a[key]) === normAlm) : arr;
+    const averias     = filt(allAverias, 'almacen');
+    const incidencias = filt(allIncidencias, 'almacen');
+    const activos     = filt(allActivos, 'almacen');
+    const inventario  = filt(allInventario, 'almacen');
+
+    const avAbiertas    = averias.filter(a => a.estado === 'Abierta').length;
+    const incActivas    = incidencias.filter(i => i.estado === 'Abierta' || i.estado === 'En curso').length;
+    const activosParados = activos.filter(a => a.estado === 'Parado').length;
+    const activosOp     = activos.filter(a => a.estado === 'Operativo').length;
+
+    // Averías por mes (últimos 12 meses)
+    const now = new Date();
+    const meses = Array.from({length:12}, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+      return { key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, label: d.toLocaleString('es',{month:'short',year:'2-digit'}) };
+    });
+    const mesCount = {};
+    meses.forEach(m => mesCount[m.key] = 0);
+    averias.forEach(a => {
+      if (a.fecha_inicio) { const k = a.fecha_inicio.slice(0,7); if (mesCount[k] !== undefined) mesCount[k]++; }
+    });
+
+    // Averías por almacén (top 5)
+    const byAlmacen = {};
+    allAverias.filter(a => a.estado === 'Abierta').forEach(a => {
+      byAlmacen[a.almacen] = (byAlmacen[a.almacen] || 0) + 1;
+    });
+
+    // Últimas averías abiertas
+    const ultimas = averias.filter(a => a.estado === 'Abierta').slice(0, 8);
+
+    // Averías por criticidad
+    const porCriticidad = { Alta:0, Moderada:0, Baja:0, Otra:0 };
+    averias.filter(a => a.estado === 'Abierta').forEach(a => {
+      if (porCriticidad[a.criticidad] !== undefined) porCriticidad[a.criticidad]++;
+      else porCriticidad.Otra++;
+    });
+
+    return { avAbiertas, incActivas, activosParados, activosOp, meses, mesCount, byAlmacen, ultimas, porCriticidad };
+  },
+
+  // ── STOCK HELPERS ──
+  async getProductosByAlmacen(almacen) {
+    // Returns products that have stock in the given almacen (joined with producto catalog)
+    // Usamos filtro JS con normalización para evitar fallos por variantes de casing/acentos
+    const normAlm = normalizeAlmacen(almacen);
+    const invArr = (await db.inventario.toArray()).filter(i => normalizeAlmacen(i.almacen) === normAlm);
+    const allProds = await db.productos.toArray();
+    const prodMap = {};
+    allProds.forEach(p => { prodMap[p.cod_producto] = p; });
+    return invArr.map(inv => {
+      const prod = prodMap[inv.cod_producto] || {};
+      return {
+        inv_id: inv.id,
+        cod_producto: inv.cod_producto,
+        producto: prod.producto || inv.cod_producto,
+        tipo: prod.tipo || '',
+        familia: prod.familia || '',
+        unidades: inv.unidades || 0,
+        almacen: inv.almacen,
+      };
+    }).filter(p => p.unidades > 0).sort((a,b) => a.producto.localeCompare(b.producto));
+  },
+
+  // Devuelve todos los productos del catálogo ordenados por código
+  async getAllProductos() {
+    const arr = await db.productos.toArray();
+    return arr.sort((a, b) => (a.cod_producto || '').localeCompare(b.cod_producto || ''));
+  },
+
+  // Busca un producto en el catálogo por código exacto
+  async getProductoByCod(cod) {
+    const all = await db.productos.toArray();
+    return all.find(p => p.cod_producto === cod) || null;
+  },
+
+  // Guarda o actualiza una entrada de inventario.
+  // mode: 'replace' | 'add'  (qué hacer si ya existe esa combinación cod+almacen)
+  async saveInventarioEntry({ cod_producto, producto, tipo, familia, unidad_medida = '', almacen, unidades, mode = 'replace' }) {
+    const normAlm = normalizeAlmacen(almacen);
+
+    // Buscar si ya existe registro en inventario para esa combinación cod+sitio
+    const allInv = await db.inventario.toArray();
+    const match  = allInv.find(i => i.cod_producto === cod_producto && normalizeAlmacen(i.almacen) === normAlm);
+
+    // Para los datos del producto usamos el registro existente como fuente de verdad
+    const nombreProd = (match?.producto)      || producto;
+    const tipoFinal  = (match?.tipo)          || tipo;
+    const familiaFin = (match?.familia)       || familia;
+    const udMedFinal = (match?.unidad_medida) || unidad_medida;
+
+    const newUds = mode === 'add'
+      ? (match ? (match.unidades || 0) + unidades : unidades)
+      : unidades;
+
+    if (match) {
+      await db.inventario.put({ ...match, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds });
+    } else {
+      // Usar clave compuesta igual que en la importación para consistencia
+      const newId = (cod_producto && normAlm) ? `${cod_producto}_${normAlm}` : `MAN-${Date.now()}`;
+      await db.inventario.put({ id: newId, cod_producto, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades });
+    }
+
+    // Registrar movimiento de Entrada
+    const now = new Date();
+    const cantidadEntrada = mode === 'add' ? unidades : (match ? newUds - (match.unidades || 0) : unidades);
+    if (cantidadEntrada !== 0) {
+      await db.movimientos.put({
+        id: `ENT-${now.getTime()}-${cod_producto}`,
+        fecha: now.toISOString().slice(0, 10),
+        cod_producto, producto: nombreProd,
+        almacen: normAlm,
+        cantidad: cantidadEntrada,
+        precio_unidad: 0,
+        tipo_movimiento: 'Entrada',
+        usuario: UserService.getUser()?.nombre || '',
+        notas: match ? `Actualización stock (${mode === 'add' ? 'suma' : 'reemplazo'})` : 'Alta en inventario',
+      });
+    }
+
+    return { updated: !!match, newUds };
+  },
+
+  async deductStock(items, averia_id, usuario) {
+    // items: [{ cod_producto, almacen, cantidad }]
+    const now = new Date();
+    const fecha = now.toISOString().slice(0,10);
+    for (const item of items) {
+      if (!item.cod_producto || !item.almacen || !item.cantidad) continue;
+      const normAlm = normalizeAlmacen(item.almacen);
+      const invArr = await db.inventario.where('cod_producto').equals(item.cod_producto).filter(r => normalizeAlmacen(r.almacen) === normAlm).toArray();
+      const nombreProd = invArr.length > 0 ? (invArr[0].producto || item.cod_producto) : (item.nombre || item.cod_producto);
+      if (invArr.length > 0) {
+        const inv = invArr[0];
+        await db.inventario.put({ ...inv, unidades: Math.max(0, (inv.unidades||0) - item.cantidad) });
+      }
+      const mov_id = `MOV-${now.getTime()}-${item.cod_producto}`;
+      await db.movimientos.put({
+        id: mov_id, fecha, cod_producto: item.cod_producto,
+        producto: nombreProd,
+        almacen: normalizeAlmacen(item.almacen), cantidad: -item.cantidad,
+        precio_unidad: 0, tipo_movimiento: 'Salida',
+        usuario: usuario || '', notas: `Avería ${averia_id}`,
+      });
+    }
+  },
+
+  async exportJSON() {
+    const [activos, averias, incidencias, tecnicos, sitios, productos, inventario, movimientos] = await Promise.all([
+      db.activos.toArray(), db.averias.toArray(), db.incidencias.toArray(),
+      db.tecnicos.toArray(), db.sitios.toArray(), db.productos.toArray(),
+      db.inventario.toArray(), db.movimientos.toArray(),
+    ]);
+    return JSON.stringify({ activos, averias, incidencias, tecnicos, sitios, productos, inventario, movimientos, exportDate: new Date().toISOString() }, null, 2);
+  },
+
+  async clearAll() {
+    await db.transaction('rw', db.activos, db.averias, db.incidencias, db.tecnicos, db.sitios, db.productos, db.inventario, db.movimientos, db.metadata, async () => {
+      await Promise.all([db.activos.clear(), db.averias.clear(), db.incidencias.clear(), db.tecnicos.clear(), db.sitios.clear(), db.productos.clear(), db.inventario.clear(), db.movimientos.clear(), db.metadata.clear()]);
+    });
+  },
+
+  // ── CASCADE HELPERS ──
+  async getZonasByAlmacen(almacen) {
+    const arr = await db.activos.where('almacen').equals(almacen).toArray();
+    return [...new Set(arr.map(a => a.zona).filter(Boolean))].sort();
+  },
+  async getLineasByAlmacenZona(almacen, zona) {
+    const arr = await db.activos.filter(a => a.almacen === almacen && a.zona === zona).toArray();
+    return [...new Set(arr.map(a => a.linea).filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric:true}));
+  },
+  async getEquiposByAlmacenZonaLinea(almacen, zona, linea) {
+    const arr = await db.activos.filter(a => a.almacen === almacen && a.zona === zona && String(a.linea) === String(linea)).toArray();
+    return arr.map(a => ({ id_activo: a.id_activo, equipo: a.equipo }));
+  },
+  async getTiposMaquina() {
+    const arr = await db.activos.toArray();
+    return [...new Set(arr.map(a => a.tipo_maquina).filter(Boolean))].sort();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// USER SERVICE
+// ═══════════════════════════════════════════════════════════════════
+const UserService = {
+  _user: null,
+
+  load() {
+    const stored = sessionStorage.getItem('gmao_user');
+    if (stored) { try { this._user = JSON.parse(stored); } catch(e){} }
+  },
+  login(t)  { this._user = t; sessionStorage.setItem('gmao_user', JSON.stringify(t)); },
+  logout()  { this._user = null; sessionStorage.removeItem('gmao_user'); },
+  getUser() { return this._user; },
+  isLoggedIn() { return !!this._user; },
+  getInitial() { return this._user?.nombre?.[0]?.toUpperCase() || '?'; },
+
+  isAdmin()       { return this._user?.rol === 'Admin'; },
+  isResponsable() { return this._user?.rol === 'Responsable'; },
+  isMecanico()    { return this._user?.rol === 'Mecanico'; },
+
+  // '' = ve todo (Admin); string canónico = su centro
+  getEffectiveAlmacen() {
+    if (!this._user) return '';
+    if (this._user.rol === 'Admin') return '';
+    return normalizeAlmacen(this._user.almacen || '');
+  },
+
+  canViewAlmacen(alm) {
+    if (!this._user) return false;
+    if (this._user.rol === 'Admin') return true;
+    return !alm || normalizeAlmacen(this._user.almacen) === normalizeAlmacen(alm);
+  },
+
+  canCreateAveria()     { return !!this._user; },
+  canCloseAveria(av)    {
+    if (!this._user) return false;
+    if (this._user.rol === 'Admin') return true;
+    return normalizeAlmacen(av.almacen) === normalizeAlmacen(this._user.almacen);
+  },
+  canManageActivos()    { return this._user?.rol === 'Admin'; },
+  canConvertIncidencia(){ return ['Admin','Responsable'].includes(this._user?.rol); },
+  canManageConfig()     { return this._user?.rol === 'Admin'; },
+  canMoveInventario()   { return ['Admin','Responsable'].includes(this._user?.rol); },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════
+const UI = {
+  badge(text, type) {
+    const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green', Abierta:'red', 'En curso':'orange', Cerrada:'gray', Operativo:'green', Parado:'red', Baja_estado:'gray', Mecánica:'blue', Eléctrica:'blue', Neumática:'blue', Alta_prior:'red', Media:'orange', Baja_prior:'green' };
+    const cls = map[text] || 'gray';
+    return `<span class="badge badge-${cls}">${this.esc(text)}</span>`;
+  },
+  criticidadBadge(c) {
+    if (!c) return '<span class="badge badge-gray">—</span>';
+    const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green' };
+    return `<span class="badge badge-${map[c]||'gray'}">${this.esc(c)}</span>`;
+  },
+  estadoBadge(e) {
+    if (!e) return '<span class="badge badge-gray">—</span>';
+    const map = { Abierta:'red', 'En curso':'orange', Cerrada:'gray' };
+    return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e)}</span>`;
+  },
+  activoEstadoBadge(e) {
+    const map = { Operativo:'green', Parado:'red', Baja:'gray', 'En reparacion':'orange' };
+    return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e||'Operativo')}</span>`;
+  },
+  formatDate(d) {
+    if (!d) return '—';
+    try {
+      const dt = new Date(d + 'T00:00:00');
+      return dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+    } catch(e) { return d; }
+  },
+  formatDuration(dur) {
+    if (!dur) return '—';
+    const m = String(dur).match(/^(\d+):(\d+)/);
+    if (m) {
+      const h = parseInt(m[1]), min = parseInt(m[2]);
+      if (h === 0) return `${min} min`;
+      return `${h}h ${min > 0 ? min+'m' : ''}`.trim();
+    }
+    return dur;
+  },
+  esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+  loading() {
+    return '<div class="loading-overlay"><div class="loader"></div><span>Cargando...</span></div>';
+  },
+  empty(msg = 'Sin resultados', sub = 'Prueba a cambiar los filtros') {
+    return `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h3>${msg}</h3><p>${sub}</p></div>`;
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = `toast${type ? ' toast-'+type : ''}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.style.transition = 'opacity .4s', 2000);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 2400);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════════
+const Modal = {
+  open(title, bodyHtml, footerHtml = '') {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML = bodyHtml;
+    document.getElementById('modal-footer').innerHTML = footerHtml;
+    document.getElementById('modal-overlay').classList.add('open');
+  },
+  close() {
+    document.getElementById('modal-overlay').classList.remove('open');
+  },
+};
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) Modal.close(); });
+
+// ═══════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════
+const Router = {
+  _routes: {},
+  register(route, fn) { this._routes[route] = fn; },
+  navigate(route) {
+    window.location.hash = route;
+  },
+  async handle() {
+    const hash = (window.location.hash || '#averias').slice(1) || 'averias';
+    const [base] = hash.split('/');
+
+    // Mecánicos solo pueden ver Averías — redirigir si llegan a otra ruta
+    if (UserService.isMecanico() && base !== 'averias') {
+      window.location.hash = 'averias';
+      return;
+    }
+
+    const fn = this._routes[base] || this._routes['averias'];
+
+    document.querySelectorAll('.nav-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.route === base);
+    });
+    const titles = { dashboard:'Dashboard', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', config:'Configuración' };
+    document.getElementById('topbar-title').textContent = titles[base] || base;
+
+    const content = document.getElementById('content');
+    content.innerHTML = UI.loading();
+    await fn(hash);
+  },
+  init() {
+    window.addEventListener('hashchange', () => this.handle());
+    document.querySelectorAll('.nav-item[data-route]').forEach(el => {
+      el.addEventListener('click', () => this.navigate(el.dataset.route));
+    });
+    document.getElementById('global-almacen-filter').addEventListener('change', () => this.handle());
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════
+
+// Normaliza valores de almacén a los nombres canónicos del sistema.
+// Elimina acentos, normaliza casing, y mapea variantes conocidas.
+// Esto garantiza que "MIRAMAR", "miramar", "Miramar" → "Miramar",
+// y "Alcàsser", "ALCACER" → "Alcacer", "Algemesí" → "Algemesi", etc.
+function normalizeAlmacen(v) {
+  if (!v) return '';
+  const clean = String(v).trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quitar acentos
+  const CANONICAL = {
+    miramar: 'Miramar',
+    xeresa: 'Xeresa',
+    murcia: 'Murcia',
+    alcacer: 'Alcacer', alcasser: 'Alcacer',
+    algemesi: 'Algemesi',
+  };
+  return CANONICAL[clean] || String(v).trim();
+}
+
+function getAlmacenFilter() {
+  return document.getElementById('global-almacen-filter').value;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
+const DashboardPage = {
+  _chartAverias: null,
+  _chartCrit: null,
+
+  async render() {
+    const almacen = getAlmacenFilter();
+    const s = await DataService.getDashboardStats(almacen);
+    const content = document.getElementById('content');
+
+    content.innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-red">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">${s.avAbiertas}</div><div class="kpi-label">Averías abiertas</div><div class="kpi-sub">${almacen||'Todos los almacenes'}</div></div>
+      </div>
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">${s.incActivas}</div><div class="kpi-label">Incidencias activas</div><div class="kpi-sub">Abiertas o en curso</div></div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">${s.activosOp}</div><div class="kpi-label">Activos operativos</div><div class="kpi-sub">${s.activosParados > 0 ? `<span style="color:var(--red)">${s.activosParados} parados</span>` : 'Sin activos parados'}</div></div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">Técnicos activos</div><div class="kpi-sub">En el sistema</div></div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-wrap">
+        <div class="chart-title">Averías registradas por mes</div>
+        <canvas id="chart-averias" height="200"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Averías abiertas por criticidad</div>
+        <canvas id="chart-criticidad" height="200"></canvas>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Averías abiertas por almacén</span></div>
+        <div id="almacen-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Últimas averías abiertas</span>
+          <button class="btn btn-sm btn-secondary" onclick="Router.navigate('averias')">Ver todas →</button>
+        </div>
+        <div class="table-wrap" id="recent-table"></div>
+      </div>
+    </div>
+    `;
+
+    // KPI técnicos
+    db.tecnicos.filter(t => t.activo).count().then(n => {
+      const el = document.getElementById('kpi-tecnicos');
+      if (el) el.textContent = n;
+    });
+
+    // Chart: averías por mes
+    if (this._chartAverias) { this._chartAverias.destroy(); this._chartAverias = null; }
+    const ctxA = document.getElementById('chart-averias');
+    if (ctxA) {
+      this._chartAverias = new Chart(ctxA, {
+        type: 'bar',
+        data: {
+          labels: s.meses.map(m => m.label),
+          datasets: [{
+            label: 'Averías', data: s.meses.map(m => s.mesCount[m.key]),
+            backgroundColor: '#275D3A', borderRadius: 6, borderSkipped: false,
+          }]
+        },
+        options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,ticks:{stepSize:1}}, x:{grid:{display:false}} } }
+      });
+    }
+
+    // Chart: criticidad
+    if (this._chartCrit) { this._chartCrit.destroy(); this._chartCrit = null; }
+    const ctxC = document.getElementById('chart-criticidad');
+    if (ctxC) {
+      const c = s.porCriticidad;
+      this._chartCrit = new Chart(ctxC, {
+        type: 'doughnut',
+        data: {
+          labels: ['Alta', 'Moderada', 'Baja', 'Otra'],
+          datasets: [{ data: [c.Alta, c.Moderada, c.Baja, c.Otra], backgroundColor: ['#C20019','#E87146','#2e7d32','#aaa'], borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ padding:16, font:{size:12} } } }, cutout:'60%' }
+      });
+    }
+
+    // Barras por almacén
+    const barsEl = document.getElementById('almacen-bars');
+    if (barsEl) {
+      const almacenes = ['Algemesi','Miramar','Xeresa','Alcacer','Murcia'];
+      const max = Math.max(1, ...almacenes.map(a => s.byAlmacen[a]||0));
+      barsEl.innerHTML = almacenes.map(a => {
+        const n = s.byAlmacen[a] || 0;
+        return `<div class="almacen-bar">
+          <span class="almacen-bar-label">${a}</span>
+          <div class="almacen-bar-track"><div class="almacen-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
+          <span class="almacen-bar-count">${n}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Tabla últimas averías
+    const tEl = document.getElementById('recent-table');
+    if (tEl) {
+      if (s.ultimas.length === 0) {
+        tEl.innerHTML = '<p style="color:var(--gray-muted);font-size:13px;padding:16px 0">No hay averías abiertas ✓</p>';
+      } else {
+        tEl.innerHTML = `<table>
+          <thead><tr><th>Almacén</th><th>Equipo</th><th>Técnico</th><th>Critic.</th></tr></thead>
+          <tbody>${s.ultimas.map(a => `<tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
+            <td>${UI.esc(a.almacen)}</td>
+            <td class="col-truncate">${UI.esc(a.equipo||a.descripcion||'—')}</td>
+            <td>${UI.esc(a.tecnico||'—')}</td>
+            <td>${UI.criticidadBadge(a.criticidad)}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: ACTIVOS
+// ═══════════════════════════════════════════════════════════════════
+const ActivosPage = {
+  _data: [],
+  _filtered: [],
+
+  async render() {
+    const canAdmin = UserService.canManageActivos();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Activos</h1><p class="page-subtitle" id="activos-count">Cargando...</p></div>
+      ${canAdmin ? `<button class="btn btn-primary" onclick="ActivosPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo activo
+      </button>` : ''}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0">
+        <input type="search" class="search-box" id="activos-search" placeholder="Buscar equipo, zona, tipo...">
+        <select class="filter-select" id="filter-almacen-act">
+          <option value="">Todos los almacenes</option>
+          <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
+        </select>
+        <select class="filter-select" id="filter-zona-act"><option value="">Todas las zonas</option></select>
+        <select class="filter-select" id="filter-estado-act">
+          <option value="">Todos los estados</option>
+          <option>Operativo</option><option>Parado</option><option>Baja</option><option>En reparacion</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table-clickable">
+          <thead><tr>
+            <th>ID Activo</th><th>Almacén</th><th>Zona</th><th>Línea</th>
+            <th>Tipo máquina</th><th>Equipo</th><th>Estado</th><th>Año</th>
+          </tr></thead>
+          <tbody id="activos-tbody">${UI.loading()}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+    const almacenGlobal = getAlmacenFilter();
+    const almacenFilter = document.getElementById('filter-almacen-act');
+    if (almacenGlobal) {
+      almacenFilter.value = almacenGlobal;
+      almacenFilter.disabled = true;
+      almacenFilter.title = 'Solo puedes ver tu centro';
+    }
+
+    this._data = await DataService.getActivos(almacenGlobal ? { almacen: almacenGlobal } : {});
+
+    // Populate zona filter
+    const zonas = [...new Set(this._data.map(a => a.zona).filter(Boolean))].sort();
+    const zonaEl = document.getElementById('filter-zona-act');
+    zonas.forEach(z => { const o = document.createElement('option'); o.value = z; o.textContent = z; zonaEl.appendChild(o); });
+
+    this._filtered = [...this._data];
+    this._renderTable();
+    document.getElementById('activos-count').textContent = `${this._data.length} activos registrados`;
+
+    ['activos-search','filter-almacen-act','filter-zona-act','filter-estado-act'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _applyFilters() {
+    const search = document.getElementById('activos-search')?.value.toLowerCase() || '';
+    const almacen = document.getElementById('filter-almacen-act')?.value || '';
+    const zona = document.getElementById('filter-zona-act')?.value || '';
+    const estado = document.getElementById('filter-estado-act')?.value || '';
+    this._filtered = this._data.filter(a =>
+      (!almacen || a.almacen === almacen) &&
+      (!zona    || a.zona === zona) &&
+      (!estado  || a.estado === estado) &&
+      (!search  || a.equipo.toLowerCase().includes(search) || a.zona.toLowerCase().includes(search) ||
+                   a.tipo_maquina.toLowerCase().includes(search) || a.almacen.toLowerCase().includes(search))
+    );
+    document.getElementById('activos-count').textContent = `${this._filtered.length} de ${this._data.length} activos`;
+    this._renderTable();
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('activos-tbody');
+    if (!tbody) return;
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin activos','Prueba a cambiar los filtros')}</td></tr>`; return; }
+    tbody.innerHTML = this._filtered.map(a => `
+      <tr onclick="ActivosPage.openDetail('${UI.esc(a.id_activo)}')">
+        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted)">${UI.esc(a.id_activo)}</td>
+        <td>${UI.esc(a.almacen)}</td>
+        <td>${UI.esc(a.zona)}</td>
+        <td style="text-align:center">${UI.esc(a.linea||'—')}</td>
+        <td>${UI.esc(a.tipo_maquina||'—')}</td>
+        <td style="font-weight:500">${UI.esc(a.equipo)}</td>
+        <td>${UI.activoEstadoBadge(a.estado)}</td>
+        <td>${a.anio||'—'}</td>
+      </tr>`).join('');
+  },
+
+  async openDetail(id) {
+    const a = await DataService.getActivo(id);
+    if (!a) return;
+    const averias = await db.averias.where('id_activo').equals(id).toArray();
+    averias.sort((x,y) => (y.fecha_inicio||'').localeCompare(x.fecha_inicio||''));
+    const avAbiertas = averias.filter(av => av.estado === 'Abierta').length;
+    Modal.open(`Activo — ${a.equipo}`, `
+      <div class="detail-grid">
+        <div class="detail-field"><label>ID Activo</label><p style="font-family:monospace;font-size:12px">${UI.esc(a.id_activo)}</p></div>
+        <div class="detail-field"><label>Estado</label><p>${UI.activoEstadoBadge(a.estado)}</p></div>
+        <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen)}</p></div>
+        <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
+        <div class="detail-field"><label>Línea</label><p>${UI.esc(a.linea||'—')}</p></div>
+        <div class="detail-field"><label>Tipo máquina</label><p>${UI.esc(a.tipo_maquina||'—')}</p></div>
+        <div class="detail-field"><label>Proveedor</label><p>${UI.esc(a.proveedor||'—')}</p></div>
+        <div class="detail-field"><label>Año adquisición</label><p>${a.anio||'—'}</p></div>
+        <div class="detail-field"><label>Matrícula</label><p>${UI.esc(a.matricula||'—')}</p></div>
+        <div class="detail-field"><label>Potencia motor</label><p>${UI.esc(a.potencia_motor||'—')}</p></div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <strong style="font-size:14px">Historial de averías</strong>
+          ${avAbiertas > 0 ? `<span class="badge badge-red">${avAbiertas} abiertas</span>` : '<span class="badge badge-green">Sin averías abiertas</span>'}
+        </div>
+        ${averias.length === 0 ? '<p style="font-size:13px;color:var(--gray-muted)">Sin averías registradas</p>' :
+          `<div class="table-wrap"><table>
+            <thead><tr><th>Fecha</th><th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th></tr></thead>
+            <tbody>${averias.slice(0,10).map(av => `<tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(av.id)}')">
+              <td style="white-space:nowrap">${UI.formatDate(av.fecha_inicio)}</td>
+              <td class="col-truncate">${UI.esc(av.descripcion||'—')}</td>
+              <td>${UI.esc(av.tecnico||'—')}</td>
+              <td>${UI.criticidadBadge(av.criticidad)}</td>
+              <td>${UI.estadoBadge(av.estado)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>`}
+      </div>`,
+      `${UserService.canManageActivos() ? `<button class="btn btn-danger btn-sm" onclick="ActivosPage._deleteActivo('${UI.esc(id)}')">Eliminar</button>` : ''}
+       <button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       ${UserService.canManageActivos() ? `<button class="btn btn-primary" onclick="ActivosPage.openEdit('${UI.esc(id)}')">✏️ Editar</button>` : ''}`);
+  },
+
+  async openNew() {
+    await this._openForm(null);
+  },
+
+  async openEdit(id) {
+    const activo = await DataService.getActivo(id);
+    if (activo) await this._openForm(activo);
+  },
+
+  async _openForm(activo) {
+    const isEdit = !!activo;
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const estados = ['Operativo','Parado','En reparacion','Baja'];
+    let zonas = activo?.almacen ? await DataService.getZonasByAlmacen(activo.almacen) : [];
+    // Merge any existing zona not in list
+    if (activo?.zona && !zonas.includes(activo.zona)) zonas = [activo.zona, ...zonas];
+    const tiposMaquina = await DataService.getTiposMaquina();
+
+    const zonaOpts = (sel) => ['<option value="">Seleccionar zona...</option>',
+      ...zonas.map(z => `<option${sel===z?' selected':''}>${UI.esc(z)}</option>`),
+      '<option value="__nueva">+ Nueva zona...</option>',
+    ].join('');
+
+    Modal.open(isEdit ? `Editar — ${activo.equipo}` : 'Nuevo activo', `
+      <form id="activo-form" class="form-grid">
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="f-almacen" required>
+            <option value="">Seleccionar...</option>
+            ${almacenes.map(a=>`<option${activo?.almacen===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Zona *</label>
+          <select class="form-input" id="f-zona" required ${!activo?.almacen?'disabled':''}>
+            ${zonaOpts(activo?.zona||'')}
+          </select>
+        </div>
+        <div class="form-field" id="f-zona-nueva-wrap" style="display:none">
+          <label>Nombre nueva zona</label>
+          <input class="form-input" id="f-zona-nueva" placeholder="Ej: Volcadores">
+        </div>
+        <div class="form-field">
+          <label>Línea</label>
+          <input class="form-input" id="f-linea" value="${UI.esc(activo?.linea||'')}">
+        </div>
+        <div class="form-field">
+          <label>Tipo máquina</label>
+          <select class="form-input" id="f-tipo">
+            <option value="">Seleccionar...</option>
+            ${tiposMaquina.map(t=>`<option${activo?.tipo_maquina===t?' selected':''}>${UI.esc(t)}</option>`).join('')}
+            <option value="__otro">+ Otro...</option>
+          </select>
+        </div>
+        <div class="form-field" id="f-tipo-otra-wrap" style="display:none">
+          <label>Tipo personalizado</label>
+          <input class="form-input" id="f-tipo-otra" placeholder="Tipo de máquina">
+        </div>
+        <div class="form-field full">
+          <label>Equipo / Nombre *</label>
+          <input class="form-input" id="f-equipo" value="${UI.esc(activo?.equipo||'')}" required placeholder="Nombre del equipo">
+        </div>
+        <div class="form-field">
+          <label>Estado</label>
+          <select class="form-input" id="f-estado">
+            ${estados.map(e=>`<option${activo?.estado===e?' selected':''}>${e}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Año adquisición</label>
+          <input class="form-input" type="number" id="f-anio" value="${activo?.anio||''}" min="1970" max="2035">
+        </div>
+        <div class="form-field">
+          <label>Proveedor</label>
+          <input class="form-input" id="f-proveedor" value="${UI.esc(activo?.proveedor||'')}">
+        </div>
+        <div class="form-field">
+          <label>Matrícula</label>
+          <input class="form-input" id="f-matricula" value="${UI.esc(activo?.matricula||'')}">
+        </div>
+        <div class="form-field">
+          <label>Potencia motor</label>
+          <input class="form-input" id="f-potencia" value="${UI.esc(activo?.potencia_motor||'')}">
+        </div>
+        <div class="form-field">
+          <label>Código zona</label>
+          <input class="form-input" id="f-czqona" value="${UI.esc(activo?.codigo_zona||'')}">
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="ActivosPage._saveActivo('${UI.esc(activo?.id_activo||'')}')">
+         ${isEdit ? 'Guardar cambios' : 'Crear activo'}
+       </button>`);
+
+    // Cascade: almacén → zona
+    document.getElementById('f-almacen').addEventListener('change', async function() {
+      const zonaEl = document.getElementById('f-zona');
+      if (!this.value) { zonaEl.disabled = true; zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>'; return; }
+      const zs = await DataService.getZonasByAlmacen(this.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' +
+        zs.map(z=>`<option>${UI.esc(z)}</option>`).join('') +
+        '<option value="__nueva">+ Nueva zona...</option>';
+      zonaEl.disabled = false;
+    });
+    // Nueva zona custom input
+    document.getElementById('f-zona').addEventListener('change', function() {
+      document.getElementById('f-zona-nueva-wrap').style.display = this.value === '__nueva' ? '' : 'none';
+    });
+    // Tipo máquina custom
+    document.getElementById('f-tipo').addEventListener('change', function() {
+      document.getElementById('f-tipo-otra-wrap').style.display = this.value === '__otro' ? '' : 'none';
+    });
+  },
+
+  async _saveActivo(oldId) {
+    const almacen = document.getElementById('f-almacen').value.trim();
+    let zona = document.getElementById('f-zona').value.trim();
+    if (zona === '__nueva') zona = document.getElementById('f-zona-nueva').value.trim();
+    const linea  = document.getElementById('f-linea').value.trim();
+    const equipo = document.getElementById('f-equipo').value.trim();
+    let tipo = document.getElementById('f-tipo').value;
+    if (tipo === '__otro') tipo = document.getElementById('f-tipo-otra').value.trim();
+
+    if (!almacen || !zona || !equipo) { toast('Almacén, zona y equipo son obligatorios', 'error'); return; }
+
+    const id_activo = `${almacen}-${zona}-${linea}-${equipo}`;
+    const data = {
+      id_activo, almacen, zona, linea, equipo,
+      tipo_maquina:   tipo,
+      estado:         document.getElementById('f-estado').value,
+      anio:           parseInt(document.getElementById('f-anio').value) || null,
+      proveedor:      document.getElementById('f-proveedor').value.trim(),
+      matricula:      document.getElementById('f-matricula').value.trim(),
+      potencia_motor: document.getElementById('f-potencia').value.trim(),
+      codigo_zona:    document.getElementById('f-czqona').value.trim(),
+      num: 0, ancho:'', largo:'', proteccion:'',
+    };
+
+    if (oldId && oldId !== id_activo) {
+      await db.activos.delete(oldId);
+      // Update references in averias
+      const refs = await db.averias.where('id_activo').equals(oldId).toArray();
+      await Promise.all(refs.map(av => db.averias.put({...av, id_activo})));
+    }
+    await DataService.saveActivo(data);
+    Modal.close();
+    toast(oldId ? 'Activo actualizado ✓' : 'Activo creado ✓', 'success');
+    await ActivosPage.render();
+  },
+
+  async _deleteActivo(id) {
+    const a = await DataService.getActivo(id);
+    if (!a) return;
+    const n = await db.averias.where('id_activo').equals(id).count();
+    const msg = n > 0
+      ? `¿Eliminar "${a.equipo}"? Tiene ${n} avería(s) asociada(s) que quedarán huérfanas.`
+      : `¿Eliminar el activo "${a.equipo}"? Esta acción no se puede deshacer.`;
+    if (!confirm(msg)) return;
+    await DataService.deleteActivo(id);
+    Modal.close();
+    toast('Activo eliminado', '');
+    await ActivosPage.render();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: AVERÍAS
+// ═══════════════════════════════════════════════════════════════════
+const AveriasPage = {
+  _data: [],
+  _filtered: [],
+  _prefillFromIncidencia: null,
+
+  async render() {
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Averías</h1><p class="page-subtitle" id="averias-count">Cargando...</p></div>
+      <button class="btn btn-primary" onclick="AveriasPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva avería
+      </button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <input type="search" class="search-box" id="av-search" placeholder="Buscar descripción, equipo, técnico...">
+        <select class="filter-select" id="av-f-almacen">
+          <option value="">Todos los almacenes</option>
+          <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
+        </select>
+        <select class="filter-select" id="av-f-estado">
+          <option value="">Todos los estados</option>
+          <option>Abierta</option><option>En curso</option><option>Cerrada</option>
+        </select>
+        <select class="filter-select" id="av-f-crit">
+          <option value="">Toda criticidad</option>
+          <option>Alta</option><option>Moderada</option><option>Baja</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table-clickable">
+          <thead><tr>
+            <th>ID</th><th>Fecha</th><th>Almacén</th><th>Equipo</th>
+            <th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th><th>Duración</th>
+          </tr></thead>
+          <tbody id="av-tbody">${UI.loading()}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+    const almacenGlobal = getAlmacenFilter();
+    const avAlmacenFilter = document.getElementById('av-f-almacen');
+    if (almacenGlobal) {
+      avAlmacenFilter.value = almacenGlobal;
+      avAlmacenFilter.disabled = true;
+      avAlmacenFilter.title = 'Solo puedes ver tu centro';
+    }
+
+    this._data = await DataService.getAverias(almacenGlobal ? { almacen:almacenGlobal } : {});
+
+    // Pre-seleccionar "Abierta" por defecto para que todos los usuarios vean las averías abiertas al entrar
+    const estadoFilter = document.getElementById('av-f-estado');
+    if (estadoFilter && !estadoFilter.value) estadoFilter.value = 'Abierta';
+
+    this._applyFilters();
+    document.getElementById('averias-count').textContent = `${this._filtered.length} de ${this._data.length} — ${this._data.filter(a=>a.estado==='Abierta').length} abiertas`;
+
+    ['av-search','av-f-almacen','av-f-estado','av-f-crit'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _applyFilters() {
+    const search = document.getElementById('av-search')?.value.toLowerCase() || '';
+    const almacen = document.getElementById('av-f-almacen')?.value || '';
+    const estado = document.getElementById('av-f-estado')?.value || '';
+    const crit = document.getElementById('av-f-crit')?.value || '';
+    this._filtered = this._data.filter(a =>
+      (!almacen || normalizeAlmacen(a.almacen) === normalizeAlmacen(almacen)) &&
+      (!estado  || a.estado === estado) &&
+      (!crit    || a.criticidad === crit) &&
+      (!search  || (a.descripcion||'').toLowerCase().includes(search) ||
+                   (a.equipo||'').toLowerCase().includes(search) ||
+                   (a.tecnico||'').toLowerCase().includes(search))
+    );
+    document.getElementById('averias-count').textContent = `${this._filtered.length} de ${this._data.length}`;
+    this._renderTable();
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('av-tbody');
+    if (!tbody) return;
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="9">${UI.empty()}</td></tr>`; return; }
+    tbody.innerHTML = this._filtered.map(a => `
+      <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
+        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
+        <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio)}</td>
+        <td>${UI.esc(a.almacen||'—')}</td>
+        <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
+        <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
+        <td>${UI.esc(a.tecnico||'—')}</td>
+        <td>${UI.criticidadBadge(a.criticidad)}</td>
+        <td>${UI.estadoBadge(a.estado)}</td>
+        <td>${UI.formatDuration(a.duracion)}</td>
+      </tr>`).join('');
+  },
+
+  async openDetail(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    const canClose = a.estado !== 'Cerrada' && UserService.canCloseAveria(a);
+    const canCurso = a.estado === 'Abierta' && UserService.canCloseAveria(a);
+    Modal.open(`Avería — ${a.id}`, `
+      <div class="detail-grid">
+        <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(a.estado)}</p></div>
+        <div class="detail-field"><label>Criticidad</label><p>${UI.criticidadBadge(a.criticidad)}</p></div>
+        <div class="detail-field"><label>Fecha inicio</label><p>${UI.formatDate(a.fecha_inicio)} ${a.hora_inicio||''}</p></div>
+        <div class="detail-field"><label>Fecha fin</label><p>${a.fecha_fin ? UI.formatDate(a.fecha_fin)+' '+a.hora_fin : '—'}</p></div>
+        <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen||'—')}</p></div>
+        <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
+        <div class="detail-field"><label>Equipo</label><p>${UI.esc(a.equipo||'—')}</p></div>
+        <div class="detail-field"><label>Técnico asignado</label><p>${UI.esc(a.tecnico||'—')}</p></div>
+        <div class="detail-field"><label>Tipo avería</label><p>${UI.esc(a.tipo||'—')}</p></div>
+        <div class="detail-field"><label>Duración</label><p>${UI.formatDuration(a.duracion)}</p></div>
+        <div class="detail-field full"><label>Descripción</label><p>${UI.esc(a.descripcion||'—')}</p></div>
+        ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
+        ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       ${canCurso ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="AveriasPage._marcarEnCurso('${UI.esc(id)}')">▶ En curso</button>` : ''}
+       ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">✓ Cerrar avería</button>` : ''}`);
+  },
+
+  async _marcarEnCurso(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    await DataService.saveAveria({...a, estado:'En curso'});
+    Modal.close();
+    toast('Avería marcada En curso', '');
+    App.updateBadges();
+    await AveriasPage.render();
+  },
+
+  async openNew() {
+    const user = UserService.getUser();
+    const tecnicos = await DataService.getTecnicos(true);
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
+    const now = new Date();
+    const today = now.toISOString().slice(0,10);
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const userAlmacen = UserService.getEffectiveAlmacen() || user?.almacen || '';
+    const almacenLocked = !!UserService.getEffectiveAlmacen();
+
+    Modal.open('Nueva avería', `
+      <form id="averia-form" class="form-grid">
+        <p class="full" style="font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px;grid-column:1/-1">
+          Localiza el activo averiado: Almacén → Zona → Línea → Equipo
+        </p>
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="av-almacen" required ${almacenLocked ? 'disabled' : ''}>
+            <option value="">Seleccionar...</option>
+            ${almacenes.map(a=>`<option${userAlmacen===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Zona *</label>
+          <select class="form-input" id="av-zona" disabled required>
+            <option value="">Selecciona almacén</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Línea</label>
+          <select class="form-input" id="av-linea" disabled>
+            <option value="">Selecciona zona</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Equipo *</label>
+          <select class="form-input" id="av-equipo" disabled required>
+            <option value="">Selecciona línea</option>
+          </select>
+        </div>
+        <input type="hidden" id="av-id-activo">
+        <div class="form-field full">
+          <label>Descripción de la avería *</label>
+          <textarea class="form-input" id="av-desc" rows="3" required placeholder="Describe el problema detectado..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Técnico asignado</label>
+          <select class="form-input" id="av-tecnico">
+            <option value="">Sin asignar</option>
+            ${tecnicos.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Tipo avería</label>
+          <select class="form-input" id="av-tipo">
+            <option value="">Seleccionar...</option>
+            ${tipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Criticidad *</label>
+          <select class="form-input" id="av-criticidad" required>
+            <option value="">Seleccionar...</option>
+            <option>Alta</option><option selected>Moderada</option><option>Baja</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fecha inicio</label>
+          <input class="form-input" type="date" id="av-fecha" value="${today}">
+        </div>
+        <div class="form-field">
+          <label>Hora inicio</label>
+          <input class="form-input" type="time" id="av-hora" value="${hh}:${mm}">
+        </div>
+
+        <!-- TOGGLE: Cerrar ahora -->
+        <div class="full" style="grid-column:1/-1;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)" id="toggle-close-label">
+            <input type="checkbox" id="av-cerrar-ahora" style="width:16px;height:16px;accent-color:var(--green)">
+            <span style="font-weight:600;font-size:13px">✓ Registrar ya resuelta (cerrar en este mismo formulario)</span>
+          </label>
+        </div>
+
+        <!-- CAMPOS DE CIERRE (ocultos por defecto) -->
+        <div id="close-fields" style="display:none;grid-column:1/-1">
+          <div style="height:1px;background:var(--border);margin:8px 0 16px"></div>
+          <div class="form-grid" style="margin:0">
+            <div class="form-field full">
+              <label>Solución aplicada *</label>
+              <textarea class="form-input" id="av-solucion" rows="2" placeholder="Qué se hizo para resolverla..."></textarea>
+            </div>
+            <div class="form-field full">
+              <label>Materiales / repuestos utilizados</label>
+              <input class="form-input" id="av-materiales" placeholder="Ej: Rodamiento 6204, correa...">
+            </div>
+            <div class="form-field">
+              <label>Coste materiales (€)</label>
+              <input class="form-input" type="number" id="av-coste" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-field">
+              <label>Fecha fin</label>
+              <input class="form-input" type="date" id="av-fecha-fin" value="${today}">
+            </div>
+            <div class="form-field">
+              <label>Hora fin</label>
+              <input class="form-input" type="time" id="av-hora-fin" value="${hh}:${mm}">
+            </div>
+          </div>
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
+
+    // Toggle visibilidad campos cierre
+    document.getElementById('av-cerrar-ahora').addEventListener('change', function() {
+      document.getElementById('close-fields').style.display = this.checked ? '' : 'none';
+      document.getElementById('toggle-close-label').style.borderColor = this.checked ? 'var(--green)' : 'var(--border)';
+    });
+
+    // — Cascade wiring —
+    const almEl   = document.getElementById('av-almacen');
+    const zonaEl  = document.getElementById('av-zona');
+    const lineaEl = document.getElementById('av-linea');
+    const equipEl = document.getElementById('av-equipo');
+    const hidEl   = document.getElementById('av-id-activo');
+
+    almEl.addEventListener('change', async () => {
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
+      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      hidEl.value = '';
+      if (!almEl.value) { zonaEl.disabled = true; return; }
+      const zs = await DataService.getZonasByAlmacen(almEl.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
+      zonaEl.disabled = false;
+    });
+    zonaEl.addEventListener('change', async () => {
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      hidEl.value = '';
+      if (!zonaEl.value) { lineaEl.disabled = true; return; }
+      const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
+      lineaEl.disabled = false;
+    });
+    lineaEl.addEventListener('change', async () => {
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>';
+      hidEl.value = '';
+      if (!lineaEl.value) { equipEl.disabled = true; return; }
+      const eq = await DataService.getEquiposByAlmacenZonaLinea(almEl.value, zonaEl.value, lineaEl.value);
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+      equipEl.disabled = false;
+    });
+    equipEl.addEventListener('change', () => { hidEl.value = equipEl.value; });
+
+    // Auto-disparar si el usuario ya tiene almacén
+    if (almEl.value) almEl.dispatchEvent(new Event('change'));
+
+    // Aplicar prefill desde Incidencia si existe (ver convertirEnAveria)
+    const prefill = AveriasPage._prefillFromIncidencia;
+    if (prefill) {
+      AveriasPage._prefillFromIncidencia = null;
+
+      // Esperar a que un select tenga opciones reales (> 1 incluye el placeholder)
+      const waitOptions = (el, ms = 2000) => new Promise((resolve, reject) => {
+        const start = Date.now();
+        const check = () => {
+          if (el.options.length > 1) return resolve();
+          if (Date.now() - start > ms) return reject(new Error('timeout'));
+          setTimeout(check, 60);
+        };
+        setTimeout(check, 60);
+      });
+
+      (async () => {
+        try {
+          // Almacén — solo si el campo no está bloqueado (usuario sin centro fijo)
+          if (prefill.almacen && !almacenLocked) {
+            almEl.value = prefill.almacen;
+            almEl.dispatchEvent(new Event('change'));
+          }
+          // Esperar a que carguen las zonas (el cascade es async)
+          await waitOptions(zonaEl);
+          if (prefill.zona) {
+            zonaEl.value = prefill.zona;
+            zonaEl.dispatchEvent(new Event('change'));
+          }
+          // Esperar líneas (pueden existir o no — no bloqueamos si no hay)
+          try { await waitOptions(lineaEl, 800); } catch (_) {}
+
+          // Rellenar campos textuales
+          if (prefill.descripcion) {
+            const el = document.getElementById('av-desc');
+            if (el) el.value = prefill.descripcion;
+          }
+          if (prefill.tipo) {
+            const el = document.getElementById('av-tipo');
+            if (el) el.value = prefill.tipo;
+          }
+          if (prefill.criticidad) {
+            const el = document.getElementById('av-criticidad');
+            if (el) el.value = prefill.criticidad;
+          }
+        } catch (e) {
+          console.warn('Prefill incidencia→avería incompleto:', e.message);
+        }
+      })();
+    }
+  },
+
+  async _saveCreate() {
+    const almacen = document.getElementById('av-almacen').value;
+    const zona    = document.getElementById('av-zona').value;
+    const linea   = document.getElementById('av-linea').value;
+    const equipEl = document.getElementById('av-equipo');
+    const equipoText = equipEl.options[equipEl.selectedIndex]?.text || '';
+    const id_activo  = document.getElementById('av-id-activo').value;
+    const desc       = document.getElementById('av-desc').value.trim();
+    const criticidad = document.getElementById('av-criticidad').value;
+    const cerrarAhora = document.getElementById('av-cerrar-ahora')?.checked || false;
+
+    if (!almacen) { toast('Selecciona el almacén', 'error'); return; }
+    if (!zona)    { toast('Selecciona la zona', 'error'); return; }
+    if (!desc)    { toast('La descripción es obligatoria', 'error'); return; }
+    if (!criticidad){ toast('Selecciona la criticidad', 'error'); return; }
+    if (cerrarAhora) {
+      const sol = document.getElementById('av-solucion')?.value.trim();
+      if (!sol) { toast('Indica la solución aplicada para cerrar la avería', 'error'); return; }
+    }
+
+    const now = new Date();
+    const ds = now.toISOString().slice(0,10).replace(/-/g,'');
+    const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    const id = `AV-${ds}-${ts}`;
+
+    const fechaInicio = document.getElementById('av-fecha').value;
+    const horaInicio  = document.getElementById('av-hora').value + ':00';
+
+    let estado = 'Abierta';
+    let fechaFin = '', horaFin = '', solucion = '', materiales = '', coste = 0, duracion = '';
+    if (cerrarAhora) {
+      estado    = 'Cerrada';
+      solucion  = document.getElementById('av-solucion').value.trim();
+      materiales= document.getElementById('av-materiales')?.value.trim() || '';
+      coste     = parseFloat(document.getElementById('av-coste')?.value) || 0;
+      fechaFin  = document.getElementById('av-fecha-fin')?.value || fechaInicio;
+      horaFin   = (document.getElementById('av-hora-fin')?.value || '') + ':00';
+      try {
+        const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${fechaInicio}T${horaInicio}`);
+        if (diff > 0) {
+          duracion = `${String(Math.floor(diff/3600000)).padStart(2,'0')}:${String(Math.floor((diff%3600000)/60000)).padStart(2,'0')}:00`;
+        }
+      } catch(e) {}
+    }
+
+    const averia = {
+      id, id_activo: id_activo || `${almacen}-${zona}-${linea}-${equipoText}`,
+      fecha_inicio: fechaInicio, hora_inicio: horaInicio,
+      descripcion:  desc,
+      tecnico:      document.getElementById('av-tecnico').value,
+      tipo:         document.getElementById('av-tipo').value,
+      criticidad, estado, almacen, zona, linea, equipo: equipoText,
+      fecha_fin: fechaFin, hora_fin: horaFin, solucion, materiales, coste, duracion,
+    };
+    await DataService.saveAveria(averia);
+    Modal.close();
+    toast(`Avería ${id} ${cerrarAhora ? 'cerrada' : 'registrada'} ✓`, 'success');
+    App.updateBadges();
+    await AveriasPage.render();
+  },
+
+  async openClose(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    const now = new Date();
+    const today = now.toISOString().slice(0,10);
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+
+    // Load stock for this almacén
+    const productos = a.almacen ? await DataService.getProductosByAlmacen(a.almacen) : [];
+    const prodOptsHtml = productos.length > 0
+      ? productos.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)}${p.familia ? ' — '+UI.esc(p.familia) : ''} (${p.unidades} uds)</option>`).join('')
+      : '<option value="" disabled>Sin stock disponible en este almacén</option>';
+
+    Modal.open(`Cerrar avería`, `
+      <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--red)">
+        <strong>${UI.esc(a.equipo || a.id_activo)}</strong> · ${UI.esc(a.almacen)} · ${UI.esc(a.zona)}<br>
+        <span style="color:var(--gray-muted)">${UI.esc(a.descripcion)}</span>
+      </div>
+      <form id="close-form" class="form-grid">
+        <div class="form-field full">
+          <label>Solución aplicada *</label>
+          <textarea class="form-input" id="cl-solucion" rows="2" required placeholder="Describe qué se hizo para resolver la avería..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Fecha fin</label>
+          <input class="form-input" type="date" id="cl-fecha" value="${today}">
+        </div>
+        <div class="form-field">
+          <label>Hora fin</label>
+          <input class="form-input" type="time" id="cl-hora" value="${hh}:${mm}">
+        </div>
+        <div class="form-field full" id="cl-dur-preview" style="font-size:12px;color:var(--gray-muted)"></div>
+
+        <!-- REPUESTOS USADOS -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="font-weight:600">Repuestos del inventario utilizados</label>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <select class="form-input" id="cl-prod-sel" style="flex:1">
+              <option value="">Seleccionar repuesto...</option>
+              ${prodOptsHtml}
+            </select>
+            <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:70px" placeholder="Uds">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
+          </div>
+          <div id="cl-repuestos-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+
+        <!-- MATERIALES LIBRES + COSTE -->
+        <div class="form-field full">
+          <label>Otros materiales (texto libre)</label>
+          <input class="form-input" id="cl-materiales" placeholder="Ej: tornillos M8, pasta térmica...">
+        </div>
+        <div class="form-field">
+          <label>Coste total materiales (€)</label>
+          <input class="form-input" type="number" id="cl-coste" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" style="background:var(--green)" onclick="AveriasPage._saveClose('${UI.esc(id)}')">✓ Confirmar cierre</button>`);
+
+    // Store repuestos in memory
+    AveriasPage._repuestosSeleccionados = [];
+
+    // Live duration preview
+    const updateDur = () => {
+      const f = document.getElementById('cl-fecha').value;
+      const h = document.getElementById('cl-hora').value;
+      const el = document.getElementById('cl-dur-preview');
+      if (!el || !f || !h || !a.fecha_inicio || !a.hora_inicio) return;
+      try {
+        const diff = new Date(`${f}T${h}`) - new Date(`${a.fecha_inicio}T${a.hora_inicio}`);
+        if (diff > 0) {
+          const hrs = Math.floor(diff/3600000);
+          const min = Math.floor((diff%3600000)/60000);
+          el.textContent = `⏱ Duración estimada: ${hrs}h ${min}m`;
+        }
+      } catch(e) {}
+    };
+    document.getElementById('cl-fecha').addEventListener('change', updateDur);
+    document.getElementById('cl-hora').addEventListener('change', updateDur);
+    updateDur();
+    // Store almacen for deduction
+    AveriasPage._closeAlmacen = a.almacen || '';
+    AveriasPage._productosCache = productos;
+  },
+
+  _repuestosSeleccionados: [],
+  _closeAlmacen: '',
+  _productosCache: [],
+
+  _addRepuesto() {
+    const sel = document.getElementById('cl-prod-sel');
+    const cod = sel.value;
+    if (!cod) { toast('Selecciona un repuesto', 'error'); return; }
+    const qty = parseInt(document.getElementById('cl-prod-qty').value) || 1;
+    if (qty < 1) { toast('La cantidad debe ser mayor que 0', 'error'); return; }
+    const prod = AveriasPage._productosCache.find(p => p.cod_producto === cod);
+    if (!prod) return;
+    // If already in list, increase quantity
+    const existing = AveriasPage._repuestosSeleccionados.find(r => r.cod_producto === cod);
+    if (existing) { existing.cantidad += qty; }
+    else { AveriasPage._repuestosSeleccionados.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: AveriasPage._closeAlmacen }); }
+    AveriasPage._renderRepuestosList();
+    document.getElementById('cl-prod-sel').value = '';
+    document.getElementById('cl-prod-qty').value = 1;
+  },
+
+  _renderRepuestosList() {
+    const el = document.getElementById('cl-repuestos-list');
+    if (!el) return;
+    if (AveriasPage._repuestosSeleccionados.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = AveriasPage._repuestosSeleccionados.map((r, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
+        <span style="flex:1"><strong>[${UI.esc(r.cod_producto)}]</strong> ${UI.esc(r.nombre)}</span>
+        <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${r.cantidad} uds</span>
+        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="AveriasPage._removeRepuesto(${i})">×</button>
+      </div>`).join('');
+  },
+
+  _removeRepuesto(index) {
+    AveriasPage._repuestosSeleccionados.splice(index, 1);
+    AveriasPage._renderRepuestosList();
+  },
+
+  async _saveClose(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    const solucion = document.getElementById('cl-solucion').value.trim();
+    if (!solucion) { toast('La solución es obligatoria', 'error'); return; }
+    const fechaFin = document.getElementById('cl-fecha').value;
+    const horaFin  = document.getElementById('cl-hora').value + ':00';
+    let duracion = '';
+    if (a.fecha_inicio && a.hora_inicio && fechaFin) {
+      try {
+        const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${a.fecha_inicio}T${a.hora_inicio}`);
+        if (diff > 0) {
+          const h = Math.floor(diff/3600000);
+          const m = Math.floor((diff%3600000)/60000);
+          duracion = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+        }
+      } catch(e) {}
+    }
+
+    // Build materiales string from repuestos + free text
+    const repuestosStr = AveriasPage._repuestosSeleccionados
+      .map(r => `${r.nombre} (${r.cantidad} uds)`).join(', ');
+    const materialesLibres = document.getElementById('cl-materiales').value.trim();
+    const materialesCombinados = [repuestosStr, materialesLibres].filter(Boolean).join(' | ');
+
+    await DataService.saveAveria({
+      ...a, estado:'Cerrada', solucion,
+      materiales: materialesCombinados,
+      coste: parseFloat(document.getElementById('cl-coste').value) || 0,
+      fecha_fin: fechaFin, hora_fin: horaFin, duracion,
+    });
+
+    // Deduct stock
+    if (AveriasPage._repuestosSeleccionados.length > 0) {
+      const user = UserService.getUser();
+      await DataService.deductStock(
+        AveriasPage._repuestosSeleccionados,
+        id,
+        user?.nombre || ''
+      );
+    }
+
+    Modal.close();
+    toast('Avería cerrada correctamente ✓', 'success');
+    App.updateBadges();
+    await AveriasPage.render();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: INCIDENCIAS
+// ═══════════════════════════════════════════════════════════════════
+const IncidenciasPage = {
+  _data: [],
+  _filtered: [],
+
+  async render() {
+    const almacen = getAlmacenFilter();
+    const canConvert = UserService.canConvertIncidencia();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Incidencias</h1><p class="page-subtitle" id="inc-count">Cargando...</p></div>
+      <button class="btn btn-primary" onclick="IncidenciasPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva incidencia
+      </button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <input type="search" class="search-box" id="inc-search" placeholder="Buscar descripción, equipo...">
+        <select class="filter-select" id="inc-f-almacen">
+          <option value="">Todos los almacenes</option>
+          <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
+        </select>
+        <select class="filter-select" id="inc-f-estado">
+          <option value="">Todos los estados</option>
+          <option>Abierta</option><option>En curso</option><option>Cerrada</option>
+        </select>
+        <select class="filter-select" id="inc-f-tipo">
+          <option value="">Todos los tipos</option>
+          <option>Productividad</option><option>Seguridad</option><option>Calidad</option><option>Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table-clickable">
+          <thead><tr>
+            <th>Fecha</th><th>Almacén</th><th>Zona</th><th>Tipo</th>
+            <th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Reportado por</th>
+          </tr></thead>
+          <tbody id="inc-tbody">${UI.loading()}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+    const almacenFilter = document.getElementById('inc-f-almacen');
+    if (almacen) {
+      almacenFilter.value = almacen;
+      almacenFilter.disabled = true;
+      almacenFilter.title = 'Solo puedes ver tu centro';
+    }
+
+    this._data = await DataService.getIncidencias(almacen ? { almacen } : {});
+    this._filtered = [...this._data];
+    this._renderTable();
+    const abiertas = this._data.filter(i => i.estado === 'Abierta' || i.estado === 'En curso').length;
+    document.getElementById('inc-count').textContent = `${this._data.length} incidencias — ${abiertas} activas`;
+
+    ['inc-search','inc-f-almacen','inc-f-estado','inc-f-tipo'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _applyFilters() {
+    const search = document.getElementById('inc-search')?.value.toLowerCase() || '';
+    const almacen = document.getElementById('inc-f-almacen')?.value || '';
+    const estado  = document.getElementById('inc-f-estado')?.value || '';
+    const tipo    = document.getElementById('inc-f-tipo')?.value || '';
+    this._filtered = this._data.filter(i =>
+      (!almacen || i.almacen === almacen) &&
+      (!estado  || i.estado === estado) &&
+      (!tipo    || i.tipo === tipo) &&
+      (!search  || (i.descripcion||'').toLowerCase().includes(search) ||
+                   (i.equipo||'').toLowerCase().includes(search) ||
+                   (i.reportado_por||'').toLowerCase().includes(search))
+    );
+    document.getElementById('inc-count').textContent = `${this._filtered.length} de ${this._data.length}`;
+    this._renderTable();
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('inc-tbody');
+    if (!tbody) return;
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin incidencias','Prueba a cambiar los filtros o crea una nueva')}</td></tr>`; return; }
+    tbody.innerHTML = this._filtered.map(i => `
+      <tr onclick="IncidenciasPage.openDetail('${UI.esc(i.id)}')">
+        <td style="white-space:nowrap">${UI.formatDate(i.fecha_registro)}</td>
+        <td>${UI.esc(i.almacen||'—')}</td>
+        <td>${UI.esc(i.zona||'—')}</td>
+        <td><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></td>
+        <td class="col-truncate" style="max-width:240px">${UI.esc(i.descripcion||'—')}</td>
+        <td>${UI.criticidadBadge(i.prioridad)}</td>
+        <td>${UI.estadoBadge(i.estado)}</td>
+        <td>${UI.esc(i.reportado_por||'—')}</td>
+      </tr>`).join('');
+  },
+
+  async openDetail(id) {
+    const i = await db.incidencias.get(id);
+    if (!i) return;
+    const canConvert = UserService.canConvertIncidencia() && i.estado !== 'Cerrada';
+    const canClose = i.estado !== 'Cerrada';
+    Modal.open(`Incidencia`, `
+      <div class="detail-grid">
+        <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(i.estado)}</p></div>
+        <div class="detail-field"><label>Prioridad</label><p>${UI.criticidadBadge(i.prioridad)}</p></div>
+        <div class="detail-field"><label>Fecha registro</label><p>${UI.formatDate(i.fecha_registro)} ${i.hora_registro||''}</p></div>
+        <div class="detail-field"><label>Tipo</label><p><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></p></div>
+        <div class="detail-field"><label>Almacén</label><p>${UI.esc(i.almacen||'—')}</p></div>
+        <div class="detail-field"><label>Zona / Línea</label><p>${UI.esc(i.zona||'—')}${i.linea?' · L'+i.linea:''}</p></div>
+        <div class="detail-field"><label>Equipo</label><p>${UI.esc(i.equipo||'—')}</p></div>
+        <div class="detail-field"><label>Reportado por</label><p>${UI.esc(i.reportado_por||'—')}</p></div>
+        <div class="detail-field"><label>Responsable</label><p>${UI.esc(i.responsable||'—')}</p></div>
+        <div class="detail-field full"><label>Descripción</label><p>${UI.esc(i.descripcion||'—')}</p></div>
+        ${i.solucion ? `<div class="detail-field full"><label>Resolución</label><p>${UI.esc(i.solucion)}</p></div>` : ''}
+        ${i.observaciones ? `<div class="detail-field full"><label>Observaciones</label><p>${UI.esc(i.observaciones)}</p></div>` : ''}
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">✓ Resolver</button>` : ''}
+       ${canConvert ? `<button class="btn btn-primary" style="background:var(--red)" onclick="IncidenciasPage.convertirEnAveria('${UI.esc(id)}')">⚡ Convertir en avería</button>` : ''}`);
+  },
+
+  async openNew() {
+    const user = UserService.getUser();
+    const tecnicos = await DataService.getTecnicos(true);
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const userAlmacen = UserService.getEffectiveAlmacen() || user?.almacen || '';
+    const almacenLocked = !!UserService.getEffectiveAlmacen();
+    const now = new Date();
+    const today = now.toISOString().slice(0,10);
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+
+    Modal.open('Nueva incidencia', `
+      <form id="inc-form" class="form-grid">
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="inc-almacen" required ${almacenLocked ? 'disabled' : ''}>
+            <option value="">Seleccionar...</option>
+            ${almacenes.map(a=>`<option${userAlmacen===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Zona</label>
+          <select class="form-input" id="inc-zona" ${almacenLocked ? '' : 'disabled'}>
+            <option value="">Selecciona almacén</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Línea</label>
+          <select class="form-input" id="inc-linea" disabled>
+            <option value="">Selecciona zona</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Equipo</label>
+          <select class="form-input" id="inc-equipo" disabled>
+            <option value="">Selecciona línea</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Tipo incidencia *</label>
+          <select class="form-input" id="inc-tipo" required>
+            <option value="">Seleccionar...</option>
+            <option>Productividad</option><option>Seguridad</option><option>Calidad</option><option>Otro</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Prioridad *</label>
+          <select class="form-input" id="inc-prioridad" required>
+            <option value="">Seleccionar...</option>
+            <option>Alta</option><option selected>Media</option><option>Baja</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Descripción *</label>
+          <textarea class="form-input" id="inc-desc" rows="3" required placeholder="Describe la incidencia detectada..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Reportado por</label>
+          <select class="form-input" id="inc-reportado">
+            <option value="">Sin especificar</option>
+            ${tecnicos.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Responsable</label>
+          <select class="form-input" id="inc-responsable">
+            <option value="">Sin asignar</option>
+            ${tecnicos.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fecha</label>
+          <input class="form-input" type="date" id="inc-fecha" value="${today}">
+        </div>
+        <div class="form-field">
+          <label>Hora</label>
+          <input class="form-input" type="time" id="inc-hora" value="${hh}:${mm}">
+        </div>
+        <div class="form-field full">
+          <label>Observaciones</label>
+          <textarea class="form-input" id="inc-obs" rows="2" placeholder="Información adicional..."></textarea>
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="IncidenciasPage._saveNew()">Registrar incidencia</button>`);
+
+    // Cascade: almacén → zona → línea → equipo
+    const almEl   = document.getElementById('inc-almacen');
+    const zonaEl  = document.getElementById('inc-zona');
+    const lineaEl = document.getElementById('inc-linea');
+    const equipEl = document.getElementById('inc-equipo');
+    almEl.addEventListener('change', async () => {
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
+      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!almEl.value) { zonaEl.disabled = true; return; }
+      const zs = await DataService.getZonasByAlmacen(almEl.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
+      zonaEl.disabled = false;
+    });
+    zonaEl.addEventListener('change', async () => {
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!zonaEl.value) { lineaEl.disabled = true; return; }
+      const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
+      lineaEl.disabled = false;
+    });
+    lineaEl.addEventListener('change', async () => {
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>';
+      if (!lineaEl.value) { equipEl.disabled = true; return; }
+      const eq = await DataService.getEquiposByAlmacenZonaLinea(almEl.value, zonaEl.value, lineaEl.value);
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option>${UI.esc(e.equipo)}</option>`).join('');
+      equipEl.disabled = false;
+    });
+    if (almEl.value) almEl.dispatchEvent(new Event('change'));
+  },
+
+  async _saveNew() {
+    const almacen    = document.getElementById('inc-almacen').value;
+    const zona       = document.getElementById('inc-zona').value;
+    const linea      = document.getElementById('inc-linea').value;
+    const equipoOpt  = document.getElementById('inc-equipo');
+    const equipo     = equipoOpt.options[equipoOpt.selectedIndex]?.text || '';
+    const tipo       = document.getElementById('inc-tipo').value;
+    const prioridad  = document.getElementById('inc-prioridad').value;
+    const desc       = document.getElementById('inc-desc').value.trim();
+    if (!almacen) { toast('Selecciona el almacén', 'error'); return; }
+    if (!tipo)    { toast('Selecciona el tipo', 'error'); return; }
+    if (!desc)    { toast('La descripción es obligatoria', 'error'); return; }
+
+    const now = new Date();
+    const id = `INC-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    await DataService.saveIncidencia({
+      id, almacen, zona, linea,
+      equipo: equipo === 'Selecciona línea' ? '' : equipo,
+      tipo, prioridad, descripcion: desc,
+      estado: 'Abierta',
+      fecha_registro: document.getElementById('inc-fecha').value,
+      hora_registro: document.getElementById('inc-hora').value + ':00',
+      reportado_por: document.getElementById('inc-reportado').value,
+      responsable: document.getElementById('inc-responsable').value,
+      observaciones: document.getElementById('inc-obs').value.trim(),
+      fecha_resolucion: '', solucion: '', id_activo: '',
+    });
+    Modal.close();
+    toast(`Incidencia ${id} registrada ✓`, 'success');
+    App.updateBadges();
+    await IncidenciasPage.render();
+  },
+
+  async openClose(id) {
+    const i = await db.incidencias.get(id);
+    if (!i) return;
+    const tecnicos = await DataService.getTecnicos(true);
+    const today = new Date().toISOString().slice(0,10);
+    Modal.open('Resolver incidencia', `
+      <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--orange)">
+        <strong>${UI.esc(i.equipo||i.zona||i.almacen)}</strong> · ${UI.esc(i.almacen)} · <span class="badge badge-blue">${UI.esc(i.tipo)}</span><br>
+        <span style="color:var(--gray-muted)">${UI.esc(i.descripcion)}</span>
+      </div>
+      <form class="form-grid">
+        <div class="form-field full">
+          <label>Solución / resolución *</label>
+          <textarea class="form-input" id="incl-sol" rows="3" required placeholder="Qué se hizo para resolver la incidencia..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Responsable de resolución</label>
+          <select class="form-input" id="incl-resp">
+            <option value="">Sin especificar</option>
+            ${tecnicos.map(t=>`<option${t.nombre===i.responsable?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fecha resolución</label>
+          <input class="form-input" type="date" id="incl-fecha" value="${today}">
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" style="background:var(--green)" onclick="IncidenciasPage._saveClose('${UI.esc(id)}')">✓ Marcar resuelta</button>`);
+  },
+
+  async _saveClose(id) {
+    const i = await db.incidencias.get(id);
+    if (!i) return;
+    const solucion = document.getElementById('incl-sol').value.trim();
+    if (!solucion) { toast('La solución es obligatoria', 'error'); return; }
+    await DataService.saveIncidencia({
+      ...i, estado: 'Cerrada', solucion,
+      responsable: document.getElementById('incl-resp').value || i.responsable,
+      fecha_resolucion: document.getElementById('incl-fecha').value,
+    });
+    Modal.close();
+    toast('Incidencia resuelta ✓', 'success');
+    App.updateBadges();
+    await IncidenciasPage.render();
+  },
+
+  async convertirEnAveria(id) {
+    const i = await db.incidencias.get(id);
+    if (!i) return;
+    if (!confirm(`¿Convertir esta incidencia en avería?\nSe abrirá el formulario de nueva avería con los datos prellenados.\nLa incidencia quedará marcada "En curso".`)) return;
+    Modal.close();
+    await DataService.saveIncidencia({ ...i, estado: 'En curso' });
+
+    // Guardar los datos de prefill — openNew() los leerá y aplicará con polling fiable
+    const tipoMap = { 'Productividad':'Productividad', 'Seguridad':'Seguridad', 'Calidad':'Calidad' };
+    const critMap = { 'Alta':'Alta', 'Media':'Moderada', 'Baja':'Baja' };
+    AveriasPage._prefillFromIncidencia = {
+      almacen:    i.almacen || '',
+      zona:       i.zona || '',
+      descripcion: `[Incidencia ${id}] ${i.descripcion || ''}`.trim(),
+      tipo:       tipoMap[i.tipo] || '',
+      criticidad: critMap[i.prioridad] || '',
+    };
+    await AveriasPage.openNew();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: INVENTARIO
+// ═══════════════════════════════════════════════════════════════════
+const InventarioPage = {
+  _allData: [],
+
+  async render() {
+    const userAlmacen  = UserService.getEffectiveAlmacen();
+    const almacenLocked = !!userAlmacen;
+    const canManage    = UserService.canMoveInventario();
+    const almacenes    = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+
+    // Cargar TODO el inventario — el filtrado y la agregación se hacen en JS
+    this._allData = await db.inventario.toArray();
+    const tipos    = [...new Set(this._allData.map(i => i.tipo).filter(Boolean))].sort();
+    const familias = [...new Set(this._allData.map(i => i.familia).filter(Boolean))].sort();
+
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Inventario</h1><p class="page-subtitle" id="inv-subtitle">Cargando...</p></div>
+      ${canManage ? `<button class="btn btn-primary" onclick="InventarioPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Añadir al inventario
+      </button>` : ''}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap;gap:10px">
+        <!-- Selector de almacén: elemento principal de la vista -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:600;white-space:nowrap">Centro:</span>
+          <select class="filter-select" id="inv-almacen-sel" style="font-weight:600" ${almacenLocked ? 'disabled title="Solo puedes ver tu centro"' : ''}>
+            ${!almacenLocked ? '<option value="">Todos los almacenes</option>' : ''}
+            ${almacenes.map(a => `<option${userAlmacen === a ? ' selected' : ''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <input type="search" class="search-box" id="inv-search" placeholder="Buscar código, producto, familia...">
+        <select class="filter-select" id="inv-f-tipo">
+          <option value="">Todos los tipos</option>
+          ${tipos.map(t => `<option>${UI.esc(t)}</option>`).join('')}
+        </select>
+        <select class="filter-select" id="inv-f-familia">
+          <option value="">Todas las familias</option>
+          ${familias.map(f => `<option>${UI.esc(f)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead id="inv-thead"></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+
+    this._applyFilters();
+
+    ['inv-almacen-sel','inv-search','inv-f-tipo','inv-f-familia'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input',  () => this._applyFilters());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _applyFilters() {
+    const almacen = document.getElementById('inv-almacen-sel')?.value || '';
+    const search  = (document.getElementById('inv-search')?.value  || '').toLowerCase();
+    const tipo    = document.getElementById('inv-f-tipo')?.value    || '';
+    const familia = document.getElementById('inv-f-familia')?.value || '';
+    const todosMode = !almacen;
+
+    // Filtrado base (tipo/familia/búsqueda aplican en ambos modos)
+    const base = this._allData.filter(i =>
+      (!almacen || normalizeAlmacen(i.almacen) === normalizeAlmacen(almacen)) &&
+      (!tipo    || i.tipo    === tipo) &&
+      (!familia || i.familia === familia) &&
+      (!search  || (i.producto    || '').toLowerCase().includes(search) ||
+                   (i.cod_producto|| '').toLowerCase().includes(search) ||
+                   (i.familia     || '').toLowerCase().includes(search))
+    );
+
+    let display;
+    if (todosMode) {
+      // Agrupar por cod_producto y sumar unidades, guardando desglose por centro
+      const map = {};
+      base.forEach(i => {
+        const cod = i.cod_producto;
+        if (!map[cod]) map[cod] = { ...i, unidades: 0, _porCentro: {} };
+        map[cod].unidades += (i.unidades || 0);
+        const c = normalizeAlmacen(i.almacen);
+        map[cod]._porCentro[c] = (map[cod]._porCentro[c] || 0) + (i.unidades || 0);
+      });
+      display = Object.values(map).sort((a, b) => (a.cod_producto||'').localeCompare(b.cod_producto||''));
+    } else {
+      display = base.sort((a, b) => (a.cod_producto||'').localeCompare(b.cod_producto||''));
+    }
+
+    // Cabecera dinámica
+    const thead = document.getElementById('inv-thead');
+    if (thead) thead.innerHTML = `<tr>
+      <th>Cód. Producto</th><th>Producto</th><th>Tipo</th><th>Familia</th>
+      ${todosMode ? '<th>Por centro</th>' : ''}
+      <th style="text-align:right">Unidades</th>
+    </tr>`;
+
+    // Subtítulo
+    const totalUds = display.reduce((s, i) => s + (i.unidades || 0), 0);
+    const centroLabel = almacen || 'todos los centros';
+    document.getElementById('inv-subtitle').textContent =
+      `${display.length} referencias en ${centroLabel} · ${totalUds} uds en stock`;
+
+    document.getElementById('inv-tbody').innerHTML = this._rows(display, todosMode);
+  },
+
+  _rows(arr, todosMode = false) {
+    const cols = todosMode ? 6 : 5;
+    if (arr.length === 0) return `<tr><td colspan="${cols}">${UI.empty()}</td></tr>`;
+    return arr.map(i => {
+      const udsColor = i.unidades <= 0 ? 'var(--red)' : i.unidades <= 2 ? 'var(--orange)' : 'var(--gray-text)';
+      const desglose = todosMode && i._porCentro
+        ? Object.entries(i._porCentro)
+            .filter(([, v]) => v > 0)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([k, v]) => `<span style="font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px;margin-right:3px;white-space:nowrap">${k}: <strong>${v}</strong></span>`)
+            .join('')
+        : '';
+      return `<tr>
+        <td style="font-family:monospace;font-size:12px">${UI.esc(i.cod_producto||'—')}</td>
+        <td style="font-weight:500">${UI.esc(i.producto||'—')}</td>
+        <td>${UI.esc(i.tipo||'—')}</td>
+        <td>${UI.esc(i.familia||'—')}</td>
+        ${todosMode ? `<td>${desglose || '—'}</td>` : ''}
+        <td style="text-align:right;font-weight:600;color:${udsColor}">${i.unidades}</td>
+      </tr>`;
+    }).join('');
+  },
+
+  async openNew() {
+    const userAlmacen = UserService.getEffectiveAlmacen();
+    const almacenLocked = !!userAlmacen;
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+
+    // Cargar listas para datalist desde el inventario (no del catálogo de productos)
+    const allInv   = await db.inventario.toArray();
+    const allProds = await DataService.getAllProductos();
+    const tipos    = [...new Set(allInv.map(i => i.tipo).filter(Boolean))].sort();
+    const familias = [...new Set(allInv.map(i => i.familia).filter(Boolean))].sort();
+    const uds_medida = [...new Set(allInv.map(i => i.unidad_medida).filter(Boolean))].sort();
+
+    Modal.open('Añadir al inventario', `
+      <form id="inv-new-form" class="form-grid">
+
+        <!-- PASO 1: Código -->
+        <div class="form-field full">
+          <label>Cód. Producto *</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="form-input" id="inv-cod" placeholder="Ej: P0042" style="flex:1;font-family:monospace;text-transform:uppercase" autocomplete="off" list="inv-cod-list">
+            <datalist id="inv-cod-list">${allProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('')}</datalist>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="InventarioPage._lookupCod()">Buscar</button>
+          </div>
+          <div id="inv-lookup-msg" style="font-size:12px;margin-top:5px;padding:6px 10px;border-radius:6px;display:none"></div>
+        </div>
+
+        <!-- PASO 2: Datos del producto -->
+        <div class="form-field full">
+          <label>Nombre del producto *</label>
+          <input class="form-input" id="inv-nombre" placeholder="Nombre del producto">
+        </div>
+        <div class="form-field">
+          <label>Tipo Consumible</label>
+          <input class="form-input" id="inv-tipo" list="inv-tipos-list" placeholder="Ej: Rodamiento">
+          <datalist id="inv-tipos-list">${tipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}</datalist>
+        </div>
+        <div class="form-field">
+          <label>Familia</label>
+          <input class="form-input" id="inv-familia" list="inv-familias-list" placeholder="Ej: Transmisión">
+          <datalist id="inv-familias-list">${familias.map(f=>`<option>${UI.esc(f)}</option>`).join('')}</datalist>
+        </div>
+        <div class="form-field">
+          <label>Unidad de medida</label>
+          <input class="form-input" id="inv-udmedida" list="inv-udmedida-list" placeholder="Ej: Ud, m, kg...">
+          <datalist id="inv-udmedida-list">${uds_medida.map(u=>`<option>${UI.esc(u)}</option>`).join('')}</datalist>
+        </div>
+
+        <!-- PASO 3: Sitio y stock -->
+        <div style="height:1px;background:var(--border);grid-column:1/-1;margin:4px 0"></div>
+        <div class="form-field">
+          <label>Sitio *</label>
+          <select class="form-input" id="inv-almacen" required ${almacenLocked ? 'disabled' : ''}>
+            <option value="">Seleccionar...</option>
+            ${almacenes.map(a => `<option${userAlmacen === a ? ' selected' : ''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Unidades *</label>
+          <input class="form-input" type="number" id="inv-uds" min="0" step="1" value="0" required>
+        </div>
+
+        <!-- Mensaje de duplicado -->
+        <div id="inv-dup-msg" style="display:none;grid-column:1/-1;background:#fff8e1;border:1.5px solid var(--orange);border-radius:8px;padding:10px 14px;font-size:13px">
+          <strong>⚠ Este producto ya existe en este sitio</strong>
+          <span id="inv-dup-uds"></span><br>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
+            <input type="radio" name="inv-mode" value="replace" checked> Reemplazar las unidades existentes
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <input type="radio" name="inv-mode" value="add"> Sumar a las unidades existentes
+          </label>
+        </div>
+
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="InventarioPage._saveNew()">Guardar</button>`);
+
+    // Auto-lookup al cambiar el código
+    document.getElementById('inv-cod').addEventListener('change', () => InventarioPage._lookupCod());
+    // Comprueba duplicado al cambiar sitio
+    document.getElementById('inv-almacen').addEventListener('change', () => InventarioPage._checkDuplicate());
+  },
+
+  // Busca el código en inventario (datos reales) y rellena los campos del formulario
+  async _lookupCod() {
+    const cod = (document.getElementById('inv-cod')?.value || '').trim().toUpperCase();
+    document.getElementById('inv-cod').value = cod;
+    const msg = document.getElementById('inv-lookup-msg');
+    if (!cod) { msg.style.display = 'none'; return; }
+
+    // Buscar en inventario existente (tiene tipo_consumible y unidad_medida reales)
+    const allInv = await db.inventario.toArray();
+    const sample = allInv.find(i => i.cod_producto === cod);
+    if (sample) {
+      document.getElementById('inv-nombre').value   = sample.producto      || '';
+      document.getElementById('inv-tipo').value     = sample.tipo          || '';
+      document.getElementById('inv-familia').value  = sample.familia       || '';
+      document.getElementById('inv-udmedida').value = sample.unidad_medida || '';
+      ['inv-nombre','inv-tipo','inv-familia','inv-udmedida'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.readOnly = true; el.style.background = 'var(--bg)'; el.style.color = 'var(--gray-muted)'; }
+      });
+      msg.style.display = '';
+      msg.style.background = '#e8f5e9'; msg.style.color = '#2e7d32';
+      msg.textContent = `✓ Producto encontrado: "${sample.producto}"`;
+    } else {
+      ['inv-nombre','inv-tipo','inv-familia','inv-udmedida'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.readOnly = false; el.style.background = ''; el.style.color = ''; el.value = ''; }
+      });
+      msg.style.display = '';
+      msg.style.background = '#fff8e1'; msg.style.color = '#e65100';
+      msg.textContent = `⚠ Código nuevo — se añadirá al catálogo al guardar.`;
+    }
+    await this._checkDuplicate();
+  },
+
+  // Avisa si ya existe ese código en el almacén seleccionado
+  async _checkDuplicate() {
+    const cod = (document.getElementById('inv-cod')?.value || '').trim();
+    const alm = document.getElementById('inv-almacen')?.value || '';
+    const dupMsg = document.getElementById('inv-dup-msg');
+    if (!cod || !alm) { dupMsg.style.display = 'none'; return; }
+    const normAlm = normalizeAlmacen(alm);
+    const all = await db.inventario.toArray();
+    const match = all.find(i => i.cod_producto === cod && normalizeAlmacen(i.almacen) === normAlm);
+    if (match) {
+      document.getElementById('inv-dup-uds').textContent = ` (actualmente: ${match.unidades} uds)`;
+      dupMsg.style.display = '';
+    } else {
+      dupMsg.style.display = 'none';
+    }
+  },
+
+  async _saveNew() {
+    const cod          = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
+    const nombre       = (document.getElementById('inv-nombre')?.value   || '').trim();
+    const tipo         = (document.getElementById('inv-tipo')?.value     || '').trim();
+    const familia      = (document.getElementById('inv-familia')?.value  || '').trim();
+    const unidad_medida= (document.getElementById('inv-udmedida')?.value || '').trim();
+    const almacen      = document.getElementById('inv-almacen')?.value   || '';
+    const uds          = parseInt(document.getElementById('inv-uds')?.value) || 0;
+    const modeEl       = document.querySelector('input[name="inv-mode"]:checked');
+    const mode         = modeEl ? modeEl.value : 'replace';
+
+    if (!cod)    { toast('El código de producto es obligatorio', 'error'); return; }
+    if (!nombre) { toast('El nombre del producto es obligatorio', 'error'); return; }
+    if (!almacen){ toast('Selecciona el sitio', 'error'); return; }
+    if (uds < 0) { toast('Las unidades no pueden ser negativas', 'error'); return; }
+
+    const result = await DataService.saveInventarioEntry({
+      cod_producto: cod, producto: nombre, tipo, familia, unidad_medida,
+      almacen, unidades: uds, mode,
+    });
+
+    Modal.close();
+    const accion = result.updated
+      ? (mode === 'add' ? `sumado → ${result.newUds} uds` : `actualizado a ${result.newUds} uds`)
+      : `añadido (${uds} uds)`;
+    toast(`${cod} ${accion} en ${almacen}`, 'success');
+    await InventarioPage.render();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: MOVIMIENTOS
+// ═══════════════════════════════════════════════════════════════════
+const MovimientosPage = {
+  _data: [],
+  _filtered: [],
+
+  async render() {
+    const almacenGlobal = getAlmacenFilter();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Movimientos</h1><p class="page-subtitle" id="mov-count">Cargando...</p></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <input type="search" class="search-box" id="mov-search" placeholder="Buscar código, producto, avería...">
+        <select class="filter-select" id="mov-f-almacen">
+          <option value="">Todos los almacenes</option>
+          <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
+        </select>
+        <select class="filter-select" id="mov-f-tipo">
+          <option value="">Entradas y salidas</option>
+          <option value="Entrada">Solo entradas</option>
+          <option value="Salida">Solo salidas</option>
+        </select>
+        <input type="date" class="filter-select" id="mov-f-desde" title="Desde">
+        <input type="date" class="filter-select" id="mov-f-hasta" title="Hasta">
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Fecha</th><th>Tipo</th><th>Cód. Producto</th><th>Producto</th>
+          <th>Almacén</th><th style="text-align:right">Cantidad</th><th>Usuario</th><th>Notas</th>
+        </tr></thead>
+        <tbody id="mov-tbody">${'<tr><td colspan="8">' + UI.loading() + '</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+    // Fijar filtro de almacén para no-Admin
+    const almacenFilter = document.getElementById('mov-f-almacen');
+    if (almacenGlobal) {
+      almacenFilter.value = almacenGlobal;
+      almacenFilter.disabled = true;
+      almacenFilter.title = 'Solo puedes ver datos de tu centro';
+    }
+
+    // Cargar todos los movimientos
+    this._data = (await db.movimientos.toArray()).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (b.id || '').localeCompare(a.id || ''));
+    this._applyFilters();
+
+    ['mov-search','mov-f-almacen','mov-f-tipo','mov-f-desde','mov-f-hasta'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input',  () => this._applyFilters());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _applyFilters() {
+    const search  = (document.getElementById('mov-search')?.value  || '').toLowerCase();
+    const almacen = document.getElementById('mov-f-almacen')?.value || '';
+    const tipo    = document.getElementById('mov-f-tipo')?.value    || '';
+    const desde   = document.getElementById('mov-f-desde')?.value  || '';
+    const hasta   = document.getElementById('mov-f-hasta')?.value  || '';
+
+    this._filtered = this._data.filter(m =>
+      (!almacen || normalizeAlmacen(m.almacen) === normalizeAlmacen(almacen)) &&
+      (!tipo    || m.tipo_movimiento === tipo) &&
+      (!desde   || (m.fecha || '') >= desde) &&
+      (!hasta   || (m.fecha || '') <= hasta) &&
+      (!search  || (m.cod_producto || '').toLowerCase().includes(search) ||
+                   (m.producto     || '').toLowerCase().includes(search) ||
+                   (m.notas        || '').toLowerCase().includes(search) ||
+                   (m.usuario      || '').toLowerCase().includes(search))
+    );
+
+    const entradas = this._filtered.filter(m => m.tipo_movimiento === 'Entrada').reduce((s, m) => s + Math.abs(m.cantidad || 0), 0);
+    const salidas  = this._filtered.filter(m => m.tipo_movimiento === 'Salida').reduce((s, m) => s + Math.abs(m.cantidad || 0), 0);
+    document.getElementById('mov-count').textContent =
+      `${this._filtered.length} movimientos — ${entradas} uds entradas · ${salidas} uds salidas`;
+    this._renderTable();
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('mov-tbody');
+    if (!tbody) return;
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty()}</td></tr>`; return; }
+    tbody.innerHTML = this._filtered.map(m => {
+      const esEntrada = m.tipo_movimiento === 'Entrada';
+      const cantStyle = esEntrada
+        ? 'color:var(--green);font-weight:600'
+        : 'color:var(--red);font-weight:600';
+      const cantText  = esEntrada ? `+${Math.abs(m.cantidad)}` : `-${Math.abs(m.cantidad)}`;
+      const tipoBadge = esEntrada
+        ? `<span class="badge badge-green">↑ Entrada</span>`
+        : `<span class="badge badge-red">↓ Salida</span>`;
+      return `<tr>
+        <td style="white-space:nowrap">${UI.formatDate(m.fecha)}</td>
+        <td>${tipoBadge}</td>
+        <td style="font-family:monospace;font-size:12px">${UI.esc(m.cod_producto || '—')}</td>
+        <td style="font-weight:500">${UI.esc(m.producto || '—')}</td>
+        <td>${UI.esc(m.almacen || '—')}</td>
+        <td style="text-align:right;${cantStyle}">${cantText}</td>
+        <td style="font-size:12px;color:var(--gray-muted)">${UI.esc(m.usuario || '—')}</td>
+        <td style="font-size:12px;color:var(--gray-muted)">${UI.esc(m.notas || '—')}</td>
+      </tr>`;
+    }).join('');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const ConfigPage = {
+  async render() {
+    const tecnicos = await DataService.getTecnicos();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header"><div><h1>Configuración</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div></div>
+    <div class="config-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Base de datos</span></div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Exporta todos los datos a JSON o importa un nuevo Excel.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-secondary" onclick="ConfigPage.exportData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar datos (JSON)
+          </button>
+          <button class="btn btn-secondary" onclick="ConfigPage.triggerReimport()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+            Reimportar desde Excel
+          </button>
+          <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
+          <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
+            Borrar todos los datos
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">👤 Técnicos (${tecnicos.length})</span></div>
+        <div class="table-wrap" style="max-height:300px;overflow-y:auto">
+          <table><thead><tr><th>Nombre</th><th>Rol</th><th>Almacén</th><th>Activo</th></tr></thead>
+          <tbody>${tecnicos.map(t => `<tr>
+            <td>${UI.esc(t.nombre)}</td>
+            <td><span class="badge ${t.rol==='Responsable'?'badge-orange':t.rol==='Admin'?'badge-red':'badge-green'}">${UI.esc(t.rol)}</span></td>
+            <td>${UI.esc(t.almacen)}</td>
+            <td>${t.activo ? '✅' : '⬜'}</td>
+          </tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+    </div>`;
+
+    document.getElementById('reimport-input')?.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await DataService.clearAll();
+      await App.runImport(file);
+    });
+  },
+
+  async exportData() {
+    const json = await DataService.exportJSON();
+    const blob = new Blob([json], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `GMAO_Deterra_${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('Datos exportados correctamente', 'success');
+  },
+
+  triggerReimport() {
+    document.getElementById('reimport-input')?.click();
+  },
+
+  async clearData() {
+    if (!confirm('¿Seguro que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) return;
+    await DataService.clearAll();
+    toast('Datos borrados. Recarga la app para importar de nuevo.', 'error');
+    setTimeout(() => location.reload(), 2000);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// USER SELECTION SCREEN
+// ═══════════════════════════════════════════════════════════════════
+const UserSelectScreen = {
+  _tecnicos: [],
+  _activeAlmacen: '',
+
+  async show() {
+    this._tecnicos = await DataService.getTecnicos(true);
+    this._renderTabs();
+    this._renderGrid();
+
+    document.getElementById('user-search').addEventListener('input', () => this._renderGrid());
+    App.showScreen('screen-users');
+  },
+
+  _renderTabs() {
+    const almacenes = ['', ...new Set(this._tecnicos.map(t => t.almacen).filter(Boolean))].sort();
+    document.getElementById('user-almacen-tabs').innerHTML = almacenes.map(a =>
+      `<div class="almacen-tab${!a ? ' active' : ''}" data-almacen="${a||''}" onclick="UserSelectScreen._filterAlmacen('${a}')">${a||'Todos'}</div>`
+    ).join('');
+  },
+
+  _filterAlmacen(a) {
+    this._activeAlmacen = a;
+    document.querySelectorAll('.almacen-tab').forEach(el => el.classList.toggle('active', el.dataset.almacen === a));
+    this._renderGrid();
+  },
+
+  _renderGrid() {
+    const search = document.getElementById('user-search')?.value.toLowerCase() || '';
+    const filtered = this._tecnicos.filter(t =>
+      (!this._activeAlmacen || t.almacen === this._activeAlmacen) &&
+      (!search || t.nombre.toLowerCase().includes(search))
+    );
+    document.getElementById('users-grid').innerHTML = filtered.map(t => `
+      <div class="user-card" data-rol="${UI.esc(t.rol)}" onclick="UserSelectScreen._select('${UI.esc(t.id)}')">
+        <div class="user-avatar">${(t.nombre||'?')[0].toUpperCase()}</div>
+        <span class="user-name">${UI.esc(t.nombre)}</span>
+        <span class="user-rol-badge rol-${t.rol}">${UI.esc(t.rol)}</span>
+        <span class="user-almacen-tag">${UI.esc(t.almacen)}</span>
+      </div>`).join('');
+  },
+
+  async _select(id) {
+    const t = await db.tecnicos.get(id);
+    if (!t) return;
+    UserService.login(t);
+    App.updateUserUI();
+    App.showScreen('screen-app');
+    // Inicializar el router SIEMPRE aquí — sin esto los clicks del sidebar
+    // no tienen event listeners y los menús no responden.
+    if (!Router._initialized) {
+      Router.init();
+      Router._initialized = true;
+    }
+    Router.navigate('averias');
+    await Router.handle();
+    App.updateBadges();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// APP — MAIN ORCHESTRATOR
+// ═══════════════════════════════════════════════════════════════════
+const App = {
+  async init() {
+    UserService.load();
+
+    // Check DB
+    const initialized = await DataService.isInitialized();
+
+    if (!initialized) {
+      this._initImportScreen();
+      this.showScreen('screen-import');
+      return;
+    }
+
+    if (!UserService.isLoggedIn()) {
+      await UserSelectScreen.show();
+      return;
+    }
+
+    // Already logged in — go to app
+    this.updateUserUI();
+    this.showScreen('screen-app');
+    Router.init();
+    Router._initialized = true;
+    Router.navigate('averias');
+    await Router.handle();
+    this.updateBadges();
+  },
+
+  showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  },
+
+  _initImportScreen() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) this.runImport(f); });
+    fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) this.runImport(f); });
+
+    document.getElementById('btn-continue').addEventListener('click', async () => {
+      await UserSelectScreen.show();
+    });
+  },
+
+  async runImport(file) {
+    document.getElementById('setup-step-1').style.display = 'none';
+    document.getElementById('setup-step-2').style.display = 'flex';
+    this.showScreen('screen-import');
+
+    try {
+      const stats = await ImportService.importExcel(file, (pct, msg) => {
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-msg').textContent = msg;
+      });
+
+      document.getElementById('setup-step-2').style.display = 'none';
+      document.getElementById('setup-step-3').style.display = 'flex';
+      document.getElementById('import-results').innerHTML = [
+        ['Activos', stats.activos], ['Averías', stats.averias],
+        ['Técnicos', stats.tecnicos], ['Productos', stats.productos],
+        ['Inventario', stats.inventario], ['Movimientos', stats.movimientos],
+      ].map(([label,n]) => `<div class="import-stat"><strong>${n}</strong><span>${label}</span></div>`).join('');
+
+      // Init router for continue button
+      if (!Router._initialized) {
+        Router.init();
+        Router._initialized = true;
+      }
+
+    } catch(err) {
+      console.error(err);
+      document.getElementById('progress-msg').textContent = '❌ Error: ' + err.message;
+      document.getElementById('progress-fill').style.background = 'var(--red)';
+    }
+  },
+
+  updateUserUI() {
+    const u = UserService.getUser();
+    if (!u) return;
+    const initial = UserService.getInitial();
+
+    // Sidebar
+    document.getElementById('sidebar-avatar').textContent = initial;
+    document.getElementById('sidebar-username').textContent = u.nombre;
+    document.getElementById('sidebar-userrole').textContent = u.rol + (u.almacen && u.almacen !== 'Todos' ? ' · ' + u.almacen : '');
+    document.getElementById('topbar-avatar').textContent = initial;
+    document.getElementById('topbar-username').textContent = u.nombre;
+
+    // Colorear avatar según rol
+    const avatarBg = { Admin:'var(--red)', Responsable:'var(--orange)', Mecanico:'var(--green)' };
+    const bg = avatarBg[u.rol] || 'var(--green)';
+    document.getElementById('sidebar-avatar').style.background = bg;
+    document.getElementById('topbar-avatar').style.background = bg;
+
+    // Filtro global de almacén: fijar al centro del usuario si no es Admin
+    const sel = document.getElementById('global-almacen-filter');
+    const eff = UserService.getEffectiveAlmacen();
+    if (eff) {
+      sel.value = eff;
+      sel.disabled = true;
+      sel.title = 'Solo puedes ver datos de tu centro';
+    } else {
+      sel.disabled = false;
+    }
+
+    // Ocultar Config a no-Admin
+    document.querySelectorAll('.nav-item[data-route="config"]').forEach(el => {
+      el.style.display = UserService.canManageConfig() ? '' : 'none';
+    });
+
+    // Mecánico solo ve el menú de Averías — ocultar el resto
+    const isMec = UserService.isMecanico();
+    ['dashboard','activos','incidencias','inventario','movimientos'].forEach(route => {
+      document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
+        el.style.display = isMec ? 'none' : '';
+      });
+    });
+
+    // Ocultar botones de gestión de activos a Mecánicos
+    document.querySelectorAll('[data-admin-only]').forEach(el => {
+      el.style.display = UserService.canManageActivos() ? '' : 'none';
+    });
+  },
+
+  async updateBadges() {
+    const alm = UserService.getEffectiveAlmacen();
+    let av = db.averias.where('estado').equals('Abierta');
+    let inc = db.incidencias.filter(i => i.estado === 'Abierta' || i.estado === 'En curso');
+    if (alm) {
+      const avArr = await db.averias.where('estado').equals('Abierta').and(a => (a.almacen||'').trim() === alm).count();
+      const incArr = await db.incidencias.filter(i => (i.estado==='Abierta'||i.estado==='En curso') && (i.almacen||'').trim()===alm).count();
+      const bAv = document.getElementById('badge-averias');
+      const bInc = document.getElementById('badge-incidencias');
+      if (bAv) { bAv.textContent = avArr; bAv.style.display = avArr > 0 ? '' : 'none'; }
+      if (bInc) { bInc.textContent = incArr; bInc.style.display = incArr > 0 ? '' : 'none'; }
+    } else {
+      const avArr = await db.averias.where('estado').equals('Abierta').count();
+      const incArr = await db.incidencias.filter(i => i.estado==='Abierta'||i.estado==='En curso').count();
+      const bAv = document.getElementById('badge-averias');
+      const bInc = document.getElementById('badge-incidencias');
+      if (bAv) { bAv.textContent = avArr; bAv.style.display = avArr > 0 ? '' : 'none'; }
+      if (bInc) { bInc.textContent = incArr; bInc.style.display = incArr > 0 ? '' : 'none'; }
+    }
+  },
+
+  switchUser() {
+    UserService.logout();
+    location.reload();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// ROUTE REGISTRATION
+// ═══════════════════════════════════════════════════════════════════
+Router.register('dashboard',  async () => DashboardPage.render());
+Router.register('activos',    async () => ActivosPage.render());
+Router.register('averias',    async () => AveriasPage.render());
+Router.register('incidencias',async () => IncidenciasPage.render());
+Router.register('inventario',  async () => InventarioPage.render());
+Router.register('movimientos', async () => MovimientosPage.render());
+Router.register('config',      async () => ConfigPage.render());
+
+// ═══════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>
