@@ -220,6 +220,53 @@ ul{list-style:none}
 /* ── CHARTS ROW ── */
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 @media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+
+/* ── RESPONSIVE MÓVIL ── */
+#hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-text);flex-shrink:0}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99}
+@media(max-width:768px){
+  :root{--sidebar-w:260px}
+  /* Sidebar como drawer lateral */
+  #sidebar{
+    position:fixed;top:0;left:0;height:100vh;z-index:100;
+    transform:translateX(-100%);transition:transform .25s ease;
+  }
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-overlay.open{display:block}
+  /* Main panel ocupa todo el ancho */
+  #main-panel{width:100%}
+  /* Topbar */
+  #hamburger{display:flex;align-items:center;justify-content:center}
+  #topbar{padding:0 14px;gap:10px}
+  #topbar-title{font-size:15px}
+  .topbar-username{display:none}
+  .almacen-select{font-size:12px;padding:5px 8px;max-width:130px}
+  /* Contenido */
+  #content{padding:14px}
+  /* KPIs en 2 columnas */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-value{font-size:28px}
+  /* Gráficos en columna */
+  .charts-row{grid-template-columns:1fr}
+  /* Filtros de tabla en columna */
+  .filter-bar{flex-direction:column;align-items:stretch;gap:8px}
+  .filter-bar input,.filter-bar select,.filter-select{width:100%;box-sizing:border-box}
+  /* Tabla con scroll horizontal */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:600px}
+  /* Cards de detalle */
+  .detail-grid{grid-template-columns:1fr 1fr}
+  /* Modal más ancho */
+  .modal-box{width:95vw;max-width:95vw;margin:10px auto}
+  /* Ocultar columnas menos importantes en tabla averías */
+  .col-truncate{max-width:120px}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .kpi-card{padding:14px 12px}
+  .kpi-value{font-size:24px}
+  .detail-grid{grid-template-columns:1fr}
+}
 .chart-wrap{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
 .chart-title{font-size:14px;font-weight:600;margin-bottom:16px}
 
@@ -444,7 +491,11 @@ select.form-input{cursor:pointer}
 
   <!-- MAIN PANEL -->
   <div id="main-panel">
+    <div id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
     <header id="topbar">
+      <button id="hamburger" onclick="toggleSidebar()" aria-label="Menú">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <span id="topbar-title">Dashboard</span>
       <select class="almacen-select" id="global-almacen-filter">
         <option value="">Todos los almacenes</option>
@@ -492,15 +543,24 @@ const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const SUPABASE_MAX_ROWS = 10000; // límite por defecto de PostgREST es 1000 — lo subimos aquí
+// Supabase limita a 1000 filas por petición (max_rows del servidor).
+// Esta función pagina automáticamente hasta traer todos los registros.
+async function fetchAll(tableName, query) {
+  const PAGE = 1000;
+  let all = [], from = 0;
+  while (true) {
+    const { data, error } = await query().range(from, from + PAGE - 1);
+    if (error) throw new Error(`[${tableName}.fetchAll] ${error.message}`);
+    all = all.concat(data || []);
+    if (!data || data.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
 
 function makeTable(tableName, pkField) {
   return {
-    toArray: async () => {
-      const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
-      if (error) throw new Error(`[${tableName}.toArray] ${error.message}`);
-      return data || [];
-    },
+    toArray: async () => fetchAll(tableName, () => sb.from(tableName).select('*')),
     get: async (id) => {
       const { data, error } = await sb.from(tableName).select('*').eq(pkField, id).maybeSingle();
       if (error) throw new Error(`[${tableName}.get] ${error.message}`);
@@ -529,12 +589,8 @@ function makeTable(tableName, pkField) {
     },
     where: (col) => ({
       equals: (val) => {
-        const _fetch = async () => {
-          const { data, error } = await sb.from(tableName).select('*').eq(col, val).limit(SUPABASE_MAX_ROWS);
-          if (error) throw new Error(`[${tableName}.where(${col}).equals] ${error.message}`);
-          return data || [];
-        };
-        const base = {
+        const _fetch = async () => fetchAll(tableName, () => sb.from(tableName).select('*').eq(col, val));
+        return {
           toArray: _fetch,
           count: async () => (await _fetch()).length,
           filter: (fn) => ({
@@ -546,27 +602,14 @@ function makeTable(tableName, pkField) {
             count:   async () => (await _fetch()).filter(fn).length,
           }),
         };
-        return base;
       }
     }),
     filter: (fn) => ({
-      toArray: async () => {
-        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
-        if (error) throw new Error(`[${tableName}.filter.toArray] ${error.message}`);
-        return (data || []).filter(fn);
-      },
-      count: async () => {
-        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
-        if (error) throw new Error(`[${tableName}.filter.count] ${error.message}`);
-        return (data || []).filter(fn).length;
-      }
+      toArray: async () => (await fetchAll(tableName, () => sb.from(tableName).select('*'))).filter(fn),
+      count:   async () => (await fetchAll(tableName, () => sb.from(tableName).select('*'))).filter(fn).length,
     }),
     toCollection: () => ({
-      toArray: async () => {
-        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
-        if (error) throw new Error(`[${tableName}.toCollection] ${error.message}`);
-        return data || [];
-      }
+      toArray: async () => fetchAll(tableName, () => sb.from(tableName).select('*')),
     }),
   };
 }
@@ -3734,6 +3777,24 @@ Router.register('incidencias',async () => IncidenciasPage.render());
 Router.register('inventario',  async () => InventarioPage.render());
 Router.register('movimientos', async () => MovimientosPage.render());
 Router.register('config',      async () => ConfigPage.render());
+
+// ═══════════════════════════════════════════════════════════════════
+// SIDEBAR MÓVIL
+// ═══════════════════════════════════════════════════════════════════
+function toggleSidebar(forceOpen) {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebar-overlay');
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.contains('open');
+  const open   = forceOpen !== undefined ? forceOpen : !isOpen;
+  sidebar.classList.toggle('open', open);
+  overlay.classList.toggle('open', open);
+}
+// Cerrar sidebar al navegar en móvil
+document.addEventListener('click', e => {
+  const item = e.target.closest('.nav-item');
+  if (item && window.innerWidth <= 768) toggleSidebar(false);
+});
 
 // ═══════════════════════════════════════════════════════════════════
 // BOOT
