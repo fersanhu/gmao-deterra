@@ -1016,17 +1016,49 @@ const DataService = {
     const activosParados = activos.filter(a => a.estado === 'Parado').length;
     const activosOp     = activos.filter(a => a.estado === 'Operativo').length;
 
-    // Averías por mes (últimos 12 meses)
+    // Averías por mes: helper para extraer YYYY-MM de una avería
+    const _getAvMes = (a) => {
+      let f = a.fecha_inicio;
+      // Fallback: extraer fecha del ID si fecha_inicio está vacío
+      if (!f && a.id) {
+        const m = String(a.id).match(/[A-Z]+-(\d{4})(\d{2})(\d{2})-/);
+        if (m) f = `${m[1]}-${m[2]}-${m[3]}`;
+      }
+      return f ? f.slice(0,7) : null;
+    };
+
+    // Determinar rango dinámico: últimos 24 meses O desde el mes más antiguo con datos
     const now = new Date();
-    const meses = Array.from({length:12}, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const allMeses24 = Array.from({length:24}, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 23 + i, 1);
       return { key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, label: d.toLocaleString('es',{month:'short',year:'2-digit'}) };
     });
-    const mesCount = {};
-    meses.forEach(m => mesCount[m.key] = 0);
+    // Contar primero para ver qué meses tienen datos
+    const mesCountAll = {};
     averias.forEach(a => {
-      if (a.fecha_inicio) { const k = a.fecha_inicio.slice(0,7); if (mesCount[k] !== undefined) mesCount[k]++; }
+      const k = _getAvMes(a);
+      if (k) mesCountAll[k] = (mesCountAll[k] || 0) + 1;
     });
+    // Si hay datos fuera de los 24 meses, incluir esos meses también
+    const keysConDatos = Object.keys(mesCountAll).sort();
+    const primerMesConDatos = keysConDatos[0];
+    const primerMes24 = allMeses24[0]?.key;
+    let meses = allMeses24;
+    if (primerMesConDatos && primerMesConDatos < primerMes24) {
+      // Hay datos más antiguos, extender el rango
+      const [y, mo] = primerMesConDatos.split('-').map(Number);
+      const extra = [];
+      let cur = new Date(y, mo - 1, 1);
+      const limit = new Date(now.getFullYear(), now.getMonth() - 23, 1);
+      while (cur < limit) {
+        const key = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`;
+        extra.push({ key, label: cur.toLocaleString('es',{month:'short',year:'2-digit'}) });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      meses = [...extra, ...allMeses24];
+    }
+    const mesCount = {};
+    meses.forEach(m => mesCount[m.key] = mesCountAll[m.key] || 0);
 
     // Averías por almacén (top 5)
     const byAlmacen = {};
@@ -1461,7 +1493,7 @@ const DashboardPage = {
             backgroundColor: '#275D3A', borderRadius: 6, borderSkipped: false,
           }]
         },
-        options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,ticks:{stepSize:1}}, x:{grid:{display:false}} } }
+        options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,ticks:{stepSize:1}}, x:{grid:{display:false}, ticks:{maxTicksLimit:12, maxRotation:45, minRotation:0}} } }
       });
     }
 
@@ -2577,7 +2609,7 @@ const IncidenciasPage = {
     if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin incidencias','Prueba a cambiar los filtros o crea una nueva')}</td></tr>`; return; }
     tbody.innerHTML = this._filtered.map(i => `
       <tr onclick="IncidenciasPage.openDetail('${UI.esc(i.id)}')">
-        <td style="white-space:nowrap">${UI.formatDate(i.fecha_registro)}</td>
+        <td style="white-space:nowrap">${UI.formatDate(i.fecha_registro, i.id)}</td>
         <td>${UI.esc(i.almacen||'—')}</td>
         <td>${UI.esc(i.zona||'—')}</td>
         <td><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></td>
@@ -2597,7 +2629,7 @@ const IncidenciasPage = {
       <div class="detail-grid">
         <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(i.estado)}</p></div>
         <div class="detail-field"><label>Prioridad</label><p>${UI.criticidadBadge(i.prioridad)}</p></div>
-        <div class="detail-field"><label>Fecha registro</label><p>${UI.formatDate(i.fecha_registro)} ${i.hora_registro||''}</p></div>
+        <div class="detail-field"><label>Fecha registro</label><p>${UI.formatDate(i.fecha_registro, i.id)} ${i.hora_registro||''}</p></div>
         <div class="detail-field"><label>Tipo</label><p><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></p></div>
         <div class="detail-field"><label>Almacén</label><p>${UI.esc(i.almacen||'—')}</p></div>
         <div class="detail-field"><label>Zona / Línea</label><p>${UI.esc(i.zona||'—')}${i.linea?' · L'+i.linea:''}</p></div>
