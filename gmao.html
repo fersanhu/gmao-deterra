@@ -684,13 +684,24 @@ const ImportService = {
       if (isNaN(v.getTime())) return '';
       return v.toISOString().slice(0,10);
     }
-    const s = String(v);
+    const s = String(v).trim();
+    // ISO: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    // JS Date string: "Wed Oct 09 2025 ..."
     const m = s.match(/\w{3} (\w{3}) (\d{1,2}) (\d{4})/);
     if (m) {
       const mo = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
       return `${m[3]}-${mo[m[1]]||'01'}-${m[2].padStart(2,'0')}`;
     }
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    // DD/MM/YYYY o DD-MM-YYYY (formato español Excel)
+    const m2 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (m2) return `${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+    // Excel serial number (número entero)
+    const n = Number(s);
+    if (!isNaN(n) && n > 40000 && n < 60000) {
+      const d = new Date((n - 25569) * 86400000);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    }
     return '';
   },
 
@@ -1244,7 +1255,12 @@ const UI = {
     const map = { Operativo:'green', Parado:'red', Baja:'gray', 'En reparacion':'orange' };
     return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e||'Operativo')}</span>`;
   },
-  formatDate(d) {
+  formatDate(d, fallbackId) {
+    // Si la fecha está vacía, intentar extraerla del ID (AV-YYYYMMDD-HHMMSS)
+    if (!d && fallbackId) {
+      const m = String(fallbackId).match(/[A-Z]+-(\d{4})(\d{2})(\d{2})-/);
+      if (m) d = `${m[1]}-${m[2]}-${m[3]}`;
+    }
     if (!d) return '—';
     try {
       const dt = new Date(d + 'T00:00:00');
@@ -1537,7 +1553,7 @@ const ActivosPage = {
             <th>ID Activo</th><th>Almacén</th><th>Zona</th><th>Línea</th>
             <th>Tipo máquina</th><th>Equipo</th><th>Estado</th><th>Año</th>
           </tr></thead>
-          <tbody id="activos-tbody">${UI.loading()}</tbody>
+          <tbody id="activos-tbody"></tbody>
         </table>
       </div>
     </div>`;
@@ -1628,7 +1644,7 @@ const ActivosPage = {
           `<div class="table-wrap"><table>
             <thead><tr><th>Fecha</th><th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th></tr></thead>
             <tbody>${averias.slice(0,10).map(av => `<tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(av.id)}')">
-              <td style="white-space:nowrap">${UI.formatDate(av.fecha_inicio)}</td>
+              <td style="white-space:nowrap">${UI.formatDate(av.fecha_inicio, av.id)}</td>
               <td class="col-truncate">${UI.esc(av.descripcion||'—')}</td>
               <td>${UI.esc(av.tecnico||'—')}</td>
               <td>${UI.criticidadBadge(av.criticidad)}</td>
@@ -1847,7 +1863,7 @@ const AveriasPage = {
             <th>ID</th><th>Fecha</th><th>Almacén</th><th>Equipo</th>
             <th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th><th>Duración</th>
           </tr></thead>
-          <tbody id="av-tbody">${UI.loading()}</tbody>
+          <tbody id="av-tbody"></tbody>
         </table>
       </div>
     </div>`;
@@ -1899,7 +1915,7 @@ const AveriasPage = {
     tbody.innerHTML = this._filtered.map(a => `
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
-        <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio)}</td>
+        <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
         <td>${UI.esc(a.almacen||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
@@ -1919,7 +1935,7 @@ const AveriasPage = {
       <div class="detail-grid">
         <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(a.estado)}</p></div>
         <div class="detail-field"><label>Criticidad</label><p>${UI.criticidadBadge(a.criticidad)}</p></div>
-        <div class="detail-field"><label>Fecha inicio</label><p>${UI.formatDate(a.fecha_inicio)} ${a.hora_inicio||''}</p></div>
+        <div class="detail-field"><label>Fecha inicio</label><p>${UI.formatDate(a.fecha_inicio, a.id)} ${a.hora_inicio||''}</p></div>
         <div class="detail-field"><label>Fecha fin</label><p>${a.fecha_fin ? UI.formatDate(a.fecha_fin)+' '+a.hora_fin : '—'}</p></div>
         <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen||'—')}</p></div>
         <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
@@ -1951,6 +1967,10 @@ const AveriasPage = {
     const tecnicos = await DataService.getTecnicos(true);
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
     const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
+    // Productos para selector de materiales (cascada)
+    const todosProds = await db.productos.toArray();
+    todosProds.forEach(p => { if (p.tipo && p.tipo.toLowerCase()==='repuestos') p.tipo='Repuestos'; });
+    const matTipos = [...new Set(todosProds.map(p => p.tipo).filter(Boolean))].sort();
     const now = new Date();
     const today = now.toISOString().slice(0,10);
     const hh = String(now.getHours()).padStart(2,'0');
@@ -2015,11 +2035,11 @@ const AveriasPage = {
           </select>
         </div>
         <div class="form-field">
-          <label>Fecha inicio</label>
+          <label id="av-fecha-label">Fecha inicio</label>
           <input class="form-input" type="date" id="av-fecha" value="${today}">
         </div>
         <div class="form-field">
-          <label>Hora inicio</label>
+          <label id="av-hora-label">Hora inicio</label>
           <input class="form-input" type="time" id="av-hora" value="${hh}:${mm}">
         </div>
 
@@ -2040,20 +2060,45 @@ const AveriasPage = {
               <textarea class="form-input" id="av-solucion" rows="2" placeholder="Qué se hizo para resolverla..."></textarea>
             </div>
             <div class="form-field full">
-              <label>Materiales / repuestos utilizados</label>
-              <input class="form-input" id="av-materiales" placeholder="Ej: Rodamiento 6204, correa...">
+              <label>Material / repuesto utilizado</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
+                <div>
+                  <small style="color:var(--gray-muted)">Tipo</small>
+                  <select class="form-input" id="mat-tipo" style="margin-top:2px">
+                    <option value="">— Tipo —</option>
+                    ${matTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <small style="color:var(--gray-muted)">Familia</small>
+                  <select class="form-input" id="mat-familia" disabled style="margin-top:2px">
+                    <option value="">— Familia —</option>
+                  </select>
+                </div>
+                <div>
+                  <small style="color:var(--gray-muted)">Producto</small>
+                  <select class="form-input" id="mat-producto" disabled style="margin-top:2px">
+                    <option value="">— Producto —</option>
+                  </select>
+                </div>
+                <div>
+                  <small style="color:var(--gray-muted)">Cant.</small>
+                  <input class="form-input" type="number" id="mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
+                </div>
+              </div>
+              <input type="hidden" id="av-materiales">
             </div>
             <div class="form-field">
               <label>Coste materiales (€)</label>
               <input class="form-input" type="number" id="av-coste" min="0" step="0.01" placeholder="0.00">
             </div>
             <div class="form-field">
-              <label>Fecha fin</label>
-              <input class="form-input" type="date" id="av-fecha-fin" value="${today}">
-            </div>
-            <div class="form-field">
-              <label>Hora fin</label>
-              <input class="form-input" type="time" id="av-hora-fin" value="${hh}:${mm}">
+              <label>Duración (horas y minutos)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-input" type="number" id="av-dur-h" min="0" max="999" placeholder="0" style="width:80px"> h
+                <input class="form-input" type="number" id="av-dur-m" min="0" max="59" placeholder="0" style="width:80px"> min
+              </div>
+              <small style="color:var(--gray-muted);font-size:11px">La fecha/hora de arriba son del FIN. El inicio se calcula restando la duración.</small>
             </div>
           </div>
         </div>
@@ -2061,10 +2106,49 @@ const AveriasPage = {
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
 
-    // Toggle visibilidad campos cierre
+    // Cascada materiales: tipo → familia → producto
+    const _matProds = todosProds;
+    document.getElementById('mat-tipo')?.addEventListener('change', function() {
+      const tipo = this.value;
+      const fams = [...new Set(_matProds.filter(p => !tipo || p.tipo===tipo).map(p=>p.familia).filter(Boolean))].sort();
+      const famEl = document.getElementById('mat-familia');
+      famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f=>`<option>${UI.esc(f)}</option>`).join('');
+      famEl.disabled = false;
+      document.getElementById('mat-producto').innerHTML = '<option value="">— Producto —</option>';
+      document.getElementById('mat-producto').disabled = true;
+      document.getElementById('av-materiales').value = '';
+    });
+    document.getElementById('mat-familia')?.addEventListener('change', function() {
+      const tipo   = document.getElementById('mat-tipo').value;
+      const familia = this.value;
+      const prods = _matProds.filter(p => (!tipo||p.tipo===tipo) && (!familia||p.familia===familia));
+      const prodEl = document.getElementById('mat-producto');
+      prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+      prodEl.disabled = false;
+      document.getElementById('av-materiales').value = '';
+    });
+    document.getElementById('mat-producto')?.addEventListener('change', function() {
+      const qty = document.getElementById('mat-qty')?.value || '1';
+      const txt = this.options[this.selectedIndex]?.text || '';
+      if (txt && txt !== '— Producto —') {
+        document.getElementById('av-materiales').value = `${txt} (x${qty})`;
+      }
+    });
+    document.getElementById('mat-qty')?.addEventListener('input', function() {
+      const sel = document.getElementById('mat-producto');
+      const txt = sel?.options[sel.selectedIndex]?.text || '';
+      if (txt && txt !== '— Producto —') {
+        document.getElementById('av-materiales').value = `${txt} (x${this.value})`;
+      }
+    });
+
+    // Toggle visibilidad campos cierre + renombrar etiquetas fecha/hora
     document.getElementById('av-cerrar-ahora').addEventListener('change', function() {
-      document.getElementById('close-fields').style.display = this.checked ? '' : 'none';
-      document.getElementById('toggle-close-label').style.borderColor = this.checked ? 'var(--green)' : 'var(--border)';
+      const cerrar = this.checked;
+      document.getElementById('close-fields').style.display = cerrar ? '' : 'none';
+      document.getElementById('toggle-close-label').style.borderColor = cerrar ? 'var(--green)' : 'var(--border)';
+      document.getElementById('av-fecha-label').textContent = cerrar ? 'Fecha fin (cuándo se resolvió)' : 'Fecha inicio';
+      document.getElementById('av-hora-label').textContent  = cerrar ? 'Hora fin'  : 'Hora inicio';
     });
 
     // — Cascade wiring —
@@ -2183,24 +2267,35 @@ const AveriasPage = {
     const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
     const id = `AV-${ds}-${ts}`;
 
-    const fechaInicio = document.getElementById('av-fecha').value;
-    const horaInicio  = document.getElementById('av-hora').value + ':00';
-
     let estado = 'Abierta';
+    let fechaInicio = document.getElementById('av-fecha').value;
+    let horaInicio  = document.getElementById('av-hora').value + ':00';
     let fechaFin = '', horaFin = '', solucion = '', materiales = '', coste = 0, duracion = '';
+
     if (cerrarAhora) {
       estado    = 'Cerrada';
       solucion  = document.getElementById('av-solucion').value.trim();
       materiales= document.getElementById('av-materiales')?.value.trim() || '';
       coste     = parseFloat(document.getElementById('av-coste')?.value) || 0;
-      fechaFin  = document.getElementById('av-fecha-fin')?.value || fechaInicio;
-      horaFin   = (document.getElementById('av-hora-fin')?.value || '') + ':00';
-      try {
-        const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${fechaInicio}T${horaInicio}`);
-        if (diff > 0) {
-          duracion = `${String(Math.floor(diff/3600000)).padStart(2,'0')}:${String(Math.floor((diff%3600000)/60000)).padStart(2,'0')}:00`;
-        }
-      } catch(e) {}
+
+      // La fecha/hora del formulario es el FIN cuando se cierra ahora
+      fechaFin = fechaInicio;
+      horaFin  = horaInicio;
+
+      // Calcular inicio = fin − duración
+      const durH = parseInt(document.getElementById('av-dur-h')?.value) || 0;
+      const durM = parseInt(document.getElementById('av-dur-m')?.value) || 0;
+      const durMs = (durH * 60 + durM) * 60000;
+      duracion = `${String(durH).padStart(2,'0')}:${String(durM).padStart(2,'0')}:00`;
+
+      if (durMs > 0) {
+        try {
+          const finDt  = new Date(`${fechaFin}T${horaFin}`);
+          const iniDt  = new Date(finDt.getTime() - durMs);
+          fechaInicio  = iniDt.toISOString().slice(0,10);
+          horaInicio   = `${String(iniDt.getHours()).padStart(2,'0')}:${String(iniDt.getMinutes()).padStart(2,'0')}:00`;
+        } catch(e) {}
+      }
     }
 
     const averia = {
@@ -2435,7 +2530,7 @@ const IncidenciasPage = {
             <th>Fecha</th><th>Almacén</th><th>Zona</th><th>Tipo</th>
             <th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Reportado por</th>
           </tr></thead>
-          <tbody id="inc-tbody">${UI.loading()}</tbody>
+          <tbody id="inc-tbody"></tbody>
         </table>
       </div>
     </div>`;
@@ -2751,6 +2846,10 @@ const InventarioPage = {
 
     // Cargar TODO el inventario — el filtrado y la agregación se hacen en JS
     this._allData = await db.inventario.toArray();
+    // Normalizar tipo: unificar "repuestos" / "Repuestos" → "Repuestos"
+    this._allData.forEach(i => {
+      if (i.tipo && i.tipo.toLowerCase() === 'repuestos') i.tipo = 'Repuestos';
+    });
     const tipos    = [...new Set(this._allData.map(i => i.tipo).filter(Boolean))].sort();
     const familias = [...new Set(this._allData.map(i => i.familia).filter(Boolean))].sort();
 
@@ -2794,7 +2893,19 @@ const InventarioPage = {
 
     this._applyFilters();
 
-    ['inv-almacen-sel','inv-search','inv-f-tipo','inv-f-familia'].forEach(id => {
+    // Cascada tipo → familia
+    document.getElementById('inv-f-tipo')?.addEventListener('change', () => {
+      const tipo = document.getElementById('inv-f-tipo').value;
+      const familiasSel = [...new Set(
+        this._allData.filter(i => !tipo || i.tipo === tipo).map(i => i.familia).filter(Boolean)
+      )].sort();
+      const famEl = document.getElementById('inv-f-familia');
+      famEl.innerHTML = '<option value="">Todas las familias</option>' +
+        familiasSel.map(f => `<option>${UI.esc(f)}</option>`).join('');
+      this._applyFilters();
+    });
+
+    ['inv-almacen-sel','inv-search','inv-f-familia'].forEach(id => {
       document.getElementById(id)?.addEventListener('input',  () => this._applyFilters());
       document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
     });
@@ -3072,7 +3183,7 @@ const MovimientosPage = {
           <th>Fecha</th><th>Tipo</th><th>Cód. Producto</th><th>Producto</th>
           <th>Almacén</th><th style="text-align:right">Cantidad</th><th>Usuario</th><th>Notas</th>
         </tr></thead>
-        <tbody id="mov-tbody">${'<tr><td colspan="8">' + UI.loading() + '</td></tr>'}</tbody>
+        <tbody id="mov-tbody"></tbody>
         </table>
       </div>
     </div>`;
