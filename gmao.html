@@ -3897,13 +3897,14 @@ const ConfigPage = {
   async managePassword(id) {
     const t = await db.tecnicos.get(id);
     if (!t) return;
-    const hasPw = !!(t.password);
+    const hasPw  = !!(t.password);
+    const curPw  = t.password || '';
     Modal.open(`🔑 Contraseña — ${UI.esc(t.nombre)}`, `
       <div style="margin-bottom:14px">
         <label style="font-size:12px;color:var(--gray-muted);font-weight:600">CONTRASEÑA ACTUAL</label>
         ${hasPw ? `
           <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-            <input class="form-input" id="pw-current-show" type="password" value="${UI.esc(t.password)}" readonly
+            <input class="form-input" id="pw-current-show" type="password" value="${UI.esc(curPw)}" readonly
               style="flex:1;background:var(--bg);font-family:monospace;cursor:default;color:var(--gray-text)">
             <button class="btn btn-secondary btn-sm" style="white-space:nowrap"
               onclick="const el=document.getElementById('pw-current-show');el.type=el.type==='password'?'text':'password';this.textContent=el.type==='password'?'👁 Ver':'🙈 Ocultar'">👁 Ver</button>
@@ -3974,6 +3975,15 @@ const ConfigPage = {
     toast('Datos borrados. Recarga la app para importar de nuevo.', 'error');
     setTimeout(() => location.reload(), 2000);
   },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PASSWORD STORE — ya no se usa; las contraseñas se guardan en Supabase
+// (campo password en tabla tecnicos). Se conserva por compatibilidad.
+// ═══════════════════════════════════════════════════════════════════
+const PasswordStore = {
+  _KEY: 'gmao_passwords',
+  _load() { try { return JSON.parse(localStorage.getItem(this._KEY) || '{}'); } catch { return {}; } },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4096,16 +4106,16 @@ const UserSelectScreen = {
     if (pw1.length < 4) { toast('Mínimo 4 caracteres', 'error'); return; }
     if (pw1 !== pw2)    { toast('Las contraseñas no coinciden', 'error'); return; }
     const t = UserSelectScreen._pendingLogin;
-    const updated = { ...t, password: pw1 };
-    await db.tecnicos.put(updated);
+    await db.tecnicos.put({ ...t, password: pw1 });
+    UserSelectScreen._pendingLogin = { ...t, password: pw1 };
     Modal.close();
-    UserSelectScreen._doLogin(updated);
+    UserSelectScreen._doLogin(UserSelectScreen._pendingLogin);
   },
 
   async _checkPassword() {
     const pw = document.getElementById('pw-input')?.value || '';
     const t  = UserSelectScreen._pendingLogin;
-    if (pw === t.password) {
+    if (pw === (t.password || '')) {
       Modal.close();
       UserSelectScreen._doLogin(t);
     } else {
