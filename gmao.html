@@ -492,10 +492,12 @@ const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const SUPABASE_MAX_ROWS = 10000; // límite por defecto de PostgREST es 1000 — lo subimos aquí
+
 function makeTable(tableName, pkField) {
   return {
     toArray: async () => {
-      const { data, error } = await sb.from(tableName).select('*');
+      const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
       if (error) throw new Error(`[${tableName}.toArray] ${error.message}`);
       return data || [];
     },
@@ -514,8 +516,6 @@ function makeTable(tableName, pkField) {
     },
     bulkPut: async (arr) => {
       if (!arr || !arr.length) return;
-      // Deduplicar por PK antes de enviar: PostgreSQL lanza error si el mismo PK
-      // aparece dos veces en el mismo batch ("cannot affect a row a second time").
       const deduped = [...new Map(arr.map(obj => [obj[pkField], obj])).values()];
       for (let i = 0; i < deduped.length; i += 500) {
         const chunk = deduped.slice(i, i + 500);
@@ -530,7 +530,7 @@ function makeTable(tableName, pkField) {
     where: (col) => ({
       equals: (val) => {
         const _fetch = async () => {
-          const { data, error } = await sb.from(tableName).select('*').eq(col, val);
+          const { data, error } = await sb.from(tableName).select('*').eq(col, val).limit(SUPABASE_MAX_ROWS);
           if (error) throw new Error(`[${tableName}.where(${col}).equals] ${error.message}`);
           return data || [];
         };
@@ -541,7 +541,6 @@ function makeTable(tableName, pkField) {
             toArray: async () => (await _fetch()).filter(fn),
             count:   async () => (await _fetch()).filter(fn).length,
           }),
-          // Dexie .and() is an alias for .filter()
           and: (fn) => ({
             toArray: async () => (await _fetch()).filter(fn),
             count:   async () => (await _fetch()).filter(fn).length,
@@ -552,19 +551,19 @@ function makeTable(tableName, pkField) {
     }),
     filter: (fn) => ({
       toArray: async () => {
-        const { data, error } = await sb.from(tableName).select('*');
+        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
         if (error) throw new Error(`[${tableName}.filter.toArray] ${error.message}`);
         return (data || []).filter(fn);
       },
       count: async () => {
-        const { data, error } = await sb.from(tableName).select('*');
+        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
         if (error) throw new Error(`[${tableName}.filter.count] ${error.message}`);
         return (data || []).filter(fn).length;
       }
     }),
     toCollection: () => ({
       toArray: async () => {
-        const { data, error } = await sb.from(tableName).select('*');
+        const { data, error } = await sb.from(tableName).select('*').limit(SUPABASE_MAX_ROWS);
         if (error) throw new Error(`[${tableName}.toCollection] ${error.message}`);
         return data || [];
       }
