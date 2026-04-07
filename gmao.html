@@ -343,15 +343,9 @@ select.form-input{cursor:pointer}
 <div id="screen-import" class="screen active">
   <div class="setup-card">
     <div class="setup-logo">
-      <img src="https://logo.clearbit.com/deterraglobal.com" alt="Deterra" style="width:80px;height:80px;object-fit:contain;border-radius:12px"
-        onerror="this.style.display='none';document.getElementById('setup-logo-fallback').style.display='block'">
-      <svg id="setup-logo-fallback" style="display:none" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="32" cy="32" r="32" fill="#275D3A"/>
-        <path d="M32 14C32 14 20 24 20 34C20 40.627 25.373 46 32 46C38.627 46 44 40.627 44 34C44 24 32 14 32 14Z" fill="white" opacity="0.9"/>
-        <path d="M32 22C32 22 26 29 26 35C26 38.314 28.686 41 32 41" stroke="#275D3A" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="32" cy="48" r="3" fill="white" opacity="0.5"/>
-      </svg>
-      <span class="setup-logo-name">DETERRA</span>
+      <img src="https://deterraglobal.com/wp-content/uploads/2024/09/Logo-Deterra-RGB180.png"
+           alt="Deterra" style="height:56px;object-fit:contain">
+      <span class="setup-logo-name" style="display:none">DETERRA</span>
       <span class="setup-logo-sub">GMAO · Gestión de Mantenimiento</span>
     </div>
     <div id="setup-step-1">
@@ -404,16 +398,12 @@ select.form-input{cursor:pointer}
   <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="sidebar-logo">
-      <img src="https://logo.clearbit.com/deterraglobal.com" alt="Deterra" style="width:34px;height:34px;object-fit:contain;border-radius:6px;flex-shrink:0;background:rgba(255,255,255,0.1)"
-        onerror="this.style.display='none';document.getElementById('sidebar-logo-fallback').style.display='block'">
-      <svg id="sidebar-logo-fallback" style="display:none" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="20" fill="rgba(255,255,255,0.15)"/>
-        <path d="M20 8C20 8 12 15.5 12 21.5C12 25.642 15.358 29 19.5 29S27 25.642 27 21.5C27 15.5 20 8 20 8Z" fill="white" opacity="0.9"/>
-        <path d="M20 14C20 14 16 18.5 16 22C16 24.209 17.791 26 20 26" stroke="#275D3A" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
+      <div style="background:rgba(255,255,255,0.92);border-radius:6px;padding:3px 6px;flex-shrink:0;display:flex;align-items:center">
+        <img src="https://deterraglobal.com/wp-content/uploads/2024/09/Logo-Deterra-RGB180.png"
+             alt="Deterra" style="height:26px;object-fit:contain">
+      </div>
       <div class="sidebar-logo-text">
-        <span class="sidebar-logo-name">DETERRA</span>
-        <span class="sidebar-logo-sub">GMAO</span>
+        <span class="sidebar-logo-sub" style="margin-top:2px">GMAO</span>
       </div>
     </div>
     <nav class="nav-items">
@@ -689,6 +679,7 @@ const ImportService = {
       return v.toISOString().slice(0,10);
     }
     const s = String(v).trim();
+    if (!s) return '';
     // ISO: YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
     // JS Date string: "Wed Oct 09 2025 ..."
@@ -697,15 +688,26 @@ const ImportService = {
       const mo = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
       return `${m[3]}-${mo[m[1]]||'01'}-${m[2].padStart(2,'0')}`;
     }
-    // DD/MM/YYYY o DD-MM-YYYY (formato español Excel)
-    const m2 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    // DD/MM/YYYY o DD-MM-YYYY (formato español Excel, año 4 dígitos)
+    const m2 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
     if (m2) return `${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
-    // Excel serial number (número entero)
+    // DD/MM/YY o DD-MM-YY (año 2 dígitos — p.ej. "15/05/24")
+    const m3 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/);
+    if (m3) {
+      const year = 2000 + parseInt(m3[3]);
+      return `${year}-${m3[2].padStart(2,'0')}-${m3[1].padStart(2,'0')}`;
+    }
+    // Excel serial number (número entero > 40000)
     const n = Number(s);
     if (!isNaN(n) && n > 40000 && n < 60000) {
       const d = new Date((n - 25569) * 86400000);
       if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
     }
+    // Último recurso: dejar que JavaScript lo interprete
+    try {
+      const jsDate = new Date(s);
+      if (!isNaN(jsDate.getTime())) return jsDate.toISOString().slice(0,10);
+    } catch(e) {}
     return '';
   },
 
@@ -1296,16 +1298,30 @@ const UI = {
     return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e||'Operativo')}</span>`;
   },
   formatDate(d, fallbackId) {
-    // Si la fecha está vacía, intentar extraerla del ID (AV-YYYYMMDD-HHMMSS)
+    // Si la fecha está vacía, intentar extraerla del ID
     if (!d && fallbackId) {
-      const m = String(fallbackId).match(/[A-Z]+-(\d{4})(\d{2})(\d{2})-/);
-      if (m) d = `${m[1]}-${m[2]}-${m[3]}`;
+      const s = String(fallbackId);
+      // Formato INC-YYYYMMDD-HHMMSS o AV-YYYYMMDD-HHMMSS
+      const m1 = s.match(/[A-Z]+-(\d{4})(\d{2})(\d{2})[-_]/);
+      if (m1) d = `${m1[1]}-${m1[2]}-${m1[3]}`;
+      // Formato con YYYY-MM-DD en cualquier parte del ID
+      if (!d) { const m2 = s.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/); if (m2) d = `${m2[1]}-${m2[2]}-${m2[3]}`; }
+      // 8 dígitos seguidos YYYYMMDD
+      if (!d) { const m3 = s.match(/(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/); if (m3) d = `${m3[1]}-${m3[2]}-${m3[3]}`; }
     }
     if (!d) return '—';
+    // Si viene como número (serial Excel)
+    const num = Number(d);
+    if (!isNaN(num) && num > 40000 && num < 60000) {
+      const dt2 = new Date((num - 25569) * 86400000);
+      if (!isNaN(dt2.getTime())) d = dt2.toISOString().slice(0,10);
+    }
     try {
-      const dt = new Date(d + 'T00:00:00');
+      const clean = String(d).slice(0,10);
+      const dt = new Date(clean + 'T00:00:00');
+      if (isNaN(dt.getTime())) return String(d);
       return dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
-    } catch(e) { return d; }
+    } catch(e) { return String(d); }
   },
   formatDuration(dur) {
     if (!dur) return '—';
