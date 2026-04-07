@@ -343,7 +343,9 @@ select.form-input{cursor:pointer}
 <div id="screen-import" class="screen active">
   <div class="setup-card">
     <div class="setup-logo">
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <img src="https://logo.clearbit.com/deterraglobal.com" alt="Deterra" style="width:80px;height:80px;object-fit:contain;border-radius:12px"
+        onerror="this.style.display='none';document.getElementById('setup-logo-fallback').style.display='block'">
+      <svg id="setup-logo-fallback" style="display:none" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="32" cy="32" r="32" fill="#275D3A"/>
         <path d="M32 14C32 14 20 24 20 34C20 40.627 25.373 46 32 46C38.627 46 44 40.627 44 34C44 24 32 14 32 14Z" fill="white" opacity="0.9"/>
         <path d="M32 22C32 22 26 29 26 35C26 38.314 28.686 41 32 41" stroke="#275D3A" stroke-width="2" stroke-linecap="round"/>
@@ -402,7 +404,9 @@ select.form-input{cursor:pointer}
   <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="sidebar-logo">
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <img src="https://logo.clearbit.com/deterraglobal.com" alt="Deterra" style="width:34px;height:34px;object-fit:contain;border-radius:6px;flex-shrink:0;background:rgba(255,255,255,0.1)"
+        onerror="this.style.display='none';document.getElementById('sidebar-logo-fallback').style.display='block'">
+      <svg id="sidebar-logo-fallback" style="display:none" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="20" cy="20" r="20" fill="rgba(255,255,255,0.15)"/>
         <path d="M20 8C20 8 12 15.5 12 21.5C12 25.642 15.358 29 19.5 29S27 25.642 27 21.5C27 15.5 20 8 20 8Z" fill="white" opacity="0.9"/>
         <path d="M20 14C20 14 16 18.5 16 22C16 24.209 17.791 26 20 26" stroke="#275D3A" stroke-width="1.5" stroke-linecap="round"/>
@@ -1076,7 +1080,11 @@ const DataService = {
       else porCriticidad.Otra++;
     });
 
-    return { avAbiertas, incActivas, activosParados, activosOp, meses, mesCount, byAlmacen, ultimas, porCriticidad };
+    // Zonas y líneas disponibles (para los filtros del gráfico)
+    const zonas  = [...new Set(averias.map(a => a.zona).filter(Boolean))].sort();
+    const lineas = [...new Set(averias.map(a => String(a.linea||'')).filter(Boolean))].sort((a,b) => Number(a)-Number(b));
+
+    return { avAbiertas, incActivas, activosParados, activosOp, meses, mesCount, byAlmacen, ultimas, porCriticidad, averiasFiltered: averias, zonas, lineas };
   },
 
   // ── STOCK HELPERS ──
@@ -1422,6 +1430,113 @@ function getAlmacenFilter() {
 const DashboardPage = {
   _chartAverias: null,
   _chartCrit: null,
+  _averiasData: [],
+  _chartMode: 'mes',
+
+  _setChartMode(mode) {
+    this._chartMode = mode;
+    const mesBtn = document.getElementById('chart-mode-mes');
+    const semBtn = document.getElementById('chart-mode-sem');
+    if (mesBtn) { mesBtn.className = mode === 'mes' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary'; }
+    if (semBtn) { semBtn.className = mode === 'semana' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary'; }
+    this._rebuildAveriasChart();
+  },
+
+  _rebuildAveriasChart() {
+    const zona  = document.getElementById('chart-zona')?.value  || '';
+    const linea = document.getElementById('chart-linea')?.value || '';
+    const ymaxRaw = document.getElementById('chart-ymax')?.value;
+    const ymax = ymaxRaw ? parseInt(ymaxRaw) : null;
+    const mode = this._chartMode || 'mes';
+
+    // Helper: extraer fecha de avería (con fallback al ID)
+    const getFecha = (a) => {
+      let f = a.fecha_inicio;
+      if (!f && a.id) {
+        const m = String(a.id).match(/[A-Z]+-(\d{4})(\d{2})(\d{2})-/);
+        if (m) f = `${m[1]}-${m[2]}-${m[3]}`;
+      }
+      return f || null;
+    };
+
+    // Filtrar por zona y línea
+    let data = (this._averiasData || []).filter(a => {
+      if (zona  && a.zona !== zona) return false;
+      if (linea && String(a.linea||'') !== linea) return false;
+      return true;
+    });
+
+    let labels = [], counts = [];
+    const now = new Date();
+
+    if (mode === 'semana') {
+      // Últimas 16 semanas
+      const getISOWeek = (d) => {
+        const tmp = new Date(d); tmp.setHours(0,0,0,0);
+        tmp.setDate(tmp.getDate() + 4 - (tmp.getDay()||7));
+        const yearStart = new Date(tmp.getFullYear(), 0, 1);
+        return { week: Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7), year: tmp.getFullYear() };
+      };
+      const weeks = Array.from({length:16}, (_, i) => {
+        const d = new Date(now); d.setDate(d.getDate() - (15-i)*7);
+        const {week, year} = getISOWeek(d);
+        // inicio de esa semana (lunes)
+        const tmp = new Date(d); tmp.setDate(tmp.getDate() - (tmp.getDay()||7) + 1); tmp.setHours(0,0,0,0);
+        const fin = new Date(tmp); fin.setDate(fin.getDate()+6); fin.setHours(23,59,59,999);
+        return { key:`${year}-W${String(week).padStart(2,'0')}`, label:`S${week}\n${tmp.getDate()}/${tmp.getMonth()+1}`, start:tmp, end:fin };
+      });
+      const wCount = {}; weeks.forEach(w => wCount[w.key] = 0);
+      data.forEach(a => {
+        const f = getFecha(a); if (!f) return;
+        const d = new Date(f);
+        weeks.forEach(w => { if (d >= w.start && d <= w.end) wCount[w.key]++; });
+      });
+      labels = weeks.map(w => w.label);
+      counts = weeks.map(w => wCount[w.key]);
+    } else {
+      // Modo mes: rango dinámico desde el primer mes con datos hasta hoy
+      const mesMap = {};
+      data.forEach(a => { const f = getFecha(a); if (f) { const k = f.slice(0,7); mesMap[k]=(mesMap[k]||0)+1; } });
+      const keys = Object.keys(mesMap).sort();
+      if (keys.length === 0) {
+        // Sin datos: mostrar últimos 6 meses vacíos
+        for (let i=5; i>=0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+          labels.push(d.toLocaleString('es',{month:'short',year:'2-digit'}));
+          counts.push(0);
+        }
+      } else {
+        const [fy,fm] = keys[0].split('-').map(Number);
+        let cur = new Date(fy, fm-1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 1);
+        while (cur <= end) {
+          const k = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`;
+          labels.push(cur.toLocaleString('es',{month:'short',year:'2-digit'}));
+          counts.push(mesMap[k]||0);
+          cur.setMonth(cur.getMonth()+1);
+        }
+      }
+    }
+
+    if (this._chartAverias) { this._chartAverias.destroy(); this._chartAverias = null; }
+    const ctxA = document.getElementById('chart-averias');
+    if (!ctxA) return;
+    this._chartAverias = new Chart(ctxA, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label:'Averías', data:counts, backgroundColor:'#275D3A', borderRadius:6, borderSkipped:false }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        plugins:{ legend:{display:false} },
+        scales:{
+          y:{ beginAtZero:true, max: ymax||undefined, ticks:{stepSize:1, precision:0} },
+          x:{ grid:{display:false}, ticks:{maxTicksLimit:14, maxRotation:45, minRotation:0, font:{size:11}} }
+        }
+      }
+    });
+  },
 
   async render() {
     const almacen = getAlmacenFilter();
@@ -1430,28 +1545,43 @@ const DashboardPage = {
 
     content.innerHTML = `
     <div class="kpi-grid">
-      <div class="kpi-card kpi-red">
+      <div class="kpi-card kpi-red" style="cursor:pointer" onclick="Router.navigate('averias')" title="Ver averías abiertas">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
         <div class="kpi-body"><div class="kpi-value">${s.avAbiertas}</div><div class="kpi-label">Averías abiertas</div><div class="kpi-sub">${almacen||'Todos los almacenes'}</div></div>
       </div>
-      <div class="kpi-card kpi-orange">
+      <div class="kpi-card kpi-orange" style="cursor:pointer" onclick="Router.navigate('incidencias')" title="Ver incidencias activas">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <div class="kpi-body"><div class="kpi-value">${s.incActivas}</div><div class="kpi-label">Incidencias activas</div><div class="kpi-sub">Abiertas o en curso</div></div>
       </div>
-      <div class="kpi-card kpi-green">
+      <div class="kpi-card kpi-green" style="cursor:pointer" onclick="Router.navigate('activos')" title="Ver activos">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
         <div class="kpi-body"><div class="kpi-value">${s.activosOp}</div><div class="kpi-label">Activos operativos</div><div class="kpi-sub">${s.activosParados > 0 ? `<span style="color:var(--red)">${s.activosParados} parados</span>` : 'Sin activos parados'}</div></div>
       </div>
-      <div class="kpi-card kpi-blue">
+      <div class="kpi-card kpi-blue" style="cursor:pointer" onclick="Router.navigate('config')" title="Ver técnicos">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
-        <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">Técnicos activos</div><div class="kpi-sub">En el sistema</div></div>
+        <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">Técnicos activos</div><div class="kpi-sub">${almacen||'Todos los almacenes'}</div></div>
       </div>
     </div>
 
     <div class="charts-row">
       <div class="chart-wrap">
-        <div class="chart-title">Averías registradas por mes</div>
-        <canvas id="chart-averias" height="200"></canvas>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <span class="chart-title" style="margin:0">Averías registradas</span>
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+            <button id="chart-mode-mes" class="btn btn-sm btn-primary" onclick="DashboardPage._setChartMode('mes')">Por mes</button>
+            <button id="chart-mode-sem" class="btn btn-sm btn-secondary" onclick="DashboardPage._setChartMode('semana')">Por semana</button>
+            <select id="chart-zona" onchange="DashboardPage._rebuildAveriasChart()" style="height:28px;border:1px solid var(--border);border-radius:4px;padding:0 6px;font-size:12px;background:#fff">
+              <option value="">Todas las zonas</option>
+            </select>
+            <select id="chart-linea" onchange="DashboardPage._rebuildAveriasChart()" style="height:28px;border:1px solid var(--border);border-radius:4px;padding:0 6px;font-size:12px;background:#fff">
+              <option value="">Todas las líneas</option>
+            </select>
+            <input type="number" id="chart-ymax" min="1" step="1" placeholder="Y máx" title="Escala Y máxima (vacío = auto)"
+              style="width:68px;height:28px;border:1px solid var(--border);border-radius:4px;padding:0 6px;font-size:12px"
+              onchange="DashboardPage._rebuildAveriasChart()">
+          </div>
+        </div>
+        <canvas id="chart-averias"></canvas>
       </div>
       <div class="chart-wrap">
         <div class="chart-title">Averías abiertas por criticidad</div>
@@ -1474,28 +1604,34 @@ const DashboardPage = {
     </div>
     `;
 
-    // KPI técnicos
-    db.tecnicos.filter(t => t.activo).count().then(n => {
+    // KPI técnicos — filtrado por almacén
+    db.tecnicos.toArray().then(all => {
+      const normAlm = normalizeAlmacen(almacen);
+      const n = normAlm
+        ? all.filter(t => t.activo && normalizeAlmacen(t.almacen) === normAlm).length
+        : all.filter(t => t.activo).length;
       const el = document.getElementById('kpi-tecnicos');
       if (el) el.textContent = n;
     });
 
-    // Chart: averías por mes
-    if (this._chartAverias) { this._chartAverias.destroy(); this._chartAverias = null; }
-    const ctxA = document.getElementById('chart-averias');
-    if (ctxA) {
-      this._chartAverias = new Chart(ctxA, {
-        type: 'bar',
-        data: {
-          labels: s.meses.map(m => m.label),
-          datasets: [{
-            label: 'Averías', data: s.meses.map(m => s.mesCount[m.key]),
-            backgroundColor: '#275D3A', borderRadius: 6, borderSkipped: false,
-          }]
-        },
-        options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,ticks:{stepSize:1}}, x:{grid:{display:false}, ticks:{maxTicksLimit:12, maxRotation:45, minRotation:0}} } }
-      });
+    // Poblar dropdowns de zona y línea del gráfico
+    const zonaEl = document.getElementById('chart-zona');
+    const lineaEl = document.getElementById('chart-linea');
+    if (zonaEl) {
+      zonaEl.innerHTML = '<option value="">Todas las zonas</option>' +
+        s.zonas.map(z => `<option value="${UI.esc(z)}">${UI.esc(z)}</option>`).join('');
     }
+    if (lineaEl) {
+      lineaEl.innerHTML = '<option value="">Todas las líneas</option>' +
+        s.lineas.map(l => `<option value="${UI.esc(l)}">Línea ${UI.esc(l)}</option>`).join('');
+    }
+
+    // Guardar datos crudos de averías para el gráfico dinámico
+    this._averiasData = s.averiasFiltered;
+    if (!this._chartMode) this._chartMode = 'mes';
+
+    // Construir gráfico de averías
+    this._rebuildAveriasChart();
 
     // Chart: criticidad
     if (this._chartCrit) { this._chartCrit.destroy(); this._chartCrit = null; }
