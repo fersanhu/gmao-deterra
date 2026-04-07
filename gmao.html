@@ -3630,8 +3630,15 @@ const MovimientosPage = {
 // ═══════════════════════════════════════════════════════════════════
 const ConfigPage = {
   async render() {
-    const tecnicos  = await DataService.getTecnicos();
-    const canAdmin  = UserService.canManageConfig();
+    const allTecnicos = await DataService.getTecnicos();
+    const canAdmin    = UserService.canManageConfig();
+    const almacenes   = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi','Todos'];
+
+    // Respetar el filtro global de almacén
+    const globalAlm = getAlmacenFilter();
+    const tecnicos  = globalAlm
+      ? allTecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(globalAlm) || t.almacen === 'Todos')
+      : allTecnicos;
 
     document.getElementById('content').innerHTML = `
     <div class="page-header">
@@ -3661,12 +3668,23 @@ const ConfigPage = {
 
       <!-- Técnicos -->
       <div class="card" style="grid-column:1/-1">
-        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-          <span class="card-title">👤 Técnicos (${tecnicos.length})</span>
-          ${canAdmin ? `<button class="btn btn-primary btn-sm" onclick="ConfigPage.openNewTecnico()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Añadir técnico
-          </button>` : ''}
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <span class="card-title">👤 Técnicos <span id="tec-count">(${tecnicos.length})</span></span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="search" class="search-box" id="tec-search" placeholder="Buscar nombre..." style="width:160px" oninput="ConfigPage._filterTecTable()">
+            <select class="filter-select" id="tec-f-almacen" onchange="ConfigPage._filterTecTable()">
+              <option value="">Todos los almacenes</option>
+              ${almacenes.map(a=>`<option${globalAlm===a?' selected':''}>${a}</option>`).join('')}
+            </select>
+            <select class="filter-select" id="tec-f-rol" onchange="ConfigPage._filterTecTable()">
+              <option value="">Todos los roles</option>
+              <option>Mecanico</option><option>Responsable</option><option>Admin</option>
+            </select>
+            ${canAdmin ? `<button class="btn btn-primary btn-sm" onclick="ConfigPage.openNewTecnico()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Añadir técnico
+            </button>` : ''}
+          </div>
         </div>
         <div class="table-wrap">
           <table id="tec-table">
@@ -3682,12 +3700,30 @@ const ConfigPage = {
 
     </div>`;
 
+    // Guardar todos los técnicos para filtrado local sin releer BD
+    ConfigPage._allTecnicos = allTecnicos;
+
     document.getElementById('reimport-input')?.addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
       await DataService.clearAll();
       await App.runImport(file);
     });
+  },
+
+  _filterTecTable() {
+    const search  = (document.getElementById('tec-search')?.value  || '').toLowerCase();
+    const almacen = document.getElementById('tec-f-almacen')?.value || '';
+    const rol     = document.getElementById('tec-f-rol')?.value     || '';
+    const canAdmin = UserService.canManageConfig();
+    const filtered = (ConfigPage._allTecnicos || []).filter(t =>
+      (!search  || (t.nombre||'').toLowerCase().includes(search) || (t.email||'').toLowerCase().includes(search)) &&
+      (!almacen || normalizeAlmacen(t.almacen) === normalizeAlmacen(almacen) || (almacen && t.almacen === 'Todos')) &&
+      (!rol     || t.rol === rol)
+    );
+    document.getElementById('tec-tbody').innerHTML = ConfigPage._tecRows(filtered, canAdmin);
+    const countEl = document.getElementById('tec-count');
+    if (countEl) countEl.textContent = `(${filtered.length})`;
   },
 
   _rolBadge(rol) {
