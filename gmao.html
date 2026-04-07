@@ -3207,60 +3207,98 @@ const InventarioPage = {
     const almacenLocked = !!userAlmacen;
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
 
-    // Cargar listas para datalist desde el inventario (no del catálogo de productos)
     const allInv   = await db.inventario.toArray();
-    const allProds = await DataService.getAllProductos();
-    const tipos    = [...new Set(allInv.map(i => i.tipo).filter(Boolean))].sort();
-    const familias = [...new Set(allInv.map(i => i.familia).filter(Boolean))].sort();
+    const allProds = await db.productos.toArray();
     const uds_medida = [...new Set(allInv.map(i => i.unidad_medida).filter(Boolean))].sort();
+    const tipos = [...new Set([
+      ...allProds.map(p => p.tipo),
+      ...allInv.map(i => i.tipo),
+    ].filter(Boolean))].sort();
 
     Modal.open('Añadir al inventario', `
       <form id="inv-new-form" class="form-grid">
 
-        <!-- PASO 1: Código -->
+        <!-- PASO 1: Tipo -->
         <div class="form-field full">
-          <label>Cód. Producto *</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input class="form-input" id="inv-cod" placeholder="Ej: P0042" style="flex:1;font-family:monospace;text-transform:uppercase" autocomplete="off" list="inv-cod-list">
-            <datalist id="inv-cod-list">${allProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('')}</datalist>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="InventarioPage._lookupCod()">Buscar</button>
-          </div>
-          <div id="inv-lookup-msg" style="font-size:12px;margin-top:5px;padding:6px 10px;border-radius:6px;display:none"></div>
-        </div>
-
-        <!-- PASO 2: Datos del producto -->
-        <div class="form-field full">
-          <label>Nombre del producto *</label>
-          <input class="form-input" id="inv-nombre" placeholder="Nombre del producto">
-        </div>
-        <div class="form-field">
-          <label>Tipo Consumible</label>
-          <input class="form-input" id="inv-tipo" list="inv-tipos-list" placeholder="Ej: Rodamiento">
-          <datalist id="inv-tipos-list">${tipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}</datalist>
-        </div>
-        <div class="form-field">
-          <label>Familia</label>
-          <input class="form-input" id="inv-familia" list="inv-familias-list" placeholder="Ej: Transmisión">
-          <datalist id="inv-familias-list">${familias.map(f=>`<option>${UI.esc(f)}</option>`).join('')}</datalist>
-        </div>
-        <div class="form-field">
-          <label>Unidad de medida</label>
-          <input class="form-input" id="inv-udmedida" list="inv-udmedida-list" placeholder="Ej: Ud, m, kg...">
-          <datalist id="inv-udmedida-list">${uds_medida.map(u=>`<option>${UI.esc(u)}</option>`).join('')}</datalist>
-        </div>
-
-        <!-- PASO 3: Sitio y stock -->
-        <div style="height:1px;background:var(--border);grid-column:1/-1;margin:4px 0"></div>
-        <div class="form-field">
-          <label>Sitio *</label>
-          <select class="form-input" id="inv-almacen" required ${almacenLocked ? 'disabled' : ''}>
-            <option value="">Seleccionar...</option>
-            ${almacenes.map(a => `<option${userAlmacen === a ? ' selected' : ''}>${a}</option>`).join('')}
+          <label>Tipo *</label>
+          <select class="form-input" id="inv-tipo" onchange="InventarioPage._onTipoChange()">
+            <option value="">Seleccionar tipo...</option>
+            ${tipos.map(t => `<option>${UI.esc(t)}</option>`).join('')}
           </select>
         </div>
-        <div class="form-field">
-          <label>Unidades *</label>
-          <input class="form-input" type="number" id="inv-uds" min="0" step="1" value="0" required>
+
+        <!-- PASO 2: Familia (aparece al elegir tipo) -->
+        <div class="form-field full" id="inv-familia-row" style="display:none">
+          <label>Familia *</label>
+          <select class="form-input" id="inv-familia" onchange="InventarioPage._onFamiliaChange()">
+            <option value="">Seleccionar familia...</option>
+          </select>
+        </div>
+
+        <!-- PASO 3: Producto (aparece al elegir familia) -->
+        <div class="form-field full" id="inv-prod-row" style="display:none">
+          <label>Producto *</label>
+          <select class="form-input" id="inv-prod-sel" onchange="InventarioPage._onProdSelChange()">
+            <option value="">Seleccionar producto...</option>
+          </select>
+        </div>
+
+        <!-- Info del producto existente seleccionado -->
+        <div id="inv-prod-info" style="display:none;grid-column:1/-1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gray-muted)"></div>
+
+        <!-- Campos para producto NUEVO -->
+        <div id="inv-nuevo-fields" style="display:none;grid-column:1/-1">
+          <div style="height:1px;background:var(--border);margin:4px 0 12px"></div>
+          <p style="font-size:12px;font-weight:600;color:var(--orange);margin-bottom:12px">➕ Nuevo producto — rellena los datos</p>
+          <div class="form-grid" style="padding:0">
+            <div class="form-field">
+              <label>Cód. Producto *</label>
+              <input class="form-input" id="inv-cod" placeholder="Ej: P0042" style="font-family:monospace;text-transform:uppercase" autocomplete="off">
+            </div>
+            <div class="form-field">
+              <label>Nombre / Descripción *</label>
+              <input class="form-input" id="inv-nombre" placeholder="Nombre del producto">
+            </div>
+            <div class="form-field">
+              <label>Tamaño</label>
+              <input class="form-input" id="inv-tamano" placeholder="Ej: 25x52x15">
+            </div>
+            <div class="form-field">
+              <label>Tamaño 2</label>
+              <input class="form-input" id="inv-tamano2" placeholder="">
+            </div>
+            <div class="form-field">
+              <label>Tamaño 3</label>
+              <input class="form-input" id="inv-tamano3" placeholder="">
+            </div>
+            <div class="form-field">
+              <label>Tamaño 4</label>
+              <input class="form-input" id="inv-tamano4" placeholder="">
+            </div>
+            <div class="form-field">
+              <label>Unidad de medida</label>
+              <input class="form-input" id="inv-udmedida" list="inv-udmedida-list" placeholder="Ej: Ud, m, kg...">
+              <datalist id="inv-udmedida-list">${uds_medida.map(u=>`<option>${UI.esc(u)}</option>`).join('')}</datalist>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 4: Sitio y stock (aparece al seleccionar producto) -->
+        <div id="inv-stock-row" style="display:none;grid-column:1/-1">
+          <div style="height:1px;background:var(--border);margin:4px 0 12px"></div>
+          <div class="form-grid" style="padding:0">
+            <div class="form-field">
+              <label>Sitio *</label>
+              <select class="form-input" id="inv-almacen" required ${almacenLocked ? 'disabled' : ''} onchange="InventarioPage._checkDuplicate()">
+                <option value="">Seleccionar...</option>
+                ${almacenes.map(a => `<option${userAlmacen === a ? ' selected' : ''}>${a}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Unidades *</label>
+              <input class="form-input" type="number" id="inv-uds" min="0" step="1" value="0" required>
+            </div>
+          </div>
         </div>
 
         <!-- Mensaje de duplicado -->
@@ -3279,54 +3317,88 @@ const InventarioPage = {
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="InventarioPage._saveNew()">Guardar</button>`);
 
-    // Auto-lookup al cambiar el código
-    document.getElementById('inv-cod').addEventListener('change', () => InventarioPage._lookupCod());
-    // Comprueba duplicado al cambiar sitio
-    document.getElementById('inv-almacen').addEventListener('change', () => InventarioPage._checkDuplicate());
+    // Cache para los handlers de cascada
+    InventarioPage._catalogCache = allProds;
+    InventarioPage._invCache     = allInv;
   },
 
-  // Busca el código en inventario (datos reales) y rellena los campos del formulario
-  async _lookupCod() {
-    const cod = (document.getElementById('inv-cod')?.value || '').trim().toUpperCase();
-    document.getElementById('inv-cod').value = cod;
-    const msg = document.getElementById('inv-lookup-msg');
-    if (!cod) { msg.style.display = 'none'; return; }
+  _onTipoChange() {
+    const tipo     = document.getElementById('inv-tipo')?.value || '';
+    const allProds = InventarioPage._catalogCache || [];
+    const allInv   = InventarioPage._invCache     || [];
+    ['inv-familia-row','inv-prod-row','inv-nuevo-fields','inv-prod-info','inv-stock-row','inv-dup-msg'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    if (!tipo) return;
+    const familias = [...new Set([
+      ...allProds.filter(p => p.tipo === tipo).map(p => p.familia),
+      ...allInv.filter(i => i.tipo === tipo).map(i => i.familia),
+    ].filter(Boolean))].sort();
+    const famEl = document.getElementById('inv-familia');
+    famEl.innerHTML = '<option value="">Seleccionar familia...</option>' +
+      familias.map(f => `<option>${UI.esc(f)}</option>`).join('');
+    document.getElementById('inv-familia-row').style.display = '';
+  },
 
-    // Buscar en inventario existente (tiene tipo_consumible y unidad_medida reales)
-    const allInv = await db.inventario.toArray();
-    const sample = allInv.find(i => i.cod_producto === cod);
-    if (sample) {
-      document.getElementById('inv-nombre').value   = sample.producto      || '';
-      document.getElementById('inv-tipo').value     = sample.tipo          || '';
-      document.getElementById('inv-familia').value  = sample.familia       || '';
-      document.getElementById('inv-udmedida').value = sample.unidad_medida || '';
-      ['inv-nombre','inv-tipo','inv-familia','inv-udmedida'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.readOnly = true; el.style.background = 'var(--bg)'; el.style.color = 'var(--gray-muted)'; }
-      });
-      msg.style.display = '';
-      msg.style.background = '#e8f5e9'; msg.style.color = '#2e7d32';
-      msg.textContent = `✓ Producto encontrado: "${sample.producto}"`;
-    } else {
-      ['inv-nombre','inv-tipo','inv-familia','inv-udmedida'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.readOnly = false; el.style.background = ''; el.style.color = ''; el.value = ''; }
-      });
-      msg.style.display = '';
-      msg.style.background = '#fff8e1'; msg.style.color = '#e65100';
-      msg.textContent = `⚠ Código nuevo — se añadirá al catálogo al guardar.`;
+  _onFamiliaChange() {
+    const tipo    = document.getElementById('inv-tipo')?.value    || '';
+    const familia = document.getElementById('inv-familia')?.value || '';
+    ['inv-prod-row','inv-nuevo-fields','inv-prod-info','inv-stock-row','inv-dup-msg'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    if (!familia) return;
+    const allProds = InventarioPage._catalogCache || [];
+    const prods = allProds
+      .filter(p => (!tipo || p.tipo === tipo) && p.familia === familia)
+      .sort((a, b) => (a.producto||'').localeCompare(b.producto||''));
+    const prodEl = document.getElementById('inv-prod-sel');
+    prodEl.innerHTML =
+      '<option value="">Seleccionar producto...</option>' +
+      prods.map(p => {
+        const sizes = [p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' / ');
+        return `<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}${sizes ? ' — '+UI.esc(sizes) : ''}</option>`;
+      }).join('') +
+      '<option value="__NUEVO__">➕ Añadir nuevo producto</option>';
+    document.getElementById('inv-prod-row').style.display = '';
+  },
+
+  _onProdSelChange() {
+    const val = document.getElementById('inv-prod-sel')?.value || '';
+    ['inv-nuevo-fields','inv-prod-info','inv-stock-row','inv-dup-msg'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    if (!val) return;
+    if (val === '__NUEVO__') {
+      document.getElementById('inv-nuevo-fields').style.display = '';
+      document.getElementById('inv-stock-row').style.display = '';
+      return;
     }
-    await this._checkDuplicate();
+    const prod = (InventarioPage._catalogCache || []).find(p => p.cod_producto === val);
+    if (prod) {
+      const sizes = [prod.tamano, prod.tamano2, prod.tamano3, prod.tamano4].filter(Boolean).join(' / ');
+      const infoEl = document.getElementById('inv-prod-info');
+      infoEl.innerHTML =
+        `<strong style="color:var(--gray-text)">${UI.esc(prod.producto)}</strong>` +
+        ` <span style="font-family:monospace">[${UI.esc(prod.cod_producto)}]</span>` +
+        (sizes   ? `<br>Tamaño: ${UI.esc(sizes)}`       : '') +
+        (prod.familia ? `<br>Familia: ${UI.esc(prod.familia)}` : '');
+      infoEl.style.display = '';
+    }
+    document.getElementById('inv-stock-row').style.display = '';
+    InventarioPage._checkDuplicate();
   },
 
   // Avisa si ya existe ese código en el almacén seleccionado
   async _checkDuplicate() {
-    const cod = (document.getElementById('inv-cod')?.value || '').trim();
-    const alm = document.getElementById('inv-almacen')?.value || '';
+    const sel    = document.getElementById('inv-prod-sel')?.value || '';
+    const cod    = sel === '__NUEVO__'
+      ? (document.getElementById('inv-cod')?.value || '').trim().toUpperCase()
+      : sel;
+    const alm    = document.getElementById('inv-almacen')?.value || '';
     const dupMsg = document.getElementById('inv-dup-msg');
-    if (!cod || !alm) { dupMsg.style.display = 'none'; return; }
+    if (!cod || !alm || sel === '__NUEVO__') { if (dupMsg) dupMsg.style.display = 'none'; return; }
     const normAlm = normalizeAlmacen(alm);
-    const all = await db.inventario.toArray();
+    const all  = InventarioPage._invCache || await db.inventario.toArray();
     const match = all.find(i => i.cod_producto === cod && normalizeAlmacen(i.almacen) === normAlm);
     if (match) {
       document.getElementById('inv-dup-uds').textContent = ` (actualmente: ${match.unidades} uds)`;
@@ -3337,26 +3409,58 @@ const InventarioPage = {
   },
 
   async _saveNew() {
-    const cod          = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
-    const nombre       = (document.getElementById('inv-nombre')?.value   || '').trim();
-    const tipo         = (document.getElementById('inv-tipo')?.value     || '').trim();
-    const familia      = (document.getElementById('inv-familia')?.value  || '').trim();
-    const unidad_medida= (document.getElementById('inv-udmedida')?.value || '').trim();
-    const almacen      = document.getElementById('inv-almacen')?.value   || '';
-    const uds          = parseInt(document.getElementById('inv-uds')?.value) || 0;
-    const modeEl       = document.querySelector('input[name="inv-mode"]:checked');
-    const mode         = modeEl ? modeEl.value : 'replace';
+    const sel     = document.getElementById('inv-prod-sel')?.value || '';
+    const isNuevo = sel === '__NUEVO__';
+    const tipo    = document.getElementById('inv-tipo')?.value    || '';
+    const familia = document.getElementById('inv-familia')?.value || '';
+    const almacen = document.getElementById('inv-almacen')?.value || '';
+    const uds     = parseInt(document.getElementById('inv-uds')?.value) || 0;
+    const modeEl  = document.querySelector('input[name="inv-mode"]:checked');
+    const mode    = modeEl ? modeEl.value : 'replace';
 
-    if (!cod)    { toast('El código de producto es obligatorio', 'error'); return; }
-    if (!nombre) { toast('El nombre del producto es obligatorio', 'error'); return; }
-    if (!almacen){ toast('Selecciona el sitio', 'error'); return; }
-    if (uds < 0) { toast('Las unidades no pueden ser negativas', 'error'); return; }
+    let cod, nombre, tamano, tamano2, tamano3, tamano4, unidad_medida;
+
+    if (isNuevo) {
+      cod           = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
+      nombre        = (document.getElementById('inv-nombre')?.value   || '').trim();
+      tamano        = (document.getElementById('inv-tamano')?.value   || '').trim();
+      tamano2       = (document.getElementById('inv-tamano2')?.value  || '').trim();
+      tamano3       = (document.getElementById('inv-tamano3')?.value  || '').trim();
+      tamano4       = (document.getElementById('inv-tamano4')?.value  || '').trim();
+      unidad_medida = (document.getElementById('inv-udmedida')?.value || '').trim();
+      if (!cod)    { toast('El código de producto es obligatorio', 'error'); return; }
+      if (!nombre) { toast('El nombre del producto es obligatorio', 'error'); return; }
+    } else {
+      cod = sel;
+      const prod    = (InventarioPage._catalogCache || []).find(p => p.cod_producto === cod);
+      nombre        = prod?.producto      || cod;
+      tamano        = prod?.tamano        || '';
+      tamano2       = prod?.tamano2       || '';
+      tamano3       = prod?.tamano3       || '';
+      tamano4       = prod?.tamano4       || '';
+      unidad_medida = '';
+      if (!cod) { toast('Selecciona un producto', 'error'); return; }
+    }
+
+    if (!almacen) { toast('Selecciona el sitio', 'error'); return; }
+    if (uds < 0)  { toast('Las unidades no pueden ser negativas', 'error'); return; }
+
+    // Si es nuevo, guardar en catálogo de productos
+    if (isNuevo) {
+      const allProds = await db.productos.toArray();
+      if (!allProds.find(p => p.cod_producto === cod)) {
+        const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
+        await db.productos.put({ id: maxId + 1, cod_producto: cod, producto: nombre,
+          tipo, familia, tamano, tamano2, tamano3, tamano4, precio: 0 });
+      }
+    }
 
     const result = await DataService.saveInventarioEntry({
       cod_producto: cod, producto: nombre, tipo, familia, unidad_medida,
       almacen, unidades: uds, mode,
     });
 
+    InventarioPage._invCache = null;
     Modal.close();
     const accion = result.updated
       ? (mode === 'add' ? `sumado → ${result.newUds} uds` : `actualizado a ${result.newUds} uds`)
