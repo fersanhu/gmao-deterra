@@ -3630,10 +3630,16 @@ const MovimientosPage = {
 // ═══════════════════════════════════════════════════════════════════
 const ConfigPage = {
   async render() {
-    const tecnicos = await DataService.getTecnicos();
+    const tecnicos  = await DataService.getTecnicos();
+    const canAdmin  = UserService.canManageConfig();
+
     document.getElementById('content').innerHTML = `
-    <div class="page-header"><div><h1>Configuración</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div></div>
+    <div class="page-header">
+      <div><h1>Configuración</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div>
+    </div>
     <div class="config-grid">
+
+      <!-- Base de datos -->
       <div class="card">
         <div class="card-header"><span class="card-title">📊 Base de datos</span></div>
         <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Exporta todos los datos a JSON o importa un nuevo Excel.</p>
@@ -3652,18 +3658,28 @@ const ConfigPage = {
           </button>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">👤 Técnicos (${tecnicos.length})</span></div>
-        <div class="table-wrap" style="max-height:300px;overflow-y:auto">
-          <table><thead><tr><th>Nombre</th><th>Rol</th><th>Almacén</th><th>Activo</th></tr></thead>
-          <tbody>${tecnicos.map(t => `<tr>
-            <td>${UI.esc(t.nombre)}</td>
-            <td><span class="badge ${t.rol==='Responsable'?'badge-orange':t.rol==='Admin'?'badge-red':'badge-green'}">${UI.esc(t.rol)}</span></td>
-            <td>${UI.esc(t.almacen)}</td>
-            <td>${t.activo ? '✅' : '⬜'}</td>
-          </tr>`).join('')}</tbody></table>
+
+      <!-- Técnicos -->
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+          <span class="card-title">👤 Técnicos (${tecnicos.length})</span>
+          ${canAdmin ? `<button class="btn btn-primary btn-sm" onclick="ConfigPage.openNewTecnico()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Añadir técnico
+          </button>` : ''}
+        </div>
+        <div class="table-wrap">
+          <table id="tec-table">
+            <thead><tr>
+              <th>Nombre</th><th>Email</th><th>Teléfono</th>
+              <th>Rol</th><th>Almacén</th><th style="text-align:center">Activo</th>
+              ${canAdmin ? '<th style="text-align:right">Acciones</th>' : ''}
+            </tr></thead>
+            <tbody id="tec-tbody">${ConfigPage._tecRows(tecnicos, canAdmin)}</tbody>
+          </table>
         </div>
       </div>
+
     </div>`;
 
     document.getElementById('reimport-input')?.addEventListener('change', async e => {
@@ -3672,6 +3688,147 @@ const ConfigPage = {
       await DataService.clearAll();
       await App.runImport(file);
     });
+  },
+
+  _rolBadge(rol) {
+    const cls = rol === 'Admin' ? 'badge-red' : rol === 'Responsable' ? 'badge-orange' : 'badge-green';
+    return `<span class="badge ${cls}">${UI.esc(rol)}</span>`;
+  },
+
+  _tecRows(tecnicos, canAdmin) {
+    const currentId = UserService.getUser()?.id;
+    return tecnicos.map(t => `<tr id="tec-row-${UI.esc(t.id)}">
+      <td style="font-weight:500">${UI.esc(t.nombre)}</td>
+      <td style="color:var(--gray-muted);font-size:12px">${UI.esc(t.email||'—')}</td>
+      <td style="color:var(--gray-muted);font-size:12px">${UI.esc(t.telefono||'—')}</td>
+      <td>${ConfigPage._rolBadge(t.rol)}</td>
+      <td>${UI.esc(t.almacen||'—')}</td>
+      <td style="text-align:center">
+        ${canAdmin
+          ? `<button class="btn btn-sm ${t.activo?'btn-secondary':'btn-danger'}" style="font-size:11px;padding:3px 8px" onclick="ConfigPage.toggleActivo('${UI.esc(t.id)}')">
+               ${t.activo ? '✅ Activo' : '⬜ Inactivo'}
+             </button>`
+          : (t.activo ? '✅' : '⬜')
+        }
+      </td>
+      ${canAdmin ? `<td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-secondary btn-sm" onclick="ConfigPage.editTecnico('${UI.esc(t.id)}')">✏️ Editar</button>
+        ${t.id !== currentId
+          ? `<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="ConfigPage.deleteTecnico('${UI.esc(t.id)}')">🗑</button>`
+          : `<button class="btn btn-secondary btn-sm" style="margin-left:4px;opacity:0.35;cursor:default" disabled title="No puedes eliminarte a ti mismo">🗑</button>`
+        }
+      </td>` : ''}
+    </tr>`).join('');
+  },
+
+  _tecFormHtml(t = {}) {
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi','Todos'];
+    const roles     = ['Mecanico','Responsable','Admin'];
+    return `
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Nombre *</label>
+          <input class="form-input" id="tec-nombre" value="${UI.esc(t.nombre||'')}" placeholder="Nombre completo">
+        </div>
+        <div class="form-field">
+          <label>Email</label>
+          <input class="form-input" id="tec-email" type="email" value="${UI.esc(t.email||'')}" placeholder="correo@empresa.com">
+        </div>
+        <div class="form-field">
+          <label>Teléfono</label>
+          <input class="form-input" id="tec-telefono" value="${UI.esc(t.telefono||'')}" placeholder="6XX XXX XXX">
+        </div>
+        <div class="form-field">
+          <label>Rol *</label>
+          <select class="form-input" id="tec-rol">
+            ${roles.map(r => `<option${t.rol===r?' selected':''}>${r}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="tec-almacen">
+            ${almacenes.map(a => `<option${(t.almacen||'Miramar')===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field" style="display:flex;align-items:center;gap:10px;padding-top:22px">
+          <input type="checkbox" id="tec-activo"${t.activo!==false?' checked':''} style="width:16px;height:16px">
+          <label for="tec-activo" style="margin:0;cursor:pointer">Activo</label>
+        </div>
+      </div>`;
+  },
+
+  openNewTecnico() {
+    Modal.open('Añadir técnico', ConfigPage._tecFormHtml(),
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico(null)">Guardar</button>`);
+  },
+
+  async editTecnico(id) {
+    const t = await db.tecnicos.get(id);
+    if (!t) return;
+    Modal.open('Editar técnico', ConfigPage._tecFormHtml(t),
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico('${UI.esc(id)}')">Guardar cambios</button>`);
+  },
+
+  async _saveTecnico(id) {
+    const nombre   = (document.getElementById('tec-nombre')?.value   || '').trim();
+    const email    = (document.getElementById('tec-email')?.value    || '').trim();
+    const telefono = (document.getElementById('tec-telefono')?.value || '').trim();
+    const rol      = document.getElementById('tec-rol')?.value      || 'Mecanico';
+    const almacen  = document.getElementById('tec-almacen')?.value  || '';
+    const activo   = document.getElementById('tec-activo')?.checked !== false;
+
+    if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+
+    if (id) {
+      // Editar existente
+      const existing = await db.tecnicos.get(id);
+      if (!existing) return;
+      await db.tecnicos.put({ ...existing, nombre, email, telefono, rol, almacen, activo });
+      // Si es el usuario actual, actualizar sesión
+      if (UserService.getUser()?.id === id) {
+        UserService.login({ ...existing, nombre, email, telefono, rol, almacen, activo });
+        App.updateUserUI();
+      }
+      toast(`${nombre} actualizado`, 'success');
+    } else {
+      // Nuevo técnico — generar ID
+      const all  = await db.tecnicos.toArray();
+      const nums = all.map(t => { const m = t.id?.match(/TEC-(\d+)$/); return m ? parseInt(m[1]) : 0; });
+      const next = (Math.max(0, ...nums) + 1);
+      const newId = `TEC-${String(next).padStart(3,'0')}`;
+      await db.tecnicos.put({ id: newId, nombre, email, telefono, rol, almacen, activo });
+      toast(`${nombre} añadido`, 'success');
+    }
+    Modal.close();
+    await ConfigPage.render();
+  },
+
+  async toggleActivo(id) {
+    const t = await db.tecnicos.get(id);
+    if (!t) return;
+    await db.tecnicos.put({ ...t, activo: !t.activo });
+    toast(`${t.nombre} → ${!t.activo ? 'Activo' : 'Inactivo'}`, 'success');
+    // Redibujar solo la fila
+    const all = await DataService.getTecnicos();
+    const canAdmin = UserService.canManageConfig();
+    document.getElementById('tec-tbody').innerHTML = ConfigPage._tecRows(all, canAdmin);
+  },
+
+  async deleteTecnico(id) {
+    const t = await db.tecnicos.get(id);
+    if (!t) return;
+    if (!confirm(`¿Eliminar a "${t.nombre}"? Esta acción no se puede deshacer.`)) return;
+    await db.tecnicos.delete(id);
+    toast(`${t.nombre} eliminado`, 'success');
+    const all = await DataService.getTecnicos();
+    const canAdmin = UserService.canManageConfig();
+    document.getElementById('tec-tbody').innerHTML = ConfigPage._tecRows(all, canAdmin);
+    document.querySelector('.card-title')?.closest('.card')
+      ?.querySelector('.card-title')?.textContent;
+    // Actualizar el título del card
+    await ConfigPage.render();
   },
 
   async exportData() {
