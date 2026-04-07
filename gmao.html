@@ -3252,33 +3252,37 @@ const InventarioPage = {
           <p style="font-size:12px;font-weight:600;color:var(--orange);margin-bottom:12px">➕ Nuevo producto — rellena los datos</p>
           <div class="form-grid" style="padding:0">
             <div class="form-field">
-              <label>Cód. Producto *</label>
-              <input class="form-input" id="inv-cod" placeholder="Ej: P0042" style="font-family:monospace;text-transform:uppercase" autocomplete="off">
+              <label>Cód. Producto (auto)</label>
+              <input class="form-input" id="inv-cod" readonly style="background:var(--bg);color:var(--gray-muted);font-family:monospace;cursor:default" tabindex="-1">
             </div>
             <div class="form-field">
-              <label>Nombre / Descripción *</label>
-              <input class="form-input" id="inv-nombre" placeholder="Nombre del producto">
+              <label>Nombre base *</label>
+              <input class="form-input" id="inv-nombre" placeholder="Ej: RODAMIENTO" oninput="InventarioPage._updateProductoPreview()">
             </div>
             <div class="form-field">
               <label>Tamaño</label>
-              <input class="form-input" id="inv-tamano" placeholder="Ej: 25x52x15">
+              <input class="form-input" id="inv-tamano" placeholder="Ej: 25x52x15" oninput="InventarioPage._updateProductoPreview()">
             </div>
             <div class="form-field">
               <label>Tamaño 2</label>
-              <input class="form-input" id="inv-tamano2" placeholder="">
+              <input class="form-input" id="inv-tamano2" placeholder="" oninput="InventarioPage._updateProductoPreview()">
             </div>
             <div class="form-field">
               <label>Tamaño 3</label>
-              <input class="form-input" id="inv-tamano3" placeholder="">
+              <input class="form-input" id="inv-tamano3" placeholder="" oninput="InventarioPage._updateProductoPreview()">
             </div>
             <div class="form-field">
               <label>Tamaño 4</label>
-              <input class="form-input" id="inv-tamano4" placeholder="">
+              <input class="form-input" id="inv-tamano4" placeholder="" oninput="InventarioPage._updateProductoPreview()">
             </div>
             <div class="form-field">
               <label>Unidad de medida</label>
               <input class="form-input" id="inv-udmedida" list="inv-udmedida-list" placeholder="Ej: Ud, m, kg...">
               <datalist id="inv-udmedida-list">${uds_medida.map(u=>`<option>${UI.esc(u)}</option>`).join('')}</datalist>
+            </div>
+            <div class="form-field full">
+              <label>Nombre de producto generado</label>
+              <div id="inv-prod-preview" style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-weight:600;font-size:13px;min-height:36px;color:var(--gray-text)">—</div>
             </div>
           </div>
         </div>
@@ -3320,6 +3324,7 @@ const InventarioPage = {
     // Cache para los handlers de cascada
     InventarioPage._catalogCache = allProds;
     InventarioPage._invCache     = allInv;
+    InventarioPage._nextCod      = InventarioPage._calcNextCod(allProds);
   },
 
   _onTipoChange() {
@@ -3371,6 +3376,10 @@ const InventarioPage = {
     if (val === '__NUEVO__') {
       document.getElementById('inv-nuevo-fields').style.display = '';
       document.getElementById('inv-stock-row').style.display = '';
+      // Rellenar código auto-generado
+      const codEl = document.getElementById('inv-cod');
+      if (codEl) codEl.value = InventarioPage._nextCod || '';
+      InventarioPage._updateProductoPreview();
       return;
     }
     const prod = (InventarioPage._catalogCache || []).find(p => p.cod_producto === val);
@@ -3386,6 +3395,40 @@ const InventarioPage = {
     }
     document.getElementById('inv-stock-row').style.display = '';
     InventarioPage._checkDuplicate();
+  },
+
+  // Calcula el siguiente código de producto manteniendo el mismo formato que los existentes
+  // Ej: si hay "P001","P002" → devuelve "P003"; si hay "001","002" → "003"
+  _calcNextCod(allProds) {
+    if (!allProds || allProds.length === 0) return '001';
+    // Extraer partes numéricas finales de cada cod_producto
+    const entries = allProds
+      .map(p => {
+        const m = (p.cod_producto || '').match(/^(.*?)(\d+)$/);
+        return m ? { prefix: m[1], num: parseInt(m[2]), len: m[2].length } : null;
+      })
+      .filter(Boolean);
+    if (entries.length === 0) {
+      const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
+      return String(maxId + 1).padStart(3, '0');
+    }
+    const maxEntry = entries.reduce((best, e) => e.num > best.num ? e : best, entries[0]);
+    const nextNum  = maxEntry.num + 1;
+    const padded   = String(nextNum).padStart(maxEntry.len, '0');
+    return maxEntry.prefix + padded;
+  },
+
+  // Actualiza en tiempo real la vista previa del nombre de producto concatenado
+  _updateProductoPreview() {
+    const parts = [
+      document.getElementById('inv-nombre')?.value.trim(),
+      document.getElementById('inv-tamano')?.value.trim(),
+      document.getElementById('inv-tamano2')?.value.trim(),
+      document.getElementById('inv-tamano3')?.value.trim(),
+      document.getElementById('inv-tamano4')?.value.trim(),
+    ].filter(Boolean);
+    const preview = document.getElementById('inv-prod-preview');
+    if (preview) preview.textContent = parts.join(' ') || '—';
   },
 
   // Avisa si ya existe ese código en el almacén seleccionado
@@ -3421,15 +3464,17 @@ const InventarioPage = {
     let cod, nombre, tamano, tamano2, tamano3, tamano4, unidad_medida;
 
     if (isNuevo) {
-      cod           = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
-      nombre        = (document.getElementById('inv-nombre')?.value   || '').trim();
-      tamano        = (document.getElementById('inv-tamano')?.value   || '').trim();
-      tamano2       = (document.getElementById('inv-tamano2')?.value  || '').trim();
-      tamano3       = (document.getElementById('inv-tamano3')?.value  || '').trim();
-      tamano4       = (document.getElementById('inv-tamano4')?.value  || '').trim();
-      unidad_medida = (document.getElementById('inv-udmedida')?.value || '').trim();
-      if (!cod)    { toast('El código de producto es obligatorio', 'error'); return; }
-      if (!nombre) { toast('El nombre del producto es obligatorio', 'error'); return; }
+      cod               = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
+      const nombreBase  = (document.getElementById('inv-nombre')?.value   || '').trim();
+      tamano            = (document.getElementById('inv-tamano')?.value   || '').trim();
+      tamano2           = (document.getElementById('inv-tamano2')?.value  || '').trim();
+      tamano3           = (document.getElementById('inv-tamano3')?.value  || '').trim();
+      tamano4           = (document.getElementById('inv-tamano4')?.value  || '').trim();
+      unidad_medida     = (document.getElementById('inv-udmedida')?.value || '').trim();
+      // Producto = concatenación de nombre base + tamaños (igual que en el Excel)
+      nombre = [nombreBase, tamano, tamano2, tamano3, tamano4].filter(Boolean).join(' ');
+      if (!nombreBase) { toast('El nombre base del producto es obligatorio', 'error'); return; }
+      if (!cod)        { toast('No se pudo generar el código automático', 'error'); return; }
     } else {
       cod = sel;
       const prod    = (InventarioPage._catalogCache || []).find(p => p.cod_producto === cod);
