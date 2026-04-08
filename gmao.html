@@ -493,6 +493,10 @@ select.form-input{cursor:pointer}
         <span class="nav-label">Incidencias</span>
         <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
       </div>
+      <div class="nav-item" data-route="partes" id="nav-partes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="nav-label">Partes</span>
+      </div>
       <div class="nav-item" data-route="inventario">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         <span class="nav-label">Inventario</span>
@@ -2768,6 +2772,18 @@ const AveriasPage = {
           <input class="form-input" type="time" id="av-hora" value="${hh}:${mm}">
         </div>
 
+        <!-- FOTOS DE LA AVERÍA -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="font-weight:600">📷 Fotos del problema (opcional)</label>
+          <div id="av-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
+          <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="file" id="av-foto-input" accept="image/*" multiple style="display:none"
+              onchange="AveriasPage._onFotoSelectedNew(this)">
+            <span class="btn btn-secondary btn-sm" style="pointer-events:none">Añadir foto(s)</span>
+          </label>
+          <span id="av-fotos-count" style="font-size:11px;color:var(--gray-muted);margin-left:8px"></span>
+        </div>
+
         <!-- TOGGLE: Cerrar ahora -->
         <div class="full" style="grid-column:1/-1;margin-top:4px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)" id="toggle-close-label">
@@ -2830,6 +2846,9 @@ const AveriasPage = {
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
+
+    // Buffer de fotos para el alta
+    AveriasPage._fotosBuffer = [];
 
     // Cascada materiales: tipo → familia → producto
     const _matProds = todosProds;
@@ -3058,6 +3077,16 @@ const AveriasPage = {
       fecha_fin: fechaFin, hora_fin: horaFin, solucion, materiales, coste, duracion,
     };
     await DataService.saveAveria(averia);
+
+    // Subir fotos del alta
+    if (AveriasPage._fotosBuffer.length > 0) {
+      for (const file of AveriasPage._fotosBuffer) {
+        try { await DataService.uploadFoto(id, file); } catch(e) { console.error('[foto alta]', e); }
+      }
+      AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
+      AveriasPage._fotosBuffer = [];
+    }
+
     Modal.close();
     toast(`Avería ${id} ${cerrarAhora ? 'cerrada' : 'registrada'} ✓`, 'success');
     App.updateBadges();
@@ -3359,9 +3388,16 @@ const AveriasPage = {
     AveriasPage._renderFotosPreview();
   },
 
-  _renderFotosPreview() {
-    const grid = document.getElementById('cl-fotos-preview');
-    const count = document.getElementById('cl-fotos-count');
+  _onFotoSelectedNew(input) {
+    Array.from(input.files).forEach(f => AveriasPage._fotosBuffer.push(f));
+    input.value = '';
+    AveriasPage._renderFotosPreview('av-fotos-preview', 'av-fotos-count');
+  },
+
+  _renderFotosPreview(gridId = 'cl-fotos-preview', countId = 'cl-fotos-count') {
+    // Fallback: si el id pedido no existe, intenta el otro formulario
+    const grid  = document.getElementById(gridId)  || document.getElementById(gridId === 'cl-fotos-preview' ? 'av-fotos-preview' : 'cl-fotos-preview');
+    const count = document.getElementById(countId) || document.getElementById(countId === 'cl-fotos-count' ? 'av-fotos-count' : 'cl-fotos-count');
     if (!grid) return;
     if (!AveriasPage._fotosBuffer.length) { grid.innerHTML = ''; if (count) count.textContent = ''; return; }
     grid.innerHTML = AveriasPage._fotosBuffer.map((f, i) => {
@@ -4990,10 +5026,14 @@ const App = {
 
     // Mecánico solo ve el menú de Averías — ocultar el resto
     const isMec = UserService.isMecanico();
-    ['dashboard','activos','incidencias','inventario','movimientos'].forEach(route => {
+    ['dashboard','activos','incidencias','inventario','movimientos','partes'].forEach(route => {
       document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
         el.style.display = isMec ? 'none' : '';
       });
+    });
+    // Partes: solo Admin y Responsable (ya cubierto por isMec=false, pero también ocultar si no tiene rol)
+    document.querySelectorAll('.nav-item[data-route="partes"]').forEach(el => {
+      el.style.display = (UserService.isAdmin() || UserService.isResponsable()) ? '' : 'none';
     });
 
     // Ocultar botones de gestión de activos a Mecánicos
@@ -5030,6 +5070,146 @@ const App = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PAGE: PARTES DE TRABAJO
+// ═══════════════════════════════════════════════════════════════════
+const PartesPage = {
+  _partes: [],
+  _averias: [],
+
+  async render() {
+    const main = document.getElementById('main-content');
+    if (!main) return;
+    // Solo Admin y Responsable
+    if (!UserService.isAdmin() && !UserService.isResponsable()) {
+      main.innerHTML = `<div class="page-header"><h1>Partes de trabajo</h1></div>
+        <p style="color:var(--gray-muted);padding:20px">Acceso restringido a Responsables y Administradores.</p>`;
+      return;
+    }
+
+    main.innerHTML = `<div class="page-header">
+      <h1>Partes de trabajo</h1>
+    </div>
+    <div class="pbi-controls">
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Almacén</span>
+        <select class="pbi-select" id="pt-alm">
+          <option value="">Todos</option>
+          ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a=>`<option>${a}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Técnico</span>
+        <select class="pbi-select" id="pt-tec"><option value="">Todos</option></select>
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Desde</span>
+        <input type="date" class="pbi-select" id="pt-desde">
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Hasta</span>
+        <input type="date" class="pbi-select" id="pt-hasta">
+      </div>
+      <div class="pbi-ctrl-group" style="justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="PartesPage._applyFilters()">Filtrar</button>
+      </div>
+    </div>
+    <div id="pt-resumen" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div class="table-container">
+      <table class="data-table" id="pt-table">
+        <thead><tr>
+          <th>Fecha</th><th>Avería</th><th>Almacén</th><th>Equipo</th>
+          <th>Técnico</th><th>Horas</th><th>Notas</th>
+        </tr></thead>
+        <tbody id="pt-tbody"><tr><td colspan="7" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
+      </table>
+    </div>`;
+
+    // Pre-filtrar por almacén del responsable
+    const effAlm = UserService.getEffectiveAlmacen();
+    if (effAlm) {
+      const sel = document.getElementById('pt-alm');
+      if (sel) sel.value = effAlm;
+    }
+
+    await this._loadData();
+  },
+
+  async _loadData() {
+    const [partes, averias, tecnicos] = await Promise.all([
+      db.partes_trabajo.toArray(),
+      db.averias.toArray(),
+      DataService.getTecnicos(true),
+    ]);
+    this._partes  = partes;
+    this._averias = averias;
+
+    // Populate técnico select
+    const tecSel = document.getElementById('pt-tec');
+    if (tecSel) {
+      const effAlm = UserService.getEffectiveAlmacen();
+      const list   = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
+      tecSel.innerHTML = '<option value="">Todos</option>' +
+        list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
+    }
+
+    this._applyFilters();
+  },
+
+  _applyFilters() {
+    const alm   = document.getElementById('pt-alm')?.value    || '';
+    const tec   = document.getElementById('pt-tec')?.value    || '';
+    const desde = document.getElementById('pt-desde')?.value  || '';
+    const hasta = document.getElementById('pt-hasta')?.value  || '';
+
+    const averiaMap = {};
+    this._averias.forEach(a => { averiaMap[a.id] = a; });
+
+    let rows = this._partes.map(p => ({ ...p, _av: averiaMap[p.averia_id] || {} }));
+
+    if (alm)   rows = rows.filter(r => normalizeAlmacen(r._av.almacen || '') === normalizeAlmacen(alm));
+    if (tec)   rows = rows.filter(r => r.tecnico === tec);
+    if (desde) rows = rows.filter(r => (r.fecha || '') >= desde);
+    if (hasta) rows = rows.filter(r => (r.fecha || '') <= hasta);
+
+    rows.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+    const totalHoras = rows.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
+    const tecnicos   = [...new Set(rows.map(r => r.tecnico).filter(Boolean))];
+
+    // Resumen KPIs
+    const res = document.getElementById('pt-resumen');
+    if (res) res.innerHTML = `
+      <div class="kpi-card kpi-blue" style="min-width:120px;flex:0 0 auto">
+        <div class="kpi-body"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Partes</div></div>
+      </div>
+      <div class="kpi-card kpi-green" style="min-width:120px;flex:0 0 auto">
+        <div class="kpi-body"><div class="kpi-value">${totalHoras.toFixed(1)}h</div><div class="kpi-label">Total horas</div></div>
+      </div>
+      <div class="kpi-card" style="min-width:120px;flex:0 0 auto;background:var(--surface)">
+        <div class="kpi-body"><div class="kpi-value">${tecnicos.length}</div><div class="kpi-label">Técnicos</div></div>
+      </div>`;
+
+    // Tabla
+    const tbody = document.getElementById('pt-tbody');
+    if (!tbody) return;
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-muted);padding:24px">Sin partes para los filtros seleccionados</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(r.averia_id)}')">
+        <td style="white-space:nowrap">${UI.esc(r.fecha || '—')}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted)">${UI.esc(r.averia_id)}</td>
+        <td>${UI.esc(r._av.almacen || '—')}</td>
+        <td>${UI.esc(r._av.equipo  || r._av.id_activo || '—')}</td>
+        <td style="font-weight:500">👤 ${UI.esc(r.tecnico || '—')}</td>
+        <td style="text-align:center"><span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 10px;font-weight:600">${parseFloat(r.horas||0).toFixed(1)}h</span></td>
+        <td style="color:var(--gray-muted);font-style:italic">${UI.esc(r.notas || '')}</td>
+      </tr>`).join('');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
 Router.register('dashboard',  async () => DashboardPage.render());
@@ -5038,6 +5218,7 @@ Router.register('averias',    async () => AveriasPage.render());
 Router.register('incidencias',async () => IncidenciasPage.render());
 Router.register('inventario',  async () => InventarioPage.render());
 Router.register('movimientos', async () => MovimientosPage.render());
+Router.register('partes',      async () => PartesPage.render());
 Router.register('config',      async () => ConfigPage.render());
 
 // ═══════════════════════════════════════════════════════════════════
