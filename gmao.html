@@ -653,6 +653,7 @@ const db = {
   inventario:  makeTable('inventario',  'id'),
   movimientos:    makeTable('movimientos',    'id'),
   partes_trabajo: makeTable('partes_trabajo', 'id'),
+  fotos_averias:  makeTable('fotos_averias',  'id'),
   metadata:       makeTable('metadata',       'key'),
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
@@ -1056,6 +1057,31 @@ const DataService = {
   async deletePartesByAveria(averia_id) {
     const all = await db.partes_trabajo.toArray();
     for (const p of all.filter(x => x.averia_id === averia_id)) await db.partes_trabajo.delete(p.id);
+  },
+
+  // ── Fotos averías ────────────────────────────────────────────────
+  async getFotosByAveria(averia_id) {
+    const all = await db.fotos_averias.toArray();
+    return all.filter(f => f.averia_id === averia_id);
+  },
+  async uploadFoto(averia_id, file) {
+    const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const slug = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `${averia_id}/${slug}`;
+    const { error } = await sb.storage.from('fotos-averias').upload(path, file, {
+      contentType: file.type || 'image/jpeg',
+      upsert: false,
+    });
+    if (error) throw new Error(`[uploadFoto] ${error.message}`);
+    const { data: urlData } = sb.storage.from('fotos-averias').getPublicUrl(path);
+    const url = urlData.publicUrl;
+    const id  = `foto_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    await db.fotos_averias.put({ id, averia_id, storage_path: path, url, nombre: file.name });
+    return { id, url, storage_path: path, nombre: file.name };
+  },
+  async deleteFoto(foto) {
+    await sb.storage.from('fotos-averias').remove([foto.storage_path]);
+    await db.fotos_averias.delete(foto.id);
   },
 
   async getIncidencias(filters = {}) {
@@ -2522,9 +2548,14 @@ const AveriasPage = {
   async openDetail(id) {
     const a = await DataService.getAveria(id);
     if (!a) return;
-    const partes = await DataService.getPartesByAveria(id);
+    const [partes, fotos] = await Promise.all([
+      DataService.getPartesByAveria(id),
+      DataService.getFotosByAveria(id),
+    ]);
     const canClose = a.estado !== 'Cerrada' && UserService.canCloseAveria(a);
     const canCurso = a.estado === 'Abierta' && UserService.canCloseAveria(a);
+    const canEdit  = a.estado !== 'Cerrada';
+
     const partesHtml = partes.length > 0
       ? `<div class="detail-field full">
            <label>Mecánicos que intervinieron</label>
@@ -2539,6 +2570,29 @@ const AveriasPage = {
            </div>
          </div>`
       : (a.tecnico ? `<div class="detail-field"><label>Técnico asignado</label><p>${UI.esc(a.tecnico)}</p></div>` : '');
+
+    const fotosHtml = `<div class="detail-field full">
+      <label>Fotos${fotos.length ? ` (${fotos.length})` : ''}</label>
+      <div id="detail-fotos-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+        ${fotos.map(f => `
+          <div style="position:relative;flex-shrink:0">
+            <a href="${UI.esc(f.url)}" target="_blank" rel="noopener" title="${UI.esc(f.nombre||'')}">
+              <img src="${UI.esc(f.url)}" loading="lazy"
+                style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block;cursor:zoom-in">
+            </a>
+            ${canEdit ? `<button type="button" onclick="AveriasPage._deleteFotoFromDetail('${UI.esc(f.id)}','${UI.esc(id)}')"
+              style="position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border:none;border-radius:50%;
+                     width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>` : ''}
+          </div>`).join('')}
+        ${canEdit ? `<label style="width:90px;height:90px;border:2px dashed var(--border);border-radius:8px;display:flex;
+                         flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+                         font-size:11px;color:var(--gray-muted);gap:4px;flex-shrink:0">
+          <input type="file" accept="image/*" multiple style="display:none"
+            onchange="AveriasPage._addFotosInDetail(this,'${UI.esc(id)}')">
+          <span style="font-size:22px">📷</span><span>Añadir</span>
+        </label>` : ''}
+      </div>
+    </div>`;
 
     Modal.open(`Avería — ${a.id}`, `
       <div class="detail-grid">
@@ -2555,10 +2609,66 @@ const AveriasPage = {
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
+        ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
        ${canCurso ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="AveriasPage._marcarEnCurso('${UI.esc(id)}')">▶ En curso</button>` : ''}
        ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">✓ Cerrar avería</button>` : ''}`);
+  },
+
+  // Añadir fotos desde el panel de detalle (avería abierta/en curso)
+  async _addFotosInDetail(input, averia_id) {
+    const files = Array.from(input.files);
+    input.value = '';
+    if (!files.length) return;
+    toast(`Subiendo ${files.length} foto(s)…`, '');
+    const errores = [];
+    const nuevas = [];
+    for (const file of files) {
+      try {
+        const foto = await DataService.uploadFoto(averia_id, file);
+        nuevas.push(foto);
+      } catch (e) {
+        errores.push(file.name);
+        console.error('[_addFotosInDetail]', e);
+      }
+    }
+    if (errores.length) { toast(`⚠️ ${errores.length} foto(s) no subidas`, 'error'); return; }
+    toast(`${nuevas.length} foto(s) añadida(s) ✓`, 'success');
+    // Actualiza la grid in situ sin re-abrir el modal
+    const grid = document.getElementById('detail-fotos-grid');
+    if (grid) {
+      const addLabel = grid.querySelector('label');
+      nuevas.forEach(f => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative;flex-shrink:0';
+        div.innerHTML = `<a href="${UI.esc(f.url)}" target="_blank" rel="noopener">
+          <img src="${UI.esc(f.url)}" loading="lazy"
+            style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block;cursor:zoom-in">
+        </a>
+        <button type="button" onclick="AveriasPage._deleteFotoFromDetail('${UI.esc(f.id)}','${UI.esc(averia_id)}')"
+          style="position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border:none;border-radius:50%;
+                 width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>`;
+        if (addLabel) grid.insertBefore(div, addLabel);
+        else grid.appendChild(div);
+      });
+    }
+  },
+
+  async _deleteFotoFromDetail(foto_id, averia_id) {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    const all = await DataService.getFotosByAveria(averia_id);
+    const foto = all.find(f => f.id === foto_id);
+    if (!foto) return;
+    try {
+      await DataService.deleteFoto(foto);
+      // Quitar el thumbnail del DOM
+      const btn = document.querySelector(`[onclick*="_deleteFotoFromDetail('${foto_id}'"]`);
+      btn?.closest('div[style*="position:relative"]')?.remove();
+      toast('Foto eliminada', '');
+    } catch (e) {
+      toast('Error al eliminar la foto', 'error');
+    }
   },
 
   async _marcarEnCurso(id) {
@@ -3062,12 +3172,26 @@ const AveriasPage = {
           <label>Coste total materiales (€)</label>
           <input class="form-input" type="number" id="cl-coste" min="0" step="0.01" placeholder="0.00">
         </div>
+
+        <!-- FOTOS -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="font-weight:600">Fotos de la avería</label>
+          <div id="cl-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
+          <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="file" id="cl-foto-input" accept="image/*" multiple style="display:none"
+              onchange="AveriasPage._onFotoSelected(this)">
+            <span class="btn btn-secondary btn-sm" style="pointer-events:none">📷 Añadir foto(s)</span>
+          </label>
+          <span id="cl-fotos-count" style="font-size:11px;color:var(--gray-muted);margin-left:8px"></span>
+        </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" style="background:var(--green)" onclick="AveriasPage._saveClose('${UI.esc(id)}')">✓ Confirmar cierre</button>`);
 
     // Store repuestos in memory
     AveriasPage._repuestosSeleccionados = [];
+    // Buffer de fotos pendientes de subir
+    AveriasPage._fotosBuffer = [];
     // Store partes de trabajo in memory; pre-populate con técnico principal si existe
     AveriasPage._partesSeleccionados = [];
     if (a.tecnico) {
@@ -3220,6 +3344,40 @@ const AveriasPage = {
       </div>`).join('');
   },
 
+  // ── Fotos ────────────────────────────────────────────────────────
+  _fotosBuffer: [],   // Array de File objects pendientes de subir
+
+  _onFotoSelected(input) {
+    Array.from(input.files).forEach(f => AveriasPage._fotosBuffer.push(f));
+    input.value = '';   // reset para poder re-seleccionar el mismo archivo
+    AveriasPage._renderFotosPreview();
+  },
+
+  _removeFotoBuffer(index) {
+    URL.revokeObjectURL(AveriasPage._fotosBuffer[index]?._previewUrl);
+    AveriasPage._fotosBuffer.splice(index, 1);
+    AveriasPage._renderFotosPreview();
+  },
+
+  _renderFotosPreview() {
+    const grid = document.getElementById('cl-fotos-preview');
+    const count = document.getElementById('cl-fotos-count');
+    if (!grid) return;
+    if (!AveriasPage._fotosBuffer.length) { grid.innerHTML = ''; if (count) count.textContent = ''; return; }
+    grid.innerHTML = AveriasPage._fotosBuffer.map((f, i) => {
+      if (!f._previewUrl) f._previewUrl = URL.createObjectURL(f);
+      return `<div style="position:relative;flex-shrink:0">
+        <img src="${f._previewUrl}" alt="${UI.esc(f.name)}" loading="lazy"
+          style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">
+        <button type="button" onclick="AveriasPage._removeFotoBuffer(${i})"
+          style="position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border:none;border-radius:50%;
+                 width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
+        <span style="display:block;max-width:80px;font-size:9px;color:var(--gray-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:2px">${UI.esc(f.name)}</span>
+      </div>`;
+    }).join('');
+    if (count) count.textContent = `${AveriasPage._fotosBuffer.length} foto${AveriasPage._fotosBuffer.length > 1 ? 's' : ''} seleccionada${AveriasPage._fotosBuffer.length > 1 ? 's' : ''}`;
+  },
+
   async _saveClose(id) {
     const a = await DataService.getAveria(id);
     if (!a) return;
@@ -3273,6 +3431,25 @@ const AveriasPage = {
         id,
         user?.nombre || ''
       );
+    }
+
+    // Subir fotos
+    if (AveriasPage._fotosBuffer.length > 0) {
+      // Mostrar progreso
+      toast(`Subiendo ${AveriasPage._fotosBuffer.length} foto(s)…`, '');
+      const errores = [];
+      for (const file of AveriasPage._fotosBuffer) {
+        try {
+          await DataService.uploadFoto(id, file);
+        } catch (e) {
+          errores.push(file.name);
+          console.error('[uploadFoto]', e);
+        }
+      }
+      // Liberar object URLs
+      AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
+      AveriasPage._fotosBuffer = [];
+      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no se pudieron subir`, 'error');
     }
 
     Modal.close();
