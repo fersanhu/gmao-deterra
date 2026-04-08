@@ -1508,7 +1508,8 @@ function getAlmacenFilter() {
 // ═══════════════════════════════════════════════════════════════════
 const DashboardPage = {
   _chartAverias: null,
-  _chartCrit: null,
+  _chartCrit:    null,
+  _chartZonas:   null,
   _allAverias: [],     // todas las averías (sin filtro de almacén global)
   _chartMode: 'mes',
 
@@ -1586,12 +1587,22 @@ const DashboardPage = {
     // Construir buckets temporales (labels)
     let buckets = [];
     if (mode === 'semana') {
+      const isoWeek = (d) => {
+        const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+        return { w: Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7), y: tmp.getUTCFullYear() };
+      };
+      const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       const n = periodo > 0 ? periodo : 26;
       buckets = Array.from({length: n}, (_, i) => {
         const d = new Date(now); d.setDate(d.getDate() - (n - 1 - i) * 7);
         const mon = new Date(d); mon.setDate(mon.getDate() - ((mon.getDay()||7) - 1)); mon.setHours(0,0,0,0);
         const sun = new Date(mon); sun.setDate(sun.getDate() + 6); sun.setHours(23,59,59,999);
-        const lbl = `${mon.getDate()}/${mon.getMonth()+1}`;
+        const { w, y } = isoWeek(mon);
+        const mes = MESES_CORTO[mon.getMonth()];
+        // Si la semana cruza dos meses, mostrar el mes de inicio
+        const lbl = `S${w} · ${mes}`;
         return { label: lbl, start: mon, end: sun };
       });
     } else if (mode === 'trimestre') {
@@ -1845,6 +1856,54 @@ const DashboardPage = {
       </div>
     </div>
 
+    <!-- ═══ GRÁFICA ZONAS ═══ -->
+    <div class="chart-wrap" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <div>
+          <span class="chart-title" style="margin:0;font-size:15px">Averías por zona</span>
+          <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">¿Qué zonas concentran más incidencias?</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="pbi-ctrl-group">
+            <span class="pbi-ctrl-label">Almacén</span>
+            <select id="zona-almacen" class="pbi-select" onchange="DashboardPage._rebuildZonasChart()">
+              <option value="">Todos</option>
+              <option>Miramar</option><option>Xeresa</option><option>Alcacer</option>
+              <option>Murcia</option><option>Algemesi</option>
+            </select>
+          </div>
+          <div class="pbi-ctrl-group">
+            <span class="pbi-ctrl-label">Estado</span>
+            <select id="zona-estado" class="pbi-select" onchange="DashboardPage._rebuildZonasChart()">
+              <option value="">Todas</option>
+              <option value="Abierta">Abiertas</option>
+              <option value="Cerrada">Cerradas</option>
+            </select>
+          </div>
+          <div class="pbi-ctrl-group">
+            <span class="pbi-ctrl-label">Ordenar</span>
+            <select id="zona-orden" class="pbi-select" onchange="DashboardPage._rebuildZonasChart()">
+              <option value="desc">Mayor → menor</option>
+              <option value="asc">Menor → mayor</option>
+              <option value="alfa">Alfabético</option>
+            </select>
+          </div>
+          <div class="pbi-ctrl-group">
+            <span class="pbi-ctrl-label">Top</span>
+            <select id="zona-top" class="pbi-select" onchange="DashboardPage._rebuildZonasChart()">
+              <option value="0">Todas</option>
+              <option value="5">Top 5</option>
+              <option value="10" selected>Top 10</option>
+              <option value="15">Top 15</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:220px">
+        <canvas id="chart-zonas"></canvas>
+      </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px">
       <div class="card">
         <div class="card-header">
@@ -1872,11 +1931,12 @@ const DashboardPage = {
     if (zonaEl)  zonaEl.innerHTML  = '<option value="">Todas</option>' + s.zonas.map(z  => `<option value="${UI.esc(z)}">${UI.esc(z)}</option>`).join('');
     if (lineaEl) lineaEl.innerHTML = '<option value="">Todas</option>' + s.lineas.map(l => `<option value="${UI.esc(l)}">Línea ${UI.esc(l)}</option>`).join('');
 
-    // Cargar TODAS las averías (sin filtro de almacén) para que el gráfico pueda filtrar dinámicamente
+    // Cargar TODAS las averías (sin filtro de almacén) para ambas gráficas dinámicas
     db.averias.toArray().then(all => {
       this._allAverias = all;
       if (!this._chartMode) this._chartMode = 'mes';
       this._rebuildAveriasChart();
+      this._rebuildZonasChart();
     });
 
 
@@ -1911,6 +1971,8 @@ const DashboardPage = {
       }).join('');
     }
 
+    // Gráfica zonas — _allAverias se llena en el then de arriba; aquí esperamos a que esté listo
+
     // Tabla últimas averías
     const tEl = document.getElementById('recent-table');
     if (tEl) {
@@ -1936,6 +1998,101 @@ const DashboardPage = {
       const b = document.getElementById(`ct-${t}`);
       if (b) b.className = `chart-pill${t === type ? ' active' : ''}`;
     });
+  },
+
+  _rebuildZonasChart() {
+    const almSel = (document.getElementById('zona-almacen')?.value || '').trim();
+    const estado = document.getElementById('zona-estado')?.value  || '';
+    const orden  = document.getElementById('zona-orden')?.value   || 'desc';
+    const top    = parseInt(document.getElementById('zona-top')?.value  || '10');
+
+    // Filtrar averías
+    const avs = (this._allAverias || []).filter(a => {
+      if (almSel && normalizeAlmacen(a.almacen) !== normalizeAlmacen(almSel)) return false;
+      if (estado && a.estado !== estado) return false;
+      return true;
+    });
+
+    // Contar por zona
+    const conteo = {};
+    avs.forEach(a => {
+      const z = (a.zona || '').trim() || '(sin zona)';
+      conteo[z] = (conteo[z] || 0) + 1;
+    });
+
+    // Ordenar
+    let entries = Object.entries(conteo);
+    if      (orden === 'desc') entries.sort((a,b) => b[1] - a[1]);
+    else if (orden === 'asc')  entries.sort((a,b) => a[1] - b[1]);
+    else                       entries.sort((a,b) => a[0].localeCompare(b[0]));
+
+    if (top > 0) entries = entries.slice(0, top);
+
+    // Colores dinámicos: gradiente verde → naranja → rojo según ranking
+    const maxVal = entries.length > 0 ? entries[0][1] || 1 : 1;
+    const sorted = [...entries].sort((a,b) => b[1] - a[1]); // siempre desc para colorear
+    const colors = entries.map(([z, n]) => {
+      const ratio = n / maxVal;
+      if (ratio > 0.75) return 'rgba(194,0,25,0.82)';
+      if (ratio > 0.50) return 'rgba(232,113,70,0.82)';
+      if (ratio > 0.25) return 'rgba(184,134,11,0.80)';
+      return 'rgba(39,93,58,0.75)';
+    });
+
+    const labels = entries.map(([z]) => z);
+    const data   = entries.map(([,n]) => n);
+
+    if (this._chartZonas) { this._chartZonas.destroy(); this._chartZonas = null; }
+    const ctx = document.getElementById('chart-zonas');
+    if (!ctx) return;
+
+    this._chartZonas = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Averías',
+          data,
+          backgroundColor: colors,
+          borderRadius: 5,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',   // ← barras horizontales, más legibles con muchas zonas
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: (item) => {
+                const pct = ((item.parsed.x / avs.length) * 100).toFixed(1);
+                return `${pct}% del total filtrado`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, precision: 0, font: { size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    // Ajustar altura del canvas dinámicamente según nº de barras
+    const wrap = ctx.closest('div[style*="height"]');
+    if (wrap) {
+      const h = Math.max(180, entries.length * 30 + 40);
+      wrap.style.height = h + 'px';
+    }
   },
 };
 
