@@ -1056,7 +1056,11 @@ const DataService = {
     return all.filter(p => p.averia_id === averia_id).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
   },
   async savePartes(partes) {
-    for (const p of partes) await db.partes_trabajo.put(p);
+    for (const p of partes) {
+      // Asegurar que fecha es string ISO (Supabase DATE espera 'YYYY-MM-DD')
+      const clean = { ...p, fecha: p.fecha ? String(p.fecha).slice(0,10) : new Date().toISOString().slice(0,10), horas: parseFloat(p.horas) || 0 };
+      await db.partes_trabajo.put(clean);
+    }
   },
   async deletePartesByAveria(averia_id) {
     const all = await db.partes_trabajo.toArray();
@@ -3362,15 +3366,35 @@ const AveriasPage = {
   _renderPartesList() {
     const el = document.getElementById('cl-partes-list');
     if (!el) return;
-    if (!AveriasPage._partesSeleccionados.length) { el.innerHTML = ''; return; }
+    if (!AveriasPage._partesSeleccionados.length) {
+      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">Ningún mecánico añadido todavía.</p>';
+      return;
+    }
     el.innerHTML = AveriasPage._partesSeleccionados.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px;border:1px solid var(--border)">
         <span style="min-width:140px;font-weight:600">👤 ${UI.esc(p.tecnico)}</span>
-        <span style="color:var(--gray-muted)">${UI.esc(p.fecha)}</span>
-        <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${p.horas}h</span>
-        ${p.notas ? `<span style="flex:1;color:var(--gray-muted);font-style:italic">${UI.esc(p.notas)}</span>` : '<span style="flex:1"></span>'}
-        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="AveriasPage._removeParte(${i})">×</button>
+        <span style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
+        <input type="number" min="0" step="0.5" value="${p.horas}"
+          style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center"
+          onchange="AveriasPage._updateParteHoras(${i}, this.value)" title="Horas">
+        <span style="color:var(--gray-muted);font-size:11px">h</span>
+        <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
+          style="flex:1;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
+          onchange="AveriasPage._updateParteNotas(${i}, this.value)">
+        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0" onclick="AveriasPage._removeParte(${i})">×</button>
       </div>`).join('');
+  },
+
+  _updateParteHoras(index, value) {
+    if (AveriasPage._partesSeleccionados[index]) {
+      AveriasPage._partesSeleccionados[index].horas = parseFloat(value) || 0;
+    }
+  },
+
+  _updateParteNotas(index, value) {
+    if (AveriasPage._partesSeleccionados[index]) {
+      AveriasPage._partesSeleccionados[index].notas = value;
+    }
   },
 
   // ── Fotos ────────────────────────────────────────────────────────
@@ -3449,24 +3473,34 @@ const AveriasPage = {
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
     });
 
-    // Guardar partes de trabajo
+    // Guardar partes de trabajo (aislado: si falla, el cierre continúa)
     if (AveriasPage._partesSeleccionados.length > 0) {
-      const partes = AveriasPage._partesSeleccionados.map((p, i) => ({
-        ...p,
-        id: p.id || `pt_${id}_${i}_${Date.now()}`,
-        averia_id: id
-      }));
-      await DataService.savePartes(partes);
+      try {
+        const partes = AveriasPage._partesSeleccionados.map((p, i) => ({
+          ...p,
+          id: p.id || `pt_${id}_${i}_${Date.now()}`,
+          averia_id: id
+        }));
+        await DataService.savePartes(partes);
+      } catch(e) {
+        console.error('[savePartes]', e);
+        toast('⚠️ Partes de trabajo no guardados — ¿existe la tabla en Supabase?', 'error');
+      }
     }
 
-    // Deduct stock
+    // Deduct stock (aislado: si falla, el cierre continúa)
     if (AveriasPage._repuestosSeleccionados.length > 0) {
-      const user = UserService.getUser();
-      await DataService.deductStock(
-        AveriasPage._repuestosSeleccionados,
-        id,
-        user?.nombre || ''
-      );
+      try {
+        const user = UserService.getUser();
+        await DataService.deductStock(
+          AveriasPage._repuestosSeleccionados,
+          id,
+          user?.nombre || ''
+        );
+      } catch(e) {
+        console.error('[deductStock]', e);
+        toast('⚠️ Descuento de stock fallido', 'error');
+      }
     }
 
     // Subir fotos
