@@ -651,8 +651,9 @@ const db = {
   sitios:      makeTable('sitios',      'id'),
   productos:   makeTable('productos',   'id'),
   inventario:  makeTable('inventario',  'id'),
-  movimientos: makeTable('movimientos', 'id'),
-  metadata:    makeTable('metadata',    'key'),
+  movimientos:    makeTable('movimientos',    'id'),
+  partes_trabajo: makeTable('partes_trabajo', 'id'),
+  metadata:       makeTable('metadata',       'key'),
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -1045,6 +1046,17 @@ const DataService = {
   },
   async getAveria(id) { return db.averias.get(id); },
   async saveAveria(data) { return db.averias.put(data); },
+  async getPartesByAveria(averia_id) {
+    const all = await db.partes_trabajo.toArray();
+    return all.filter(p => p.averia_id === averia_id).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
+  },
+  async savePartes(partes) {
+    for (const p of partes) await db.partes_trabajo.put(p);
+  },
+  async deletePartesByAveria(averia_id) {
+    const all = await db.partes_trabajo.toArray();
+    for (const p of all.filter(x => x.averia_id === averia_id)) await db.partes_trabajo.delete(p.id);
+  },
 
   async getIncidencias(filters = {}) {
     let arr = await db.incidencias.toArray();
@@ -2510,8 +2522,24 @@ const AveriasPage = {
   async openDetail(id) {
     const a = await DataService.getAveria(id);
     if (!a) return;
+    const partes = await DataService.getPartesByAveria(id);
     const canClose = a.estado !== 'Cerrada' && UserService.canCloseAveria(a);
     const canCurso = a.estado === 'Abierta' && UserService.canCloseAveria(a);
+    const partesHtml = partes.length > 0
+      ? `<div class="detail-field full">
+           <label>Mecánicos que intervinieron</label>
+           <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+             ${partes.map(p => `
+               <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:6px;padding:5px 10px;font-size:12px">
+                 <span style="font-weight:600;min-width:130px">👤 ${UI.esc(p.tecnico)}</span>
+                 <span style="color:var(--gray-muted)">${UI.esc(p.fecha||'')}</span>
+                 <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${p.horas}h</span>
+                 ${p.notas ? `<span style="color:var(--gray-muted);font-style:italic">${UI.esc(p.notas)}</span>` : ''}
+               </div>`).join('')}
+           </div>
+         </div>`
+      : (a.tecnico ? `<div class="detail-field"><label>Técnico asignado</label><p>${UI.esc(a.tecnico)}</p></div>` : '');
+
     Modal.open(`Avería — ${a.id}`, `
       <div class="detail-grid">
         <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(a.estado)}</p></div>
@@ -2521,10 +2549,10 @@ const AveriasPage = {
         <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen||'—')}</p></div>
         <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
         <div class="detail-field"><label>Equipo</label><p>${UI.esc(a.equipo||'—')}</p></div>
-        <div class="detail-field"><label>Técnico asignado</label><p>${UI.esc(a.tecnico||'—')}</p></div>
         <div class="detail-field"><label>Tipo avería</label><p>${UI.esc(a.tipo||'—')}</p></div>
         <div class="detail-field"><label>Duración</label><p>${UI.formatDuration(a.duracion)}</p></div>
         <div class="detail-field full"><label>Descripción</label><p>${UI.esc(a.descripcion||'—')}</p></div>
+        ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
       </div>`,
@@ -2545,7 +2573,7 @@ const AveriasPage = {
 
   async openNew() {
     const user = UserService.getUser();
-    const tecnicos = await DataService.getTecnicos(true);
+    const allTecnicos = await DataService.getTecnicos(true);
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
     const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
     // Productos para selector de materiales (cascada)
@@ -2558,6 +2586,13 @@ const AveriasPage = {
     const mm = String(now.getMinutes()).padStart(2,'0');
     const userAlmacen = UserService.getEffectiveAlmacen() || user?.almacen || '';
     const almacenLocked = !!UserService.getEffectiveAlmacen();
+    // Helper: filtra técnicos por almacén y genera <option>s
+    const tecOptsHtml = (alm) => {
+      const norm = normalizeAlmacen(alm);
+      const list = alm ? allTecnicos.filter(t => normalizeAlmacen(t.almacen) === norm) : allTecnicos;
+      return '<option value="">Sin asignar</option>' +
+        list.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('');
+    };
 
     Modal.open('Nueva avería', `
       <form id="averia-form" class="form-grid">
@@ -2597,8 +2632,7 @@ const AveriasPage = {
         <div class="form-field">
           <label>Técnico asignado</label>
           <select class="form-input" id="av-tecnico">
-            <option value="">Sin asignar</option>
-            ${tecnicos.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
+            ${tecOptsHtml(userAlmacen)}
           </select>
         </div>
         <div class="form-field">
@@ -2689,23 +2723,45 @@ const AveriasPage = {
 
     // Cascada materiales: tipo → familia → producto
     const _matProds = todosProds;
+
+    // Si no hay tipos definidos en el catálogo, saltamos el primer nivel y cargamos todos los productos
+    if (matTipos.length === 0) {
+      const prodEl = document.getElementById('mat-producto');
+      if (prodEl) {
+        prodEl.innerHTML = '<option value="">— Producto —</option>' + _matProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+        prodEl.disabled = false;
+      }
+      const famEl = document.getElementById('mat-familia');
+      if (famEl) { famEl.innerHTML = '<option value="">— (sin categoría) —</option>'; famEl.disabled = true; }
+    }
+
     document.getElementById('mat-tipo')?.addEventListener('change', function() {
       const tipo = this.value;
-      const fams = [...new Set(_matProds.filter(p => !tipo || p.tipo===tipo).map(p=>p.familia).filter(Boolean))].sort();
+      const filtered = _matProds.filter(p => !tipo || p.tipo === tipo);
+      const fams = [...new Set(filtered.map(p => p.familia).filter(Boolean))].sort();
       const famEl = document.getElementById('mat-familia');
-      famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f=>`<option>${UI.esc(f)}</option>`).join('');
-      famEl.disabled = false;
-      document.getElementById('mat-producto').innerHTML = '<option value="">— Producto —</option>';
-      document.getElementById('mat-producto').disabled = true;
+      const prodEl = document.getElementById('mat-producto');
+      // Si hay familias, usa cascada normal; si no, carga productos directamente
+      if (fams.length > 0) {
+        famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f=>`<option>${UI.esc(f)}</option>`).join('');
+        famEl.disabled = false;
+        prodEl.innerHTML = '<option value="">— Producto —</option>';
+        prodEl.disabled = true;
+      } else {
+        famEl.innerHTML = '<option value="">— (sin familia) —</option>';
+        famEl.disabled = true;
+        prodEl.innerHTML = '<option value="">— Producto —</option>' + filtered.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+        prodEl.disabled = filtered.length === 0;
+      }
       document.getElementById('av-materiales').value = '';
     });
     document.getElementById('mat-familia')?.addEventListener('change', function() {
-      const tipo   = document.getElementById('mat-tipo').value;
+      const tipo    = document.getElementById('mat-tipo').value;
       const familia = this.value;
-      const prods = _matProds.filter(p => (!tipo||p.tipo===tipo) && (!familia||p.familia===familia));
-      const prodEl = document.getElementById('mat-producto');
+      const prods   = _matProds.filter(p => (!tipo||p.tipo===tipo) && (!familia||p.familia===familia));
+      const prodEl  = document.getElementById('mat-producto');
       prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
-      prodEl.disabled = false;
+      prodEl.disabled = prods.length === 0;
       document.getElementById('av-materiales').value = '';
     });
     document.getElementById('mat-producto')?.addEventListener('change', function() {
@@ -2744,6 +2800,9 @@ const AveriasPage = {
       lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
       equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
       hidEl.value = '';
+      // Actualizar técnicos según almacén
+      const tecEl = document.getElementById('av-tecnico');
+      if (tecEl) tecEl.innerHTML = tecOptsHtml(almEl.value);
       if (!almEl.value) { zonaEl.disabled = true; return; }
       const zs = await DataService.getZonasByAlmacen(almEl.value);
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
@@ -2902,12 +2961,11 @@ const AveriasPage = {
     const today = now.toISOString().slice(0,10);
     const hh = String(now.getHours()).padStart(2,'0');
     const mm = String(now.getMinutes()).padStart(2,'0');
+    const allTecnicos = await DataService.getTecnicos(true);
 
     // Load stock for this almacén
     const productos = a.almacen ? await DataService.getProductosByAlmacen(a.almacen) : [];
-    const prodOptsHtml = productos.length > 0
-      ? productos.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)}${p.familia ? ' — '+UI.esc(p.familia) : ''} (${p.unidades} uds)</option>`).join('')
-      : '<option value="" disabled>Sin stock disponible en este almacén</option>';
+    const clTipos = [...new Set(productos.map(p => p.tipo).filter(Boolean))].sort();
 
     Modal.open(`Cerrar avería`, `
       <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--red)">
@@ -2929,17 +2987,69 @@ const AveriasPage = {
         </div>
         <div class="form-field full" id="cl-dur-preview" style="font-size:12px;color:var(--gray-muted)"></div>
 
+        <!-- PARTES DE TRABAJO -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="font-weight:600">Mecánicos que intervienen</label>
+          <div style="display:grid;grid-template-columns:1fr 120px 80px 1fr auto;gap:8px;align-items:end;margin-top:6px">
+            <div>
+              <small style="color:var(--gray-muted)">Técnico</small>
+              <select class="form-input" id="cl-parte-tec" style="margin-top:2px">
+                <option value="">— Seleccionar —</option>
+                ${(a.almacen ? allTecnicos.filter(t=>t.activo && normalizeAlmacen(t.almacen)===normalizeAlmacen(a.almacen)) : allTecnicos.filter(t=>t.activo))
+                  .map(t=>`<option${t.nombre===a.tecnico?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Fecha</small>
+              <input class="form-input" type="date" id="cl-parte-fecha" value="${today}" style="margin-top:2px">
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Horas</small>
+              <input class="form-input" type="number" id="cl-parte-horas" min="0" step="0.5" value="1" style="margin-top:2px" placeholder="h">
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Notas (opcional)</small>
+              <input class="form-input" id="cl-parte-notas" style="margin-top:2px" placeholder="Qué hizo este técnico...">
+            </div>
+            <div style="padding-top:18px">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParte()">+ Añadir</button>
+            </div>
+          </div>
+          <div id="cl-partes-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+
         <!-- REPUESTOS USADOS -->
         <div class="form-field full" style="margin-top:4px">
           <label style="font-weight:600">Repuestos del inventario utilizados</label>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <select class="form-input" id="cl-prod-sel" style="flex:1">
-              <option value="">Seleccionar repuesto...</option>
-              ${prodOptsHtml}
-            </select>
-            <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:70px" placeholder="Uds">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
-          </div>
+          ${productos.length === 0 ? `<p style="font-size:12px;color:var(--gray-muted);margin-top:6px">Sin stock disponible en este almacén.</p>` : `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-top:6px">
+            <div>
+              <small style="color:var(--gray-muted)">Tipo</small>
+              <select class="form-input" id="cl-tipo" style="margin-top:2px">
+                <option value="">— Tipo —</option>
+                ${clTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Familia</small>
+              <select class="form-input" id="cl-familia" disabled style="margin-top:2px">
+                <option value="">— Familia —</option>
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Producto</small>
+              <select class="form-input" id="cl-producto" disabled style="margin-top:2px">
+                <option value="">— Producto —</option>
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Cant.</small>
+              <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:60px;margin-top:2px" placeholder="Uds">
+            </div>
+            <div style="padding-top:18px">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
+            </div>
+          </div>`}
           <div id="cl-repuestos-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
         </div>
 
@@ -2958,6 +3068,19 @@ const AveriasPage = {
 
     // Store repuestos in memory
     AveriasPage._repuestosSeleccionados = [];
+    // Store partes de trabajo in memory; pre-populate con técnico principal si existe
+    AveriasPage._partesSeleccionados = [];
+    if (a.tecnico) {
+      AveriasPage._partesSeleccionados.push({
+        id: `pt_${Date.now()}_0`,
+        averia_id: id,
+        tecnico: a.tecnico,
+        fecha: today,
+        horas: 1,
+        notas: ''
+      });
+      AveriasPage._renderPartesList();
+    }
 
     // Live duration preview
     const updateDur = () => {
@@ -2980,6 +3103,33 @@ const AveriasPage = {
     // Store almacen for deduction
     AveriasPage._closeAlmacen = a.almacen || '';
     AveriasPage._productosCache = productos;
+
+    // Cascada repuestos: tipo → familia → producto
+    const _clProds = productos;
+    document.getElementById('cl-tipo')?.addEventListener('change', function() {
+      const tipo = this.value;
+      const fams = [...new Set(_clProds.filter(p => !tipo || p.tipo === tipo).map(p => p.familia).filter(Boolean))].sort();
+      const famEl = document.getElementById('cl-familia');
+      famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f => `<option>${UI.esc(f)}</option>`).join('');
+      famEl.disabled = false;
+      const prodEl = document.getElementById('cl-producto');
+      prodEl.innerHTML = '<option value="">— Producto —</option>';
+      prodEl.disabled = true;
+      // If no familias, populate productos directly
+      if (fams.length === 0) {
+        const prods = _clProds.filter(p => !tipo || p.tipo === tipo);
+        prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)} (${p.unidades} uds)</option>`).join('');
+        prodEl.disabled = prods.length === 0;
+      }
+    });
+    document.getElementById('cl-familia')?.addEventListener('change', function() {
+      const tipo   = document.getElementById('cl-tipo')?.value || '';
+      const familia = this.value;
+      const prods = _clProds.filter(p => (!tipo || p.tipo === tipo) && (!familia || p.familia === familia));
+      const prodEl = document.getElementById('cl-producto');
+      prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)} (${p.unidades} uds)</option>`).join('');
+      prodEl.disabled = prods.length === 0;
+    });
   },
 
   _repuestosSeleccionados: [],
@@ -2987,9 +3137,9 @@ const AveriasPage = {
   _productosCache: [],
 
   _addRepuesto() {
-    const sel = document.getElementById('cl-prod-sel');
-    const cod = sel.value;
-    if (!cod) { toast('Selecciona un repuesto', 'error'); return; }
+    const sel = document.getElementById('cl-producto');
+    const cod = sel?.value;
+    if (!cod) { toast('Selecciona un producto de la cascada', 'error'); return; }
     const qty = parseInt(document.getElementById('cl-prod-qty').value) || 1;
     if (qty < 1) { toast('La cantidad debe ser mayor que 0', 'error'); return; }
     const prod = AveriasPage._productosCache.find(p => p.cod_producto === cod);
@@ -2999,7 +3149,13 @@ const AveriasPage = {
     if (existing) { existing.cantidad += qty; }
     else { AveriasPage._repuestosSeleccionados.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: AveriasPage._closeAlmacen }); }
     AveriasPage._renderRepuestosList();
-    document.getElementById('cl-prod-sel').value = '';
+    // Reset cascading selects
+    const tipoEl = document.getElementById('cl-tipo');
+    const famEl  = document.getElementById('cl-familia');
+    if (tipoEl) tipoEl.value = '';
+    if (famEl)  { famEl.innerHTML = '<option value="">— Familia —</option>'; famEl.disabled = true; }
+    sel.innerHTML = '<option value="">— Producto —</option>';
+    sel.disabled = true;
     document.getElementById('cl-prod-qty').value = 1;
   },
 
@@ -3018,6 +3174,50 @@ const AveriasPage = {
   _removeRepuesto(index) {
     AveriasPage._repuestosSeleccionados.splice(index, 1);
     AveriasPage._renderRepuestosList();
+  },
+
+  _partesSeleccionados: [],
+
+  _addParte() {
+    const tecnico = document.getElementById('cl-parte-tec')?.value;
+    if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
+    const fecha = document.getElementById('cl-parte-fecha')?.value || new Date().toISOString().slice(0,10);
+    const horas = parseFloat(document.getElementById('cl-parte-horas')?.value) || 0;
+    const notas = document.getElementById('cl-parte-notas')?.value.trim() || '';
+    // Si el técnico ya existe en la lista, sustituye su parte (no duplica)
+    const existing = AveriasPage._partesSeleccionados.find(p => p.tecnico === tecnico);
+    if (existing) {
+      existing.fecha = fecha; existing.horas = horas; existing.notas = notas;
+    } else {
+      AveriasPage._partesSeleccionados.push({
+        id: `pt_${Date.now()}`,
+        averia_id: '',        // se rellena en _saveClose
+        tecnico, fecha, horas, notas
+      });
+    }
+    AveriasPage._renderPartesList();
+    document.getElementById('cl-parte-tec').value = '';
+    document.getElementById('cl-parte-horas').value = 1;
+    document.getElementById('cl-parte-notas').value = '';
+  },
+
+  _removeParte(index) {
+    AveriasPage._partesSeleccionados.splice(index, 1);
+    AveriasPage._renderPartesList();
+  },
+
+  _renderPartesList() {
+    const el = document.getElementById('cl-partes-list');
+    if (!el) return;
+    if (!AveriasPage._partesSeleccionados.length) { el.innerHTML = ''; return; }
+    el.innerHTML = AveriasPage._partesSeleccionados.map((p, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
+        <span style="min-width:140px;font-weight:600">👤 ${UI.esc(p.tecnico)}</span>
+        <span style="color:var(--gray-muted)">${UI.esc(p.fecha)}</span>
+        <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${p.horas}h</span>
+        ${p.notas ? `<span style="flex:1;color:var(--gray-muted);font-style:italic">${UI.esc(p.notas)}</span>` : '<span style="flex:1"></span>'}
+        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="AveriasPage._removeParte(${i})">×</button>
+      </div>`).join('');
   },
 
   async _saveClose(id) {
@@ -3045,12 +3245,25 @@ const AveriasPage = {
     const materialesLibres = document.getElementById('cl-materiales').value.trim();
     const materialesCombinados = [repuestosStr, materialesLibres].filter(Boolean).join(' | ');
 
+    // Técnico principal = el primero de los partes (si hay alguno)
+    const tecnicoPrincipal = AveriasPage._partesSeleccionados[0]?.tecnico || a.tecnico || '';
     await DataService.saveAveria({
       ...a, estado:'Cerrada', solucion,
+      tecnico: tecnicoPrincipal,
       materiales: materialesCombinados,
       coste: parseFloat(document.getElementById('cl-coste').value) || 0,
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
     });
+
+    // Guardar partes de trabajo
+    if (AveriasPage._partesSeleccionados.length > 0) {
+      const partes = AveriasPage._partesSeleccionados.map((p, i) => ({
+        ...p,
+        id: p.id || `pt_${id}_${i}_${Date.now()}`,
+        averia_id: id
+      }));
+      await DataService.savePartes(partes);
+    }
 
     // Deduct stock
     if (AveriasPage._repuestosSeleccionados.length > 0) {
