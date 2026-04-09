@@ -385,6 +385,28 @@ select.form-input{cursor:pointer}
   .materiales-row > div{width:100%}
   /* Botones de acción también a ancho completo en repuestos */
   .repuestos-row > div:last-child button,.materiales-row > div:last-child button{width:100%;padding:12px}
+  /* Fila de mecánico añadido: en móvil se reorganiza en 2 líneas */
+  .parte-item{flex-wrap:wrap !important;gap:6px !important}
+  .parte-item .parte-nombre{min-width:0 !important;width:100%;font-size:13px}
+  .parte-item .parte-fecha{font-size:11px}
+  .parte-item .parte-notas{flex:1 1 100px !important;min-width:80px}
+  .parte-item .parte-del{margin-left:auto}
+}
+
+/* ── Secciones del formulario con separador visual ── */
+.form-section{
+  grid-column:1/-1;
+  border-top:1.5px solid var(--border);
+  margin-top:8px;
+  padding-top:14px;
+}
+.form-section-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--gray-muted);margin-bottom:10px;
+}
+.form-section-label::after{
+  content:'';flex:1;height:1px;background:var(--border);
 }
 
 /* ── EMPTY STATE ── */
@@ -2799,8 +2821,8 @@ const AveriasPage = {
           <textarea class="form-input" id="av-desc" rows="3" required placeholder="Describe el problema detectado..."></textarea>
         </div>
         <!-- MECÁNICOS QUE INTERVIENEN -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="font-weight:600">Mecánicos que intervienen</label>
+        <div class="form-section">
+          <div class="form-section-label">👷 Mecánicos que intervienen</div>
           <div class="partes-row" style="margin-top:6px">
             <div>
               <small style="color:var(--gray-muted)">Técnico</small>
@@ -2853,8 +2875,8 @@ const AveriasPage = {
         </div>
 
         <!-- FOTOS DE LA AVERÍA -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="font-weight:600">📷 Fotos del problema (opcional)</label>
+        <div class="form-section">
+          <div class="form-section-label">📷 Fotos del problema</div>
           <div id="av-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
           <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <input type="file" id="av-foto-input" accept="image/*" multiple style="display:none"
@@ -3271,8 +3293,8 @@ const AveriasPage = {
         <div class="form-field full" id="cl-dur-preview" style="font-size:12px;color:var(--gray-muted)"></div>
 
         <!-- PARTES DE TRABAJO -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="font-weight:600">Mecánicos que intervienen</label>
+        <div class="form-section">
+          <div class="form-section-label">👷 Mecánicos que intervienen</div>
           <div class="partes-row" style="margin-top:6px">
             <div>
               <small style="color:var(--gray-muted)">Técnico</small>
@@ -3302,8 +3324,8 @@ const AveriasPage = {
         </div>
 
         <!-- REPUESTOS USADOS -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="font-weight:600">Repuestos del inventario utilizados</label>
+        <div class="form-section">
+          <div class="form-section-label">🔧 Repuestos utilizados</div>
           ${productos.length === 0 ? `<p style="font-size:12px;color:var(--gray-muted);margin-top:6px">Sin stock disponible en este almacén.</p>` : `
           <div class="repuestos-row" style="margin-top:6px">
             <div>
@@ -3337,18 +3359,23 @@ const AveriasPage = {
         </div>
 
         <!-- MATERIALES LIBRES + COSTE -->
-        <div class="form-field full">
-          <label>Otros materiales (texto libre)</label>
-          <input class="form-input" id="cl-materiales" placeholder="Ej: tornillos M8, pasta térmica...">
-        </div>
-        <div class="form-field">
-          <label>Coste total materiales (€)</label>
-          <input class="form-input" type="number" id="cl-coste" min="0" step="0.01" placeholder="0.00">
+        <div class="form-section">
+          <div class="form-section-label">📦 Otros materiales y coste</div>
+          <div class="form-grid" style="padding:0;margin-top:0">
+            <div class="form-field">
+              <label>Materiales (texto libre)</label>
+              <input class="form-input" id="cl-materiales" placeholder="Ej: tornillos M8, pasta térmica...">
+            </div>
+            <div class="form-field">
+              <label>Coste total (€)</label>
+              <input class="form-input" type="number" id="cl-coste" min="0" step="0.01" placeholder="0.00">
+            </div>
+          </div>
         </div>
 
         <!-- FOTOS -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="font-weight:600">Fotos de la avería</label>
+        <div class="form-section">
+          <div class="form-section-label">📷 Fotos de la avería</div>
           <div id="cl-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
           <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <input type="file" id="cl-foto-input" accept="image/*" multiple style="display:none"
@@ -3510,17 +3537,17 @@ const AveriasPage = {
       return;
     }
     el.innerHTML = AveriasPage._partesNuevos.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px;border:1px solid var(--border)">
-        <span style="min-width:140px;font-weight:600">👤 ${UI.esc(p.tecnico)}</span>
-        <span style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
+      <div class="parte-item" style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;border:1px solid var(--border)">
+        <span class="parte-nombre" style="font-weight:600;flex-shrink:0">👤 ${UI.esc(p.tecnico)}</span>
+        <span class="parte-fecha" style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
         <input type="number" min="0" step="0.5" value="${p.horas}"
-          style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center"
+          style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;flex-shrink:0"
           onchange="AveriasPage._updateParteHorasNew(${i}, this.value)" title="Horas">
-        <span style="color:var(--gray-muted);font-size:11px">h</span>
+        <span style="color:var(--gray-muted);font-size:11px;flex-shrink:0">h</span>
         <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
-          style="flex:1;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
+          class="parte-notas" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
           onchange="AveriasPage._updateParteNotasNew(${i}, this.value)">
-        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0" onclick="AveriasPage._removeParteNew(${i})">×</button>
+        <button type="button" class="parte-del" style="color:var(--red);font-size:18px;background:none;border:none;cursor:pointer;padding:2px 6px;flex-shrink:0;line-height:1" onclick="AveriasPage._removeParteNew(${i})">×</button>
       </div>`).join('');
   },
 
@@ -3565,17 +3592,17 @@ const AveriasPage = {
       return;
     }
     el.innerHTML = AveriasPage._partesSeleccionados.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px;border:1px solid var(--border)">
-        <span style="min-width:140px;font-weight:600">👤 ${UI.esc(p.tecnico)}</span>
-        <span style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
+      <div class="parte-item" style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;border:1px solid var(--border)">
+        <span class="parte-nombre" style="font-weight:600;flex-shrink:0">👤 ${UI.esc(p.tecnico)}</span>
+        <span class="parte-fecha" style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
         <input type="number" min="0" step="0.5" value="${p.horas}"
-          style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center"
+          style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;flex-shrink:0"
           onchange="AveriasPage._updateParteHoras(${i}, this.value)" title="Horas">
-        <span style="color:var(--gray-muted);font-size:11px">h</span>
+        <span style="color:var(--gray-muted);font-size:11px;flex-shrink:0">h</span>
         <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
-          style="flex:1;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
+          class="parte-notas" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
           onchange="AveriasPage._updateParteNotas(${i}, this.value)">
-        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0" onclick="AveriasPage._removeParte(${i})">×</button>
+        <button type="button" class="parte-del" style="color:var(--red);font-size:18px;background:none;border:none;cursor:pointer;padding:2px 6px;flex-shrink:0;line-height:1" onclick="AveriasPage._removeParte(${i})">×</button>
       </div>`).join('');
   },
 
