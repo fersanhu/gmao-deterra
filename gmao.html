@@ -1052,8 +1052,13 @@ const DataService = {
   async getAveria(id) { return db.averias.get(id); },
   async saveAveria(data) { return db.averias.put(data); },
   async getPartesByAveria(averia_id) {
-    const all = await db.partes_trabajo.toArray();
-    return all.filter(p => p.averia_id === averia_id).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
+    try {
+      const all = await db.partes_trabajo.toArray();
+      return all.filter(p => p.averia_id === averia_id).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
+    } catch(e) {
+      console.warn('[getPartesByAveria] tabla partes_trabajo no existe o error:', e.message);
+      return [];
+    }
   },
   async savePartes(partes) {
     for (const p of partes) {
@@ -1063,14 +1068,21 @@ const DataService = {
     }
   },
   async deletePartesByAveria(averia_id) {
-    const all = await db.partes_trabajo.toArray();
-    for (const p of all.filter(x => x.averia_id === averia_id)) await db.partes_trabajo.delete(p.id);
+    try {
+      const all = await db.partes_trabajo.toArray();
+      for (const p of all.filter(x => x.averia_id === averia_id)) await db.partes_trabajo.delete(p.id);
+    } catch(e) { console.warn('[deletePartesByAveria]', e.message); }
   },
 
   // ── Fotos averías ────────────────────────────────────────────────
   async getFotosByAveria(averia_id) {
-    const all = await db.fotos_averias.toArray();
-    return all.filter(f => f.averia_id === averia_id);
+    try {
+      const all = await db.fotos_averias.toArray();
+      return all.filter(f => f.averia_id === averia_id);
+    } catch(e) {
+      console.warn('[getFotosByAveria] tabla fotos_averias no existe o error:', e.message);
+      return [];
+    }
   },
   async uploadFoto(averia_id, file) {
     const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
@@ -5122,6 +5134,9 @@ const PartesPage = {
 
     main.innerHTML = `<div class="page-header">
       <h1>Partes de trabajo</h1>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()" title="Ver SQL de configuración de tablas">⚙️ Setup SQL</button>
+      </div>
     </div>
     <div class="pbi-controls">
       <div class="pbi-ctrl-group">
@@ -5169,11 +5184,28 @@ const PartesPage = {
   },
 
   async _loadData() {
-    const [partes, averias, tecnicos] = await Promise.all([
-      db.partes_trabajo.toArray(),
-      db.averias.toArray(),
-      DataService.getTecnicos(true),
-    ]);
+    let partes = [], averias = [], tecnicos = [];
+    try {
+      [partes, averias, tecnicos] = await Promise.all([
+        db.partes_trabajo.toArray(),
+        db.averias.toArray(),
+        DataService.getTecnicos(true),
+      ]);
+    } catch(e) {
+      console.warn('[PartesPage._loadData]', e.message);
+      // Si partes_trabajo no existe, intentar cargar sólo averias y técnicos
+      try { averias = await db.averias.toArray(); } catch(_) {}
+      try { tecnicos = await DataService.getTecnicos(true); } catch(_) {}
+      const tbody = document.getElementById('pt-tbody');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px">
+        <div style="color:var(--red);font-weight:600;margin-bottom:8px">⚠️ Tabla <code>partes_trabajo</code> no encontrada en Supabase</div>
+        <div style="font-size:12px;color:var(--gray-muted)">Ejecuta el SQL de configuración para crear las tablas necesarias.</div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="PartesPage._showSetupSQL()">Ver SQL de configuración</button>
+      </td></tr>`;
+      const res = document.getElementById('pt-resumen');
+      if (res) res.innerHTML = '';
+      return;
+    }
     this._partes  = partes;
     this._averias = averias;
 
@@ -5187,6 +5219,41 @@ const PartesPage = {
     }
 
     this._applyFilters();
+  },
+
+  _showSetupSQL() {
+    const sql = `-- Ejecuta este SQL en Supabase > SQL Editor
+-- 1. Tabla partes_trabajo
+CREATE TABLE IF NOT EXISTS partes_trabajo (
+  id           TEXT PRIMARY KEY,
+  averia_id    TEXT NOT NULL,
+  tecnico      TEXT NOT NULL,
+  fecha        DATE NOT NULL,
+  horas        NUMERIC(5,2) DEFAULT 0,
+  notas        TEXT DEFAULT ''
+);
+ALTER TABLE partes_trabajo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "all_access" ON partes_trabajo FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. Tabla fotos_averias
+CREATE TABLE IF NOT EXISTS fotos_averias (
+  id            TEXT PRIMARY KEY,
+  averia_id     TEXT NOT NULL,
+  storage_path  TEXT NOT NULL,
+  url           TEXT NOT NULL,
+  nombre        TEXT DEFAULT ''
+);
+ALTER TABLE fotos_averias ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "all_access" ON fotos_averias FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Bucket de Storage (hazlo desde Supabase > Storage > New bucket)
+-- Nombre: fotos-averias  |  Público: SÍ`;
+    Modal.open('SQL de configuración', `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:12px">Copia este SQL y ejecútalo en <strong>Supabase → SQL Editor → New query</strong>:</p>
+      <textarea readonly style="width:100%;height:320px;font-family:monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>
+      <p style="font-size:11px;color:var(--gray-muted);margin-top:8px">Después de ejecutarlo, recarga la página.</p>`,
+      `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.querySelector('#modal-body textarea')?.value);toast('SQL copiado','success')">📋 Copiar SQL</button>
+       <button class="btn btn-primary" onclick="Modal.close()">Cerrar</button>`);
   },
 
   _applyFilters() {
