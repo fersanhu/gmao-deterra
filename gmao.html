@@ -2759,11 +2759,36 @@ const AveriasPage = {
           <label>Descripción de la avería *</label>
           <textarea class="form-input" id="av-desc" rows="3" required placeholder="Describe el problema detectado..."></textarea>
         </div>
-        <div class="form-field">
-          <label>Técnico asignado</label>
-          <select class="form-input" id="av-tecnico">
-            ${tecOptsHtml(userAlmacen)}
-          </select>
+        <!-- MECÁNICOS QUE INTERVIENEN -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="font-weight:600">Mecánicos que intervienen</label>
+          <div style="display:grid;grid-template-columns:1fr 120px 80px 1fr auto;gap:8px;align-items:end;margin-top:6px">
+            <div>
+              <small style="color:var(--gray-muted)">Técnico</small>
+              <select class="form-input" id="av-parte-tec" style="margin-top:2px">
+                <option value="">— Seleccionar —</option>
+                ${tecOptsHtml(userAlmacen).replace('<option value="">Sin asignar</option>','<option value="">— Seleccionar —</option>')}
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Fecha</small>
+              <input class="form-input" type="date" id="av-parte-fecha" value="${today}" style="margin-top:2px">
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Horas</small>
+              <input class="form-input" type="number" id="av-parte-horas" min="0" step="0.5" value="1" style="margin-top:2px" placeholder="h">
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Notas (opcional)</small>
+              <input class="form-input" id="av-parte-notas" style="margin-top:2px" placeholder="Qué hizo este técnico...">
+            </div>
+            <div style="padding-top:18px">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParteNew()">+ Añadir</button>
+            </div>
+          </div>
+          <div id="av-partes-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+            <p style="font-size:12px;color:var(--gray-muted);margin-top:4px">Ningún mecánico añadido todavía.</p>
+          </div>
         </div>
         <div class="form-field">
           <label>Tipo avería</label>
@@ -2863,8 +2888,9 @@ const AveriasPage = {
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
 
-    // Buffer de fotos para el alta
+    // Buffer de fotos para el alta + partes de trabajo
     AveriasPage._fotosBuffer = [];
+    AveriasPage._partesNuevos = [];
 
     // Cascada materiales: tipo → familia → producto
     const _matProds = todosProds;
@@ -2945,9 +2971,12 @@ const AveriasPage = {
       lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
       equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
       hidEl.value = '';
-      // Actualizar técnicos según almacén
-      const tecEl = document.getElementById('av-tecnico');
-      if (tecEl) tecEl.innerHTML = tecOptsHtml(almEl.value);
+      // Actualizar técnicos en multi-mecánico según almacén
+      const tecPartEl = document.getElementById('av-parte-tec');
+      if (tecPartEl) {
+        const opts = tecOptsHtml(almEl.value).replace('<option value="">Sin asignar</option>','<option value="">— Seleccionar —</option>');
+        tecPartEl.innerHTML = opts;
+      }
       if (!almEl.value) { zonaEl.disabled = true; return; }
       const zs = await DataService.getZonasByAlmacen(almEl.value);
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
@@ -3083,24 +3112,48 @@ const AveriasPage = {
       }
     }
 
+    // Técnico principal = primer mecánico añadido o vacío
+    const tecnicoPrincipal = AveriasPage._partesNuevos[0]?.tecnico || '';
+
     const averia = {
       id, id_activo: id_activo || `${almacen}-${zona}-${linea}-${equipoText}`,
       fecha_inicio: fechaInicio, hora_inicio: horaInicio,
       descripcion:  desc,
-      tecnico:      document.getElementById('av-tecnico').value,
+      tecnico:      tecnicoPrincipal,
       tipo:         document.getElementById('av-tipo').value,
       criticidad, estado, almacen, zona, linea, equipo: equipoText,
       fecha_fin: fechaFin, hora_fin: horaFin, solucion, materiales, coste, duracion,
     };
     await DataService.saveAveria(averia);
 
+    // Guardar partes de trabajo (aislado: si falla, el registro continúa)
+    if (AveriasPage._partesNuevos.length > 0) {
+      try {
+        const partes = AveriasPage._partesNuevos.map((p, i) => ({
+          ...p, id: p.id || `pt_${id}_${i}_${Date.now()}`, averia_id: id
+        }));
+        await DataService.savePartes(partes);
+      } catch(e) {
+        console.error('[savePartes alta]', e);
+        toast('⚠️ Partes de trabajo no guardados — crea la tabla partes_trabajo en Supabase', 'error');
+      }
+    }
+
     // Subir fotos del alta
     if (AveriasPage._fotosBuffer.length > 0) {
+      toast(`Subiendo ${AveriasPage._fotosBuffer.length} foto(s)…`, '');
+      let fotosOk = 0, fotosErr = [];
       for (const file of AveriasPage._fotosBuffer) {
-        try { await DataService.uploadFoto(id, file); } catch(e) { console.error('[foto alta]', e); }
+        try { await DataService.uploadFoto(id, file); fotosOk++; }
+        catch(e) { fotosErr.push(file.name); console.error('[foto alta]', e); }
       }
       AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
       AveriasPage._fotosBuffer = [];
+      if (fotosErr.length > 0) {
+        toast(`⚠️ ${fotosErr.length} foto(s) no subidas — ¿existe el bucket 'fotos-averias' en Supabase Storage?`, 'error');
+      } else if (fotosOk > 0) {
+        toast(`${fotosOk} foto(s) subida(s) ✓`, 'success');
+      }
     }
 
     Modal.close();
@@ -3345,23 +3398,77 @@ const AveriasPage = {
     AveriasPage._renderRepuestosList();
   },
 
-  _partesSeleccionados: [],
+  _partesSeleccionados: [],  // Para formulario de CIERRE
+  _partesNuevos: [],         // Para formulario de REGISTRO
 
+  // ── Partes en formulario de REGISTRO (openNew) ───────────────────
+  _addParteNew() {
+    const tecnico = document.getElementById('av-parte-tec')?.value;
+    if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
+    const fecha = document.getElementById('av-parte-fecha')?.value || new Date().toISOString().slice(0,10);
+    const horas = parseFloat(document.getElementById('av-parte-horas')?.value) || 0;
+    const notas = document.getElementById('av-parte-notas')?.value.trim() || '';
+    const existing = AveriasPage._partesNuevos.find(p => p.tecnico === tecnico);
+    if (existing) {
+      existing.fecha = fecha; existing.horas = horas; existing.notas = notas;
+    } else {
+      AveriasPage._partesNuevos.push({
+        id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, horas, notas
+      });
+    }
+    AveriasPage._renderPartesListNew();
+    document.getElementById('av-parte-tec').value = '';
+    document.getElementById('av-parte-horas').value = 1;
+    document.getElementById('av-parte-notas').value = '';
+  },
+
+  _removeParteNew(index) {
+    AveriasPage._partesNuevos.splice(index, 1);
+    AveriasPage._renderPartesListNew();
+  },
+
+  _renderPartesListNew() {
+    const el = document.getElementById('av-partes-list');
+    if (!el) return;
+    if (!AveriasPage._partesNuevos.length) {
+      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">Ningún mecánico añadido todavía.</p>';
+      return;
+    }
+    el.innerHTML = AveriasPage._partesNuevos.map((p, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px;border:1px solid var(--border)">
+        <span style="min-width:140px;font-weight:600">👤 ${UI.esc(p.tecnico)}</span>
+        <span style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
+        <input type="number" min="0" step="0.5" value="${p.horas}"
+          style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center"
+          onchange="AveriasPage._updateParteHorasNew(${i}, this.value)" title="Horas">
+        <span style="color:var(--gray-muted);font-size:11px">h</span>
+        <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
+          style="flex:1;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
+          onchange="AveriasPage._updateParteNotasNew(${i}, this.value)">
+        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0" onclick="AveriasPage._removeParteNew(${i})">×</button>
+      </div>`).join('');
+  },
+
+  _updateParteHorasNew(index, value) {
+    if (AveriasPage._partesNuevos[index]) AveriasPage._partesNuevos[index].horas = parseFloat(value) || 0;
+  },
+  _updateParteNotasNew(index, value) {
+    if (AveriasPage._partesNuevos[index]) AveriasPage._partesNuevos[index].notas = value;
+  },
+
+  // ── Partes en formulario de CIERRE (openClose) ──────────────────
   _addParte() {
     const tecnico = document.getElementById('cl-parte-tec')?.value;
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
     const fecha = document.getElementById('cl-parte-fecha')?.value || new Date().toISOString().slice(0,10);
     const horas = parseFloat(document.getElementById('cl-parte-horas')?.value) || 0;
     const notas = document.getElementById('cl-parte-notas')?.value.trim() || '';
-    // Si el técnico ya existe en la lista, sustituye su parte (no duplica)
     const existing = AveriasPage._partesSeleccionados.find(p => p.tecnico === tecnico);
     if (existing) {
       existing.fecha = fecha; existing.horas = horas; existing.notas = notas;
     } else {
       AveriasPage._partesSeleccionados.push({
-        id: `pt_${Date.now()}`,
-        averia_id: '',        // se rellena en _saveClose
-        tecnico, fecha, horas, notas
+        id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, horas, notas
       });
     }
     AveriasPage._renderPartesList();
@@ -3398,15 +3505,10 @@ const AveriasPage = {
   },
 
   _updateParteHoras(index, value) {
-    if (AveriasPage._partesSeleccionados[index]) {
-      AveriasPage._partesSeleccionados[index].horas = parseFloat(value) || 0;
-    }
+    if (AveriasPage._partesSeleccionados[index]) AveriasPage._partesSeleccionados[index].horas = parseFloat(value) || 0;
   },
-
   _updateParteNotas(index, value) {
-    if (AveriasPage._partesSeleccionados[index]) {
-      AveriasPage._partesSeleccionados[index].notas = value;
-    }
+    if (AveriasPage._partesSeleccionados[index]) AveriasPage._partesSeleccionados[index].notas = value;
   },
 
   // ── Fotos ────────────────────────────────────────────────────────
@@ -3531,7 +3633,7 @@ const AveriasPage = {
       // Liberar object URLs
       AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
       AveriasPage._fotosBuffer = [];
-      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no se pudieron subir`, 'error');
+      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no subidas — ¿existe el bucket 'fotos-averias' en Supabase Storage?`, 'error');
     }
 
     Modal.close();
@@ -4497,6 +4599,10 @@ const ConfigPage = {
           <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
           <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
             Borrar todos los datos
+          </button>
+          <div style="height:1px;background:var(--border);margin:8px 0"></div>
+          <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()">
+            ⚙️ SQL para crear tablas (partes_trabajo, fotos)
           </button>
         </div>
       </div>
