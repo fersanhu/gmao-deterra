@@ -3090,7 +3090,12 @@ const AveriasPage = {
     }
   },
 
+  _saving: false,   // guard anti-doble-submit
+
   async _saveCreate() {
+    if (AveriasPage._saving) return;          // ya está procesando, ignorar
+
+    // Validaciones ANTES de bloquear el botón
     const almacen = document.getElementById('av-almacen').value;
     const zona    = document.getElementById('av-zona').value;
     const linea   = document.getElementById('av-linea').value;
@@ -3110,6 +3115,12 @@ const AveriasPage = {
       if (!sol) { toast('Indica la solución aplicada para cerrar la avería', 'error'); return; }
     }
 
+    // Bloquear submit — deshabilitar botón para evitar doble envío
+    AveriasPage._saving = true;
+    const submitBtn = document.querySelector('#modal-overlay .btn-primary');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando…'; }
+
+    try {
     const now = new Date();
     const ds = now.toISOString().slice(0,10).replace(/-/g,'');
     const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
@@ -3173,27 +3184,40 @@ const AveriasPage = {
       }
     }
 
-    // Subir fotos del alta
+    // Cerrar modal y actualizar lista ANTES de subir fotos (no bloquear UI)
+    Modal.close();
+    AveriasPage._saving = false;
+    toast(`Avería ${id} ${cerrarAhora ? 'cerrada' : 'registrada'} ✓`, 'success');
+    App.updateBadges();
+    await AveriasPage.render();
+
+    } catch(err) {
+      // Error inesperado — re-habilitar botón para que el usuario pueda reintentar
+      AveriasPage._saving = false;
+      const btn = document.querySelector('#modal-overlay .btn-primary');
+      if (btn) { btn.disabled = false; btn.textContent = 'Registrar avería'; }
+      toast('Error al guardar: ' + err.message, 'error');
+      console.error('[_saveCreate]', err);
+      return;
+    }
+
+    // Subir fotos EN SEGUNDO PLANO — el usuario ya puede seguir trabajando
     if (AveriasPage._fotosBuffer.length > 0) {
-      toast(`Subiendo ${AveriasPage._fotosBuffer.length} foto(s)…`, '');
+      const fotosCopy = [...AveriasPage._fotosBuffer];
+      AveriasPage._fotosBuffer = [];
+      toast(`Subiendo ${fotosCopy.length} foto(s) en segundo plano…`, '');
       let fotosOk = 0, fotosErr = [];
-      for (const file of AveriasPage._fotosBuffer) {
+      for (const file of fotosCopy) {
         try { await DataService.uploadFoto(id, file); fotosOk++; }
         catch(e) { fotosErr.push(file.name); console.error('[foto alta]', e); }
+        finally { if (file._previewUrl) URL.revokeObjectURL(file._previewUrl); }
       }
-      AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
-      AveriasPage._fotosBuffer = [];
       if (fotosErr.length > 0) {
-        toast(`⚠️ ${fotosErr.length} foto(s) no subidas — ¿existe el bucket 'fotos-averias' en Supabase Storage?`, 'error');
+        toast(`⚠️ ${fotosErr.length} foto(s) no subidas`, 'error');
       } else if (fotosOk > 0) {
         toast(`${fotosOk} foto(s) subida(s) ✓`, 'success');
       }
     }
-
-    Modal.close();
-    toast(`Avería ${id} ${cerrarAhora ? 'cerrada' : 'registrada'} ✓`, 'success');
-    App.updateBadges();
-    await AveriasPage.render();
   },
 
   async openClose(id) {
@@ -3587,10 +3611,17 @@ const AveriasPage = {
   },
 
   async _saveClose(id) {
-    const a = await DataService.getAveria(id);
-    if (!a) return;
+    if (AveriasPage._saving) return;
     const solucion = document.getElementById('cl-solucion').value.trim();
     if (!solucion) { toast('La solución es obligatoria', 'error'); return; }
+
+    // Bloquear botón inmediatamente
+    AveriasPage._saving = true;
+    const submitBtn = document.querySelector('#modal-overlay .btn-primary');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Cerrando…'; }
+
+    const a = await DataService.getAveria(id);
+    if (!a) { AveriasPage._saving = false; return; }
     const fechaFin = document.getElementById('cl-fecha').value;
     const horaFin  = document.getElementById('cl-hora').value + ':00';
     let duracion = '';
@@ -3651,29 +3682,27 @@ const AveriasPage = {
       }
     }
 
-    // Subir fotos
-    if (AveriasPage._fotosBuffer.length > 0) {
-      // Mostrar progreso
-      toast(`Subiendo ${AveriasPage._fotosBuffer.length} foto(s)…`, '');
-      const errores = [];
-      for (const file of AveriasPage._fotosBuffer) {
-        try {
-          await DataService.uploadFoto(id, file);
-        } catch (e) {
-          errores.push(file.name);
-          console.error('[uploadFoto]', e);
-        }
-      }
-      // Liberar object URLs
-      AveriasPage._fotosBuffer.forEach(f => { if (f._previewUrl) URL.revokeObjectURL(f._previewUrl); });
-      AveriasPage._fotosBuffer = [];
-      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no subidas — ¿existe el bucket 'fotos-averias' en Supabase Storage?`, 'error');
-    }
-
+    // Cerrar modal ANTES de subir fotos — el usuario ya puede continuar
     Modal.close();
+    AveriasPage._saving = false;
     toast('Avería cerrada correctamente ✓', 'success');
     App.updateBadges();
     await AveriasPage.render();
+
+    // Subir fotos EN SEGUNDO PLANO
+    if (AveriasPage._fotosBuffer.length > 0) {
+      const fotosCopy = [...AveriasPage._fotosBuffer];
+      AveriasPage._fotosBuffer = [];
+      toast(`Subiendo ${fotosCopy.length} foto(s) en segundo plano…`, '');
+      const errores = [];
+      for (const file of fotosCopy) {
+        try { await DataService.uploadFoto(id, file); }
+        catch (e) { errores.push(file.name); console.error('[uploadFoto]', e); }
+        finally { if (file._previewUrl) URL.revokeObjectURL(file._previewUrl); }
+      }
+      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no subidas`, 'error');
+      else toast(`Fotos subidas ✓`, 'success');
+    }
   },
 };
 
