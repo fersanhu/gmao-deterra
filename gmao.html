@@ -3159,11 +3159,13 @@ const AveriasPage = {
     const submitBtn = document.querySelector('#modal-overlay .btn-primary');
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando…'; }
 
-    try {
+    // Declarar id ANTES del try para que sea accesible en la subida de fotos posterior
     const now = new Date();
     const ds = now.toISOString().slice(0,10).replace(/-/g,'');
     const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
     const id = `AV-${ds}-${ts}`;
+
+    try {
 
     let estado = 'Abierta';
     let fechaInicio = document.getElementById('av-fecha').value;
