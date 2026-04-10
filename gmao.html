@@ -2974,6 +2974,13 @@ const AveriasPage = {
               </div>
               <small style="color:var(--gray-muted);font-size:11px">La fecha/hora de arriba son del FIN. El inicio se calcula restando la duración.</small>
             </div>
+            <div class="form-field full">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none" id="av-zona-limpia-label">
+                <input type="checkbox" id="av-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0"
+                  onchange="const l=document.getElementById('av-zona-limpia-label');l.style.borderColor=this.checked?'var(--green)':'var(--red)'">
+                <span style="font-size:13px;font-weight:600">🧹 Zona limpia y revisada</span>
+              </label>
+            </div>
           </div>
         </div>
       </form>`,
@@ -3232,6 +3239,7 @@ const AveriasPage = {
     // Técnico principal = primer mecánico añadido o vacío
     const tecnicoPrincipal = AveriasPage._partesNuevos[0]?.tecnico || '';
 
+    const zonaLimpia = cerrarAhora ? (document.getElementById('av-zona-limpia')?.checked ?? true) : undefined;
     const averia = {
       id, id_activo: id_activo || `${almacen}-${zona}-${linea}-${equipoText}`,
       fecha_inicio: fechaInicio, hora_inicio: horaInicio,
@@ -3240,6 +3248,7 @@ const AveriasPage = {
       tipo:         document.getElementById('av-tipo').value,
       criticidad, estado, almacen, zona, linea, equipo: equipoText,
       fecha_fin: fechaFin, hora_fin: horaFin, solucion, materiales, coste, duracion,
+      ...(zonaLimpia !== undefined && { zona_limpia: zonaLimpia }),
     };
     await DataService.saveAveria(averia);
 
@@ -3419,10 +3428,12 @@ const AveriasPage = {
         </div>
 
         <!-- ZONA LIMPIA -->
-        <div class="form-field full" style="margin-top:4px">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none">
-            <input type="checkbox" id="cl-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0">
-            <span style="font-size:13px;font-weight:600;color:var(--green)">✓ Zona limpia y revisada</span>
+        <div class="form-section">
+          <div class="form-section-label">🧹 Estado de la zona</div>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;margin-top:8px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none" id="zona-limpia-label">
+            <input type="checkbox" id="cl-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0"
+              onchange="const l=document.getElementById('zona-limpia-label');l.style.borderColor=this.checked?'var(--green)':'var(--red)'">
+            <span style="font-size:13px;font-weight:600">Zona limpia y revisada</span>
           </label>
         </div>
       </form>`,
