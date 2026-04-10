@@ -1448,11 +1448,11 @@ const UserService = {
   _user: null,
 
   load() {
-    const stored = sessionStorage.getItem('gmao_user');
+    const stored = localStorage.getItem('gmao_user');
     if (stored) { try { this._user = JSON.parse(stored); } catch(e){} }
   },
-  login(t)  { this._user = t; sessionStorage.setItem('gmao_user', JSON.stringify(t)); },
-  logout()  { this._user = null; sessionStorage.removeItem('gmao_user'); },
+  login(t)  { this._user = t; localStorage.setItem('gmao_user', JSON.stringify(t)); },
+  logout()  { this._user = null; localStorage.removeItem('gmao_user'); },
   getUser() { return this._user; },
   isLoggedIn() { return !!this._user; },
   getInitial() { return this._user?.nombre?.[0]?.toUpperCase() || '?'; },
