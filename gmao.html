@@ -1149,15 +1149,23 @@ const DataService = {
     const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const slug = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const path = `${averia_id}/${slug}`;
-    const { error } = await sb.storage.from('fotos-averias').upload(path, file, {
+    // 1) Subir al Storage — esto es lo crítico; si falla, propagamos el error
+    const { error: storageErr } = await sb.storage.from('fotos-averias').upload(path, file, {
       contentType: file.type || 'image/jpeg',
       upsert: false,
     });
-    if (error) throw new Error(`[uploadFoto] ${error.message}`);
+    if (storageErr) throw new Error(`[Storage] ${storageErr.message}`);
+    // 2) Obtener URL pública
     const { data: urlData } = sb.storage.from('fotos-averias').getPublicUrl(path);
     const url = urlData.publicUrl;
+    // 3) Guardar metadatos en la tabla fotos_averias — no es fatal si falla
     const id  = `foto_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    await db.fotos_averias.put({ id, averia_id, storage_path: path, url, nombre: file.name });
+    try {
+      await db.fotos_averias.put({ id, averia_id, storage_path: path, url, nombre: file.name });
+    } catch(dbErr) {
+      // La foto ya está en Storage; solo advertimos — no bloqueamos
+      console.warn('[uploadFoto] Foto subida al Storage pero no registrada en BD:', dbErr.message);
+    }
     return { id, url, storage_path: path, nombre: file.name };
   },
   async deleteFoto(foto) {
@@ -1354,25 +1362,47 @@ const DataService = {
   },
 
   async deductStock(items, averia_id, usuario) {
-    // items: [{ cod_producto, almacen, cantidad }]
+    // items: [{ cod_producto, almacen, cantidad, nombre }]
+    // El descuento se hace vía RPC para ser ATÓMICO y evitar race conditions
+    // cuando varios usuarios descuentan el mismo producto a la vez.
+    // Fallback al método client-side si el RPC todavía no existe en Supabase.
     const now = new Date();
     const fecha = now.toISOString().slice(0,10);
     for (const item of items) {
       if (!item.cod_producto || !item.almacen || !item.cantidad) continue;
       const normAlm = normalizeAlmacen(item.almacen);
-      const invArr = await db.inventario.where('cod_producto').equals(item.cod_producto).filter(r => normalizeAlmacen(r.almacen) === normAlm).toArray();
-      const nombreProd = invArr.length > 0 ? (invArr[0].producto || item.cod_producto) : (item.nombre || item.cod_producto);
-      if (invArr.length > 0) {
-        const inv = invArr[0];
-        await db.inventario.put({ ...inv, unidades: Math.max(0, (inv.unidades||0) - item.cantidad) });
+
+      // 1) Descuento atómico en la base de datos — sin race condition
+      const { error: rpcErr } = await sb.rpc('deduct_stock_safe', {
+        p_cod: item.cod_producto,
+        p_alm: normAlm,
+        p_qty: item.cantidad,
+      });
+      if (rpcErr) {
+        // RPC no disponible (SQL no ejecutado aún): fallback client-side
+        console.warn('[deductStock] RPC no disponible, usando fallback:', rpcErr.message);
+        const invArr = await db.inventario
+          .where('cod_producto').equals(item.cod_producto)
+          .filter(r => normalizeAlmacen(r.almacen) === normAlm)
+          .toArray();
+        if (invArr.length > 0) {
+          const inv = invArr[0];
+          await db.inventario.put({ ...inv, unidades: Math.max(0, (inv.unidades||0) - item.cantidad) });
+        }
       }
-      const mov_id = `MOV-${now.getTime()}-${item.cod_producto}`;
+
+      // 2) Registrar movimiento de auditoría (siempre, independiente del método)
+      const mov_id = `MOV-${now.getTime()}-${Math.random().toString(36).slice(2,6)}-${item.cod_producto}`;
       await db.movimientos.put({
-        id: mov_id, fecha, cod_producto: item.cod_producto,
-        producto: nombreProd,
-        almacen: normalizeAlmacen(item.almacen), cantidad: -item.cantidad,
-        precio_unidad: 0, tipo_movimiento: 'Salida',
-        usuario: usuario || '', notas: `Avería ${averia_id}`,
+        id: mov_id, fecha,
+        cod_producto: item.cod_producto,
+        producto:     item.nombre || item.cod_producto,
+        almacen:      normAlm,
+        cantidad:     -item.cantidad,
+        precio_unidad:    0,
+        tipo_movimiento: 'Salida',
+        usuario: usuario || '',
+        notas:   `Avería ${averia_id}`,
       });
     }
   },
@@ -3250,11 +3280,11 @@ const AveriasPage = {
       let fotosOk = 0, fotosErr = [];
       for (const file of fotosCopy) {
         try { await DataService.uploadFoto(id, file); fotosOk++; }
-        catch(e) { fotosErr.push(file.name); console.error('[foto alta]', e); }
+        catch(e) { fotosErr.push(file.name); console.error('[foto alta] ' + e.message, e); toast('⚠️ Error foto: ' + e.message, 'error'); }
         finally { if (file._previewUrl) URL.revokeObjectURL(file._previewUrl); }
       }
       if (fotosErr.length > 0) {
-        toast(`⚠️ ${fotosErr.length} foto(s) no subidas`, 'error');
+        toast(`⚠️ ${fotosErr.length} foto(s) no subidas al Storage`, 'error');
       } else if (fotosOk > 0) {
         toast(`${fotosOk} foto(s) subida(s) ✓`, 'success');
       }
@@ -3743,10 +3773,10 @@ const AveriasPage = {
       const errores = [];
       for (const file of fotosCopy) {
         try { await DataService.uploadFoto(id, file); }
-        catch (e) { errores.push(file.name); console.error('[uploadFoto]', e); }
+        catch (e) { errores.push(file.name); console.error('[uploadFoto] ' + e.message, e); toast('⚠️ Error foto: ' + e.message, 'error'); }
         finally { if (file._previewUrl) URL.revokeObjectURL(file._previewUrl); }
       }
-      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no subidas`, 'error');
+      if (errores.length) toast(`⚠️ ${errores.length} foto(s) no subidas al Storage`, 'error');
       else toast(`Fotos subidas ✓`, 'success');
     }
   },
@@ -5438,8 +5468,65 @@ const PartesPage = {
 
   _showSetupSQL() {
     const sql = `-- ═══ EJECUTA TODO ESTO EN Supabase > SQL Editor > New query ═══
+-- Versión 2 — incluye RLS en tablas principales y función atómica de stock
 
--- 1. Tabla partes_trabajo (mecánicos que intervienen en cada avería)
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE A: RLS en tablas principales
+-- Sin esto, cualquier persona con la URL de la API puede leer/escribir
+-- todos los datos usando la clave anon visible en el código.
+-- Estas políticas permiten el acceso con clave anon (comportamiento actual)
+-- y dejan la puerta abierta para restringir por centro en el futuro.
+-- ──────────────────────────────────────────────────────────────────────
+ALTER TABLE activos      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE averias      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE incidencias  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tecnicos     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sitios       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE productos    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventario   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE movimientos  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE metadata     ENABLE ROW LEVEL SECURITY;
+
+-- Políticas permisivas para la clave anon (la app no usa Supabase Auth)
+-- Si en el futuro añades autenticación real, reemplaza USING (true)
+-- por USING (auth.uid() IS NOT NULL) o filtros por almacén.
+CREATE POLICY "anon_all" ON activos      FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON averias      FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON incidencias  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON tecnicos     FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON sitios       FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON productos    FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON inventario   FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON movimientos  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON metadata     FOR ALL USING (true) WITH CHECK (true);
+
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE B: Función atómica de descuento de stock (evita race conditions)
+-- Sin esto, si dos mecánicos descuentan el mismo producto a la vez,
+-- uno sobreescribe al otro y el stock queda incorrecto.
+-- Con esta función, el UPDATE ocurre dentro de PostgreSQL de forma atómica.
+-- ──────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION deduct_stock_safe(
+  p_cod TEXT,
+  p_alm TEXT,
+  p_qty NUMERIC
+) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE inventario
+  SET    unidades = GREATEST(0, unidades - p_qty)
+  WHERE  cod_producto = p_cod
+    AND  LOWER(TRIM(almacen)) = LOWER(TRIM(p_alm));
+END;
+$$;
+
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE C: Tablas opcionales (partes de trabajo y fotos)
+-- ──────────────────────────────────────────────────────────────────────
+
+-- Tabla partes_trabajo
 CREATE TABLE IF NOT EXISTS partes_trabajo (
   id           TEXT PRIMARY KEY,
   averia_id    TEXT NOT NULL,
@@ -5451,7 +5538,7 @@ CREATE TABLE IF NOT EXISTS partes_trabajo (
 ALTER TABLE partes_trabajo ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "partes_all" ON partes_trabajo FOR ALL USING (true) WITH CHECK (true);
 
--- 2. Tabla fotos_averias (metadatos de fotos subidas)
+-- Tabla fotos_averias
 CREATE TABLE IF NOT EXISTS fotos_averias (
   id            TEXT PRIMARY KEY,
   averia_id     TEXT NOT NULL,
@@ -5462,8 +5549,9 @@ CREATE TABLE IF NOT EXISTS fotos_averias (
 ALTER TABLE fotos_averias ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "fotos_all" ON fotos_averias FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Políticas de Storage para el bucket fotos-averias
---    (necesario aunque el bucket sea PUBLIC — los uploads requieren política INSERT)
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE D: Storage bucket para fotos
+-- ──────────────────────────────────────────────────────────────────────
 INSERT INTO storage.buckets (id, name, public)
   VALUES ('fotos-averias', 'fotos-averias', true)
   ON CONFLICT (id) DO UPDATE SET public = true;
@@ -5471,12 +5559,14 @@ INSERT INTO storage.buckets (id, name, public)
 CREATE POLICY "fotos_storage_all" ON storage.objects
   FOR ALL USING (bucket_id = 'fotos-averias')
   WITH CHECK (bucket_id = 'fotos-averias');`;
-    Modal.open('SQL de configuración — tablas y Storage', `
-      <div style="background:var(--red);color:#fff;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;margin-bottom:10px">
-        ⚠️ Si el bucket fotos-averias ya existe con 0 policies, los uploads están bloqueados aunque sea PUBLIC. Ejecuta este SQL completo.
+    Modal.open('SQL de configuración — tablas, RLS y Stock atómico', `
+      <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
+        ⚠️ <strong>Versión 2 del SQL de setup.</strong><br>
+        Incluye RLS en tablas principales (seguridad) y función atómica de stock.<br>
+        Si ya ejecutaste la versión anterior, ejecuta solo los Bloques A y B.
       </div>
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
-      <textarea readonly style="width:100%;height:340px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>`,
+      <textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>`,
       `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.querySelector('#modal-body textarea')?.value);toast('SQL copiado ✓','success')">📋 Copiar SQL</button>
        <button class="btn btn-primary" onclick="Modal.close()">Cerrar</button>`);
   },
