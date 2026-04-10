@@ -2720,7 +2720,7 @@ const AveriasPage = {
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
-        ${a.estado === 'Cerrada' ? `<div class="detail-field"><label>Zona limpia y revisada</label><p style="font-weight:600;color:${a.zona_limpia ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia ? '✓ Sí' : '✗ No'}</p></div>` : ''}
+        ${a.estado === 'Cerrada' ? `<div class="detail-field"><label>Zona limpia y revisada</label><p style="font-weight:600;color:${a.zona_limpia !== false ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia !== false ? '✓ Sí' : '✗ No'}</p></div>` : ''}
         ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
