@@ -2720,6 +2720,7 @@ const AveriasPage = {
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
+        ${a.estado === 'Cerrada' ? `<div class="detail-field"><label>Zona limpia y revisada</label><p style="font-weight:600;color:${a.zona_limpia ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia ? '✓ Sí' : '✗ No'}</p></div>` : ''}
         ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
@@ -3416,6 +3417,14 @@ const AveriasPage = {
           </label>
           <span id="cl-fotos-count" style="font-size:11px;color:var(--gray-muted);margin-left:8px"></span>
         </div>
+
+        <!-- ZONA LIMPIA -->
+        <div class="form-field full" style="margin-top:4px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none">
+            <input type="checkbox" id="cl-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0">
+            <span style="font-size:13px;font-weight:600;color:var(--green)">✓ Zona limpia y revisada</span>
+          </label>
+        </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" style="background:var(--green)" onclick="AveriasPage._saveClose('${UI.esc(id)}')">✓ Confirmar cierre</button>`);
@@ -3720,12 +3729,14 @@ const AveriasPage = {
 
     // Técnico principal = el primero de los partes (si hay alguno)
     const tecnicoPrincipal = AveriasPage._partesSeleccionados[0]?.tecnico || a.tecnico || '';
+    const zonaLimpia = document.getElementById('cl-zona-limpia')?.checked ?? true;
     await DataService.saveAveria({
       ...a, estado:'Cerrada', solucion,
       tecnico: tecnicoPrincipal,
       materiales: materialesCombinados,
       coste: parseFloat(document.getElementById('cl-coste').value) || 0,
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
+      zona_limpia: zonaLimpia,
     });
 
     // Guardar partes de trabajo (aislado: si falla, el cierre continúa)
@@ -5558,12 +5569,18 @@ INSERT INTO storage.buckets (id, name, public)
 
 CREATE POLICY "fotos_storage_all" ON storage.objects
   FOR ALL USING (bucket_id = 'fotos-averias')
-  WITH CHECK (bucket_id = 'fotos-averias');`;
+  WITH CHECK (bucket_id = 'fotos-averias');
+
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE E: Nueva columna zona_limpia en averias
+-- Indica si el mecánico dejó la zona limpia y revisada al cerrar.
+-- ──────────────────────────────────────────────────────────────────────
+ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`;
     Modal.open('SQL de configuración — tablas, RLS y Stock atómico', `
       <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
         ⚠️ <strong>Versión 2 del SQL de setup.</strong><br>
         Incluye RLS en tablas principales (seguridad) y función atómica de stock.<br>
-        Si ya ejecutaste la versión anterior, ejecuta solo los Bloques A y B.
+        Si ya ejecutaste la versión anterior, ejecuta solo el Bloque E (nueva columna zona_limpia).
       </div>
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
       <textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>`,
