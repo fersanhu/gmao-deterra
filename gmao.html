@@ -1447,12 +1447,41 @@ const DataService = {
 const UserService = {
   _user: null,
 
+  _TIMEOUT_KEY:  'gmao_session_timeout_h',  // horas; 0 = nunca
+  _ACTIVITY_KEY: 'gmao_last_activity',
+
   load() {
     const stored = localStorage.getItem('gmao_user');
     if (stored) { try { this._user = JSON.parse(stored); } catch(e){} }
   },
-  login(t)  { this._user = t; localStorage.setItem('gmao_user', JSON.stringify(t)); },
-  logout()  { this._user = null; localStorage.removeItem('gmao_user'); },
+  login(t) {
+    this._user = t;
+    localStorage.setItem('gmao_user', JSON.stringify(t));
+    this.touchActivity();
+  },
+  logout() { this._user = null; localStorage.removeItem('gmao_user'); localStorage.removeItem(this._ACTIVITY_KEY); },
+
+  // Actualiza la marca de última actividad
+  touchActivity() { localStorage.setItem(this._ACTIVITY_KEY, Date.now()); },
+
+  // Devuelve timeout configurado en horas (0 = nunca)
+  getTimeoutHours() { return parseFloat(localStorage.getItem(this._TIMEOUT_KEY) || '8'); },
+  setTimeoutHours(h) { localStorage.setItem(this._TIMEOUT_KEY, String(h)); },
+
+  // Comprueba si ha expirado la sesión por inactividad
+  checkSessionTimeout() {
+    if (!this._user) return;
+    const h = this.getTimeoutHours();
+    if (!h || h <= 0) return;  // 0 = nunca caducar
+    const last = parseInt(localStorage.getItem(this._ACTIVITY_KEY) || '0');
+    if (!last) { this.touchActivity(); return; }
+    const diffH = (Date.now() - last) / 3600000;
+    if (diffH >= h) {
+      this.logout();
+      toast(`Sesión cerrada por inactividad (${h}h). Vuelve a identificarte.`, 'error');
+      App.showLogin();
+    }
+  },
   getUser() { return this._user; },
   isLoggedIn() { return !!this._user; },
   getInitial() { return this._user?.nombre?.[0]?.toUpperCase() || '?'; },
@@ -4919,6 +4948,30 @@ const ConfigPage = {
         </div>
       </div>
 
+      <!-- Sesión -->
+      ${canAdmin ? `<div class="card">
+        <div class="card-header"><span class="card-title">⏱️ Tiempo de sesión</span></div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
+          Si la app lleva X horas sin usarse, al volver se pedirá identificación de nuevo.<br>
+          Útil cuando varios mecánicos comparten un dispositivo.
+        </p>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <label style="font-size:13px;font-weight:600">Cerrar sesión tras:</label>
+          <select class="form-input" id="cfg-timeout" style="width:auto"
+            onchange="UserService.setTimeoutHours(parseFloat(this.value)); toast('Configuración de sesión guardada ✓','success')">
+            <option value="2"  ${UserService.getTimeoutHours()===2 ?'selected':''}>2 horas</option>
+            <option value="4"  ${UserService.getTimeoutHours()===4 ?'selected':''}>4 horas</option>
+            <option value="8"  ${UserService.getTimeoutHours()===8 ?'selected':''}>8 horas (por defecto)</option>
+            <option value="12" ${UserService.getTimeoutHours()===12?'selected':''}>12 horas</option>
+            <option value="24" ${UserService.getTimeoutHours()===24?'selected':''}>24 horas</option>
+            <option value="0"  ${UserService.getTimeoutHours()===0 ?'selected':''}>Nunca cerrar sesión</option>
+          </select>
+        </div>
+        <p style="font-size:11px;color:var(--gray-muted);margin-top:10px">
+          ⚠️ El contador se reinicia con cualquier interacción (clic, teclado). Solo cierra la sesión si el dispositivo está inactivo.
+        </p>
+      </div>` : ''}
+
       <!-- Técnicos -->
       <div class="card" style="grid-column:1/-1">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -5400,11 +5453,39 @@ const App = {
     Router.navigate('averias');
     await Router.handle();
     this.updateBadges();
+    this._initSessionWatcher();
+  },
+
+  _initSessionWatcher() {
+    // Resetear inactividad en cualquier interacción del usuario
+    const touch = () => UserService.touchActivity();
+    document.addEventListener('click',    touch, { passive: true });
+    document.addEventListener('keydown',  touch, { passive: true });
+    document.addEventListener('touchstart', touch, { passive: true });
+    document.addEventListener('scroll',   touch, { passive: true });
+
+    // Al volver a la app (cambio de pestaña, desbloqueo de pantalla, etc.)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        UserService.checkSessionTimeout();
+      }
+    });
+
+    // También comprobar cada 5 min mientras la app está abierta (por si no hay visibilitychange)
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        UserService.checkSessionTimeout();
+      }
+    }, 5 * 60 * 1000);
   },
 
   showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+  },
+
+  async showLogin() {
+    await UserSelectScreen.show();
   },
 
   _initImportScreen() {
