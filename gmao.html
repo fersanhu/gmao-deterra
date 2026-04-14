@@ -2257,10 +2257,13 @@ const ActivosPage = {
     document.getElementById('content').innerHTML = `
     <div class="page-header">
       <div><h1>Activos</h1><p class="page-subtitle" id="activos-count">Cargando...</p></div>
-      ${canAdmin ? `<button class="btn btn-primary" onclick="ActivosPage.openNew()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo activo
-      </button>` : ''}
+      ${canAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="ActivosPage.openBulk()">📋 Alta masiva</button>
+        <button class="btn btn-primary" onclick="ActivosPage.openNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo activo
+        </button>
+      </div>` : ''}
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0">
@@ -2386,6 +2389,154 @@ const ActivosPage = {
        <button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
        ${UserService.canManageActivos() ? `<button class="btn btn-primary" onclick="ActivosPage.openEdit('${UI.esc(id)}')">✏️ Editar</button>` : ''}`);
   },
+
+  // ── ALTA MASIVA ──────────────────────────────────────────────────
+  _bulkCols: [
+    { key:'almacen',      label:'Almacén *',     w:'110px' },
+    { key:'zona',         label:'Zona *',         w:'100px' },
+    { key:'linea',        label:'Línea',          w:'70px'  },
+    { key:'equipo',       label:'Equipo *',       w:'160px' },
+    { key:'tipo_maquina', label:'Tipo máquina',   w:'120px' },
+    { key:'estado',       label:'Estado',         w:'110px' },
+    { key:'anio',         label:'Año',            w:'65px'  },
+    { key:'proveedor',    label:'Proveedor',      w:'120px' },
+    { key:'matricula',    label:'Matrícula',      w:'100px' },
+  ],
+
+  openBulk() {
+    const cols = ActivosPage._bulkCols;
+    const mkRow = (vals = {}) => `
+      <tr>
+        ${cols.map(c => `
+          <td style="padding:2px">
+            <input class="form-input bulk-cell" data-col="${c.key}"
+              style="width:${c.w};min-width:${c.w};padding:4px 6px;font-size:12px"
+              value="${UI.esc(vals[c.key]||'')}"
+              placeholder="${c.key==='estado'?'Operativo':''}">
+          </td>`).join('')}
+        <td style="padding:2px;vertical-align:middle">
+          <button type="button" style="background:none;border:none;color:var(--gray-muted);cursor:pointer;font-size:16px;line-height:1" onclick="this.closest('tr').remove()">×</button>
+        </td>
+      </tr>`;
+
+    const initRows = Array.from({length:8}, () => mkRow()).join('');
+
+    Modal.open('Alta masiva de activos', `
+      <div style="font-size:12px;color:var(--gray-muted);margin-bottom:10px;line-height:1.5">
+        📋 <strong>Pega desde Excel o Google Sheets:</strong> haz clic en la primera celda de la fila donde quieres empezar y pulsa <kbd style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px">Ctrl+V</kbd>. Las columnas son: <em>Almacén · Zona · Línea · Equipo · Tipo · Estado · Año · Proveedor · Matrícula</em>
+      </div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:6px">
+        <table style="border-collapse:collapse;width:100%;min-width:900px">
+          <thead style="position:sticky;top:0;background:var(--bg-card);z-index:1">
+            <tr>
+              ${cols.map(c=>`<th style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--gray-muted);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">${c.label}</th>`).join('')}
+              <th style="width:24px"></th>
+            </tr>
+          </thead>
+          <tbody id="bulk-body">${initRows}</tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="document.getElementById('bulk-body').insertAdjacentHTML('beforeend', ActivosPage._bulkMkRow())">+ Añadir fila</button>
+      <span id="bulk-status" style="font-size:12px;color:var(--gray-muted);margin-left:12px"></span>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="ActivosPage._saveBulk()">💾 Guardar activos</button>`);
+
+    // Exponer mkRow para el botón inline
+    ActivosPage._bulkMkRow = () => mkRow();
+
+    // Paste handler: parsea TSV desde Excel/Sheets
+    document.getElementById('bulk-body').addEventListener('paste', function(e) {
+      const text = e.clipboardData?.getData('text/plain') || '';
+      if (!text) return;
+      e.preventDefault();
+
+      // Encontrar fila y columna de inicio desde la celda enfocada
+      const focusedCell = document.activeElement?.closest('td');
+      const focusedRow  = focusedCell?.closest('tr');
+      const tbody       = document.getElementById('bulk-body');
+      const allRows     = Array.from(tbody.querySelectorAll('tr'));
+      let startRow = focusedRow ? allRows.indexOf(focusedRow) : 0;
+      const cols   = ActivosPage._bulkCols;
+      const focusedInput = focusedCell?.querySelector('input');
+      const colKeys = cols.map(c=>c.key);
+      let startCol = focusedInput ? colKeys.indexOf(focusedInput.dataset.col) : 0;
+      if (startCol < 0) startCol = 0;
+
+      const pastedRows = text.trimEnd().split('\n').map(r => r.split('\t'));
+
+      pastedRows.forEach((pr, ri) => {
+        let tr = allRows[startRow + ri];
+        if (!tr) {
+          // Añadir fila nueva si hace falta
+          tbody.insertAdjacentHTML('beforeend', ActivosPage._bulkMkRow());
+          tr = tbody.lastElementChild;
+        }
+        const inputs = Array.from(tr.querySelectorAll('input.bulk-cell'));
+        pr.forEach((val, ci) => {
+          const inp = inputs[startCol + ci];
+          if (inp) inp.value = val.trim();
+        });
+      });
+
+      document.getElementById('bulk-status').textContent = `${pastedRows.length} fila(s) pegada(s)`;
+    });
+  },
+
+  async _saveBulk() {
+    const tbody = document.getElementById('bulk-body');
+    if (!tbody) return;
+    const cols = ActivosPage._bulkCols;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const activos = [];
+    const errors  = [];
+
+    rows.forEach((tr, i) => {
+      const vals = {};
+      tr.querySelectorAll('input.bulk-cell').forEach(inp => { vals[inp.dataset.col] = inp.value.trim(); });
+      // Saltar filas completamente vacías
+      if (!vals.almacen && !vals.zona && !vals.equipo) return;
+      // Validar obligatorios
+      if (!vals.almacen || !vals.zona || !vals.equipo) {
+        errors.push(`Fila ${i+1}: faltan Almacén, Zona o Equipo`);
+        tr.style.background = '#fff0f0';
+        return;
+      }
+      tr.style.background = '';
+      activos.push({
+        id_activo:     `${vals.almacen}-${vals.zona}-${vals.linea||''}-${vals.equipo}`,
+        almacen:       vals.almacen,
+        zona:          vals.zona,
+        linea:         vals.linea || '',
+        equipo:        vals.equipo,
+        tipo_maquina:  vals.tipo_maquina || '',
+        estado:        vals.estado || 'Operativo',
+        anio:          parseInt(vals.anio) || null,
+        proveedor:     vals.proveedor || '',
+        matricula:     vals.matricula || '',
+        potencia_motor:'', codigo_zona:'', num:0, ancho:'', largo:'', proteccion:'',
+      });
+    });
+
+    if (errors.length) {
+      document.getElementById('bulk-status').textContent = errors.join(' · ');
+      document.getElementById('bulk-status').style.color = 'var(--red)';
+      return;
+    }
+    if (!activos.length) { toast('No hay datos válidos que guardar', 'error'); return; }
+
+    const btn = document.querySelector('#modal-overlay .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+    let saved = 0;
+    for (const a of activos) {
+      try { await DataService.saveActivo(a); saved++; } catch(e) { console.error('[bulk]', e); }
+    }
+
+    Modal.close();
+    toast(`${saved} activo(s) guardados ✓`, 'success');
+    await ActivosPage.render();
+  },
+  // ── FIN ALTA MASIVA ───────────────────────────────────────────────
 
   async openNew() {
     await this._openForm(null);
