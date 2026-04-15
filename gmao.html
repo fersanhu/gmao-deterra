@@ -776,11 +776,22 @@ const ImportService = {
     onProgress(93, 'Guardando en base de datos...');
     await db.transaction('rw', db.activos, db.averias, db.incidencias, db.tecnicos,
       db.sitios, db.productos, db.inventario, db.movimientos, db.metadata, async () => {
+        // ⚠️ IMPORTANTE: averias e incidencias NO se reimportan desde Excel.
+        // Son datos vivos creados en la app. El Excel solo actualiza el maestro de activos,
+        // productos, inventario, técnicos y movimientos históricos.
+        // (Las averías del Excel sí se importan la primera vez, pero en reimportación se saltan.)
+        const isReimport = (await db.averias.filter(() => true).count().catch(() => 0)) > 0;
+
         // Limpiar inventario antes de reimportar para eliminar IDs obsoletos
         await db.inventario.clear();
         await db.activos.bulkPut(activos);
-        await db.averias.bulkPut(averias);
-        await db.incidencias.bulkPut(incidencias);
+
+        // Solo importar averías históricas del Excel si la BD está vacía (primera importación)
+        if (!isReimport) {
+          await db.averias.bulkPut(averias);
+          await db.incidencias.bulkPut(incidencias);
+        }
+
         // Asegurar usuario Admin para Fernando
         const adminUser = {
           id: 'TEC-ADMIN', nombre: 'Fernando (Admin)', email: 'nandosanjuan@gmail.com',
@@ -978,14 +989,28 @@ const ImportService = {
   _parseProductos(sheet) {
     if (!sheet) return [];
     const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    // Filtra valores que SheetJS convirtió de fecha Excel a Date/string de fecha
+    const safeSize = (v) => {
+      if (v == null || v === '') return '';
+      if (v instanceof Date) return '';  // celda Excel era fecha
+      const s = String(v).trim();
+      // "Wed Nov 18 2026..." — cadena de Date.toString()
+      if (/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s/.test(s)) return '';
+      return s;
+    };
+    // Normaliza tipo: primera letra mayúscula, resto minúscula
+    const normTipo = (v) => {
+      const s = this._str(v);
+      return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+    };
     return rows.map(r => ({
       id:          parseInt(r['ID']) || 0,
       producto:    this._str(r['Producto']),
-      tamano:      this._str(r['Tamaño']),
-      tamano2:     this._str(r['Tamaño2']),
-      tamano3:     this._str(r['Tamaño3']),
-      tamano4:     this._str(r['Tamaño4']),
-      tipo:        this._str(r['Tipo']),
+      tamano:      safeSize(r['Tamaño']),
+      tamano2:     safeSize(r['Tamaño2']),
+      tamano3:     safeSize(r['Tamaño3']),
+      tamano4:     safeSize(r['Tamaño4']),
+      tipo:        normTipo(r['Tipo']),
       cod_producto:this._str(r['Cód. producto']),
       familia:     this._str(r['Familia']),
       precio:      parseFloat(r['Precio']) || 0,
@@ -3143,10 +3168,6 @@ const AveriasPage = {
               <input type="hidden" id="av-materiales">
             </div>
             <div class="form-field">
-              <label>Coste materiales (€)</label>
-              <input class="form-input" type="number" id="av-coste" min="0" step="0.01" placeholder="0.00">
-            </div>
-            <div class="form-field">
               <label>Duración (horas y minutos)</label>
               <div style="display:flex;gap:8px;align-items:center">
                 <input class="form-input" type="number" id="av-dur-h" min="0" max="999" placeholder="0" style="width:80px"> h
@@ -3394,7 +3415,7 @@ const AveriasPage = {
       estado    = 'Cerrada';
       solucion  = document.getElementById('av-solucion').value.trim();
       materiales= document.getElementById('av-materiales')?.value.trim() || '';
-      coste     = parseFloat(document.getElementById('av-coste')?.value) || 0;
+      coste     = 0; // El coste se gestiona en el módulo de Inventario
 
       // La fecha/hora del formulario es el FIN cuando se cierra ahora
       fechaFin = fechaInicio;
@@ -3584,13 +3605,9 @@ const AveriasPage = {
         <div class="form-section">
           <div class="form-section-label">📦 Otros materiales y coste</div>
           <div class="form-grid" style="padding:0;margin-top:0">
-            <div class="form-field">
+            <div class="form-field full">
               <label>Materiales (texto libre)</label>
               <input class="form-input" id="cl-materiales" placeholder="Ej: tornillos M8, pasta térmica...">
-            </div>
-            <div class="form-field">
-              <label>Coste total (€)</label>
-              <input class="form-input" type="number" id="cl-coste" min="0" step="0.01" placeholder="0.00">
             </div>
           </div>
         </div>
@@ -3925,7 +3942,7 @@ const AveriasPage = {
       ...a, estado:'Cerrada', solucion,
       tecnico: tecnicoPrincipal,
       materiales: materialesCombinados,
-      coste: parseFloat(document.getElementById('cl-coste').value) || 0,
+      coste: 0, // El coste se gestiona en el módulo de Inventario
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
       zona_limpia: zonaLimpia,
     });
