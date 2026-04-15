@@ -1394,8 +1394,12 @@ const DataService = {
     const now = new Date();
     const fecha = now.toISOString().slice(0,10);
     for (const item of items) {
-      if (!item.cod_producto || !item.almacen || !item.cantidad) continue;
-      const normAlm = normalizeAlmacen(item.almacen);
+      if (!item.cod_producto || !item.cantidad) continue;
+      // Si no hay almacén, intentar leerlo del inventario por código de producto
+      if (!item.almacen) {
+        console.warn('[deductStock] item sin almacén, se intentará sin filtro de almacén:', item.cod_producto);
+      }
+      const normAlm = item.almacen ? normalizeAlmacen(item.almacen) : '';
 
       // 1) Descuento atómico en la base de datos — sin race condition
       const { error: rpcErr } = await sb.rpc('deduct_stock_safe', {
@@ -1408,7 +1412,7 @@ const DataService = {
         console.warn('[deductStock] RPC no disponible, usando fallback:', rpcErr.message);
         const invArr = await db.inventario
           .where('cod_producto').equals(item.cod_producto)
-          .filter(r => normalizeAlmacen(r.almacen) === normAlm)
+          .filter(r => !normAlm || normalizeAlmacen(r.almacen) === normAlm)
           .toArray();
         if (invArr.length > 0) {
           const inv = invArr[0];
@@ -3139,8 +3143,8 @@ const AveriasPage = {
               <textarea class="form-input" id="av-solucion" rows="2" placeholder="Qué se hizo para resolverla..."></textarea>
             </div>
             <div class="form-field full">
-              <label>Material / repuesto utilizado</label>
-              <div class="materiales-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
+              <label>Repuestos utilizados</label>
+              <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:6px">
                 <div>
                   <small style="color:var(--gray-muted)">Tipo</small>
                   <select class="form-input" id="mat-tipo" style="margin-top:2px">
@@ -3164,7 +3168,11 @@ const AveriasPage = {
                   <small style="color:var(--gray-muted)">Cant.</small>
                   <input class="form-input" type="number" id="mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
                 </div>
+                <div style="padding-top:18px">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuestoNew()">+ Añadir</button>
+                </div>
               </div>
+              <div id="mat-repuestos-list" style="display:flex;flex-direction:column;gap:4px"></div>
               <input type="hidden" id="av-materiales">
             </div>
             <div class="form-field">
@@ -3188,9 +3196,10 @@ const AveriasPage = {
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
 
-    // Buffer de fotos para el alta + partes de trabajo
+    // Buffer de fotos para el alta + partes de trabajo + repuestos
     AveriasPage._fotosBuffer = [];
     AveriasPage._partesNuevos = [];
+    AveriasPage._repuestosNuevos = [];
     // Pre-añadir al usuario actual si es un técnico de la lista
     const usuarioActual = user?.nombre || '';
     if (usuarioActual) {
@@ -3206,6 +3215,7 @@ const AveriasPage = {
 
     // Cascada materiales: tipo → familia → producto
     const _matProds = todosProds;
+    AveriasPage._matProdCache = _matProds;  // cache para _addRepuestoNew()
 
     // Si no hay tipos definidos en el catálogo, saltamos el primer nivel y cargamos todos los productos
     if (matTipos.length === 0) {
@@ -3218,13 +3228,15 @@ const AveriasPage = {
       if (famEl) { famEl.innerHTML = '<option value="">— (sin categoría) —</option>'; famEl.disabled = true; }
     }
 
+    const _tipoEq   = (p, t) => !t || (p.tipo   ||'').toLowerCase() === t.toLowerCase();
+    const _famEq    = (p, f) => !f || (p.familia||'').toLowerCase() === f.toLowerCase();
     document.getElementById('mat-tipo')?.addEventListener('change', function() {
       const tipo = this.value;
-      const filtered = _matProds.filter(p => !tipo || p.tipo === tipo);
-      const fams = [...new Set(filtered.map(p => p.familia).filter(Boolean))].sort();
+      const filtered = _matProds.filter(p => _tipoEq(p, tipo));
+      const rawFams = filtered.map(p => p.familia).filter(Boolean);
+      const fams = [...new Map(rawFams.map(f => [f.toLowerCase(), f])).values()].sort();
       const famEl = document.getElementById('mat-familia');
       const prodEl = document.getElementById('mat-producto');
-      // Si hay familias, usa cascada normal; si no, carga productos directamente
       if (fams.length > 0) {
         famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f=>`<option>${UI.esc(f)}</option>`).join('');
         famEl.disabled = false;
@@ -3241,7 +3253,7 @@ const AveriasPage = {
     document.getElementById('mat-familia')?.addEventListener('change', function() {
       const tipo    = document.getElementById('mat-tipo').value;
       const familia = this.value;
-      const prods   = _matProds.filter(p => (!tipo||p.tipo===tipo) && (!familia||p.familia===familia));
+      const prods   = _matProds.filter(p => _tipoEq(p, tipo) && _famEq(p, familia));
       const prodEl  = document.getElementById('mat-producto');
       prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
       prodEl.disabled = prods.length === 0;
@@ -3466,6 +3478,17 @@ const AveriasPage = {
       }
     }
 
+    // Descontar stock si se cierra ahora y hay repuestos añadidos
+    if (cerrarAhora && AveriasPage._repuestosNuevos.length > 0) {
+      try {
+        const user = UserService.getUser();
+        await DataService.deductStock(AveriasPage._repuestosNuevos, id, user?.nombre || '');
+      } catch(e) {
+        console.error('[deductStock alta]', e);
+        toast('⚠️ Descuento de stock fallido', 'error');
+      }
+    }
+
     // Cerrar modal y actualizar lista ANTES de subir fotos (no bloquear UI)
     Modal.close();
     AveriasPage._saving = false;
@@ -3679,26 +3702,28 @@ const AveriasPage = {
 
     // Cascada repuestos: tipo → familia → producto
     const _clProds = productos;
+    const tipoMatch   = (p, t) => !t || p.tipo?.toLowerCase()   === t.toLowerCase();
+    const familiaMatch = (p, f) => !f || p.familia?.toLowerCase() === f.toLowerCase();
     document.getElementById('cl-tipo')?.addEventListener('change', function() {
       const tipo = this.value;
-      const fams = [...new Set(_clProds.filter(p => !tipo || p.tipo === tipo).map(p => p.familia).filter(Boolean))].sort();
+      const rawFams = _clProds.filter(p => tipoMatch(p, tipo)).map(p => p.familia).filter(Boolean);
+      const fams = [...new Map(rawFams.map(f => [f.toLowerCase(), f])).values()].sort();
       const famEl = document.getElementById('cl-familia');
       famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f => `<option>${UI.esc(f)}</option>`).join('');
       famEl.disabled = false;
       const prodEl = document.getElementById('cl-producto');
       prodEl.innerHTML = '<option value="">— Producto —</option>';
       prodEl.disabled = true;
-      // If no familias, populate productos directly
       if (fams.length === 0) {
-        const prods = _clProds.filter(p => !tipo || p.tipo === tipo);
+        const prods = _clProds.filter(p => tipoMatch(p, tipo));
         prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)} (${p.unidades} uds)</option>`).join('');
         prodEl.disabled = prods.length === 0;
       }
     });
     document.getElementById('cl-familia')?.addEventListener('change', function() {
-      const tipo   = document.getElementById('cl-tipo')?.value || '';
+      const tipo    = document.getElementById('cl-tipo')?.value || '';
       const familia = this.value;
-      const prods = _clProds.filter(p => (!tipo || p.tipo === tipo) && (!familia || p.familia === familia));
+      const prods = _clProds.filter(p => tipoMatch(p, tipo) && familiaMatch(p, familia));
       const prodEl = document.getElementById('cl-producto');
       prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p => `<option value="${UI.esc(p.cod_producto)}">[${UI.esc(p.cod_producto)}] ${UI.esc(p.producto)} (${p.unidades} uds)</option>`).join('');
       prodEl.disabled = prods.length === 0;
@@ -3753,6 +3778,43 @@ const AveriasPage = {
   _partesNuevos: [],         // Para formulario de REGISTRO
 
   // ── Partes en formulario de REGISTRO (openNew) ───────────────────
+  _repuestosNuevos: [],  // Para formulario de REGISTRO (openNew)
+
+  _addRepuestoNew() {
+    const sel = document.getElementById('mat-producto');
+    const cod = sel?.value;
+    if (!cod) { toast('Selecciona un producto primero', 'error'); return; }
+    const qty = parseInt(document.getElementById('mat-qty').value) || 1;
+    const prod = (AveriasPage._matProdCache || []).find(p => p.cod_producto === cod);
+    if (!prod) return;
+    const existing = AveriasPage._repuestosNuevos.find(r => r.cod_producto === cod);
+    if (existing) { existing.cantidad += qty; }
+    else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: prod.almacen || '' }); }
+    AveriasPage._renderRepuestosNewList();
+    // Reset selects
+    const tipoEl = document.getElementById('mat-tipo');
+    const famEl  = document.getElementById('mat-familia');
+    if (tipoEl) tipoEl.value = '';
+    if (famEl)  { famEl.innerHTML = '<option value="">— Familia —</option>'; famEl.disabled = true; }
+    sel.innerHTML = '<option value="">— Producto —</option>'; sel.disabled = true;
+    document.getElementById('mat-qty').value = 1;
+    // Actualizar hidden text field para el campo materiales del avería
+    document.getElementById('av-materiales').value = AveriasPage._repuestosNuevos.map(r=>`${r.nombre} (${r.cantidad} uds)`).join(', ');
+  },
+
+  _renderRepuestosNewList() {
+    const el = document.getElementById('mat-repuestos-list');
+    if (!el) return;
+    if (!AveriasPage._repuestosNuevos.length) { el.innerHTML = ''; return; }
+    el.innerHTML = AveriasPage._repuestosNuevos.map((r, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
+        <span style="flex:1"><strong>[${UI.esc(r.cod_producto)}]</strong> ${UI.esc(r.nombre)}</span>
+        <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${r.cantidad} uds</span>
+        <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px"
+          onclick="AveriasPage._repuestosNuevos.splice(${i},1);AveriasPage._renderRepuestosNewList();document.getElementById('av-materiales').value=AveriasPage._repuestosNuevos.map(r=>r.nombre+' ('+r.cantidad+' uds)').join(', ')">×</button>
+      </div>`).join('');
+  },
+
   _addParteNew() {
     const tecnico = document.getElementById('av-parte-tec')?.value;
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
