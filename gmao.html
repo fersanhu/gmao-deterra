@@ -1315,12 +1315,16 @@ const DataService = {
     allProds.forEach(p => { prodMap[p.cod_producto] = p; });
     return invArr.map(inv => {
       const prod = prodMap[inv.cod_producto] || {};
+      const sizes = [prod.tamano, prod.tamano2, prod.tamano3, prod.tamano4].filter(Boolean).join(' / ');
+      const nombreCompleto = prod.producto
+        ? prod.producto + (sizes ? ' — ' + sizes : '')
+        : (inv.producto || inv.cod_producto);
       return {
         inv_id: inv.id,
         cod_producto: inv.cod_producto,
-        producto: prod.producto || inv.cod_producto,
-        tipo: prod.tipo || '',
-        familia: prod.familia || '',
+        producto: nombreCompleto,
+        tipo:    prod.tipo    || inv.tipo    || '',
+        familia: prod.familia || inv.familia || '',
         unidades: inv.unidades || 0,
         almacen: inv.almacen,
       };
@@ -1328,9 +1332,16 @@ const DataService = {
   },
 
   // Devuelve todos los productos del catálogo ordenados por código
+  // El campo `producto` devuelto incluye los tamaños concatenados
   async getAllProductos() {
     const arr = await db.productos.toArray();
-    return arr.sort((a, b) => (a.cod_producto || '').localeCompare(b.cod_producto || ''));
+    return arr.map(p => {
+      const sizes = [p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' / ');
+      return {
+        ...p,
+        producto: p.producto + (sizes ? ' — ' + sizes : ''),
+      };
+    }).sort((a, b) => (a.cod_producto || '').localeCompare(b.cod_producto || ''));
   },
 
   // Busca un producto en el catálogo por código exacto
@@ -4419,12 +4430,33 @@ const InventarioPage = {
     const canManage    = UserService.canMoveInventario();
     const almacenes    = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
 
-    // Cargar TODO el inventario — el filtrado y la agregación se hacen en JS
-    this._allData = await db.inventario.toArray();
-    // Normalizar tipo: unificar "repuestos" / "Repuestos" → "Repuestos"
-    this._allData.forEach(i => {
-      if (i.tipo && i.tipo.toLowerCase() === 'repuestos') i.tipo = 'Repuestos';
+    // Cargar inventario Y catálogo de productos en paralelo
+    const [invRaw, catalogRaw] = await Promise.all([
+      db.inventario.toArray(),
+      db.productos.toArray(),
+    ]);
+
+    // Mapa rápido cod_producto → producto del catálogo
+    const catalogMap = new Map(catalogRaw.map(p => {
+      return [p.cod_producto, { nombre: p.producto, tipo: p.tipo, familia: p.familia }];
+    }));
+
+    // Enriquecer cada entrada de inventario con el nombre/tipo/familia del catálogo
+    this._allData = invRaw.map(i => {
+      const cat = catalogMap.get(i.cod_producto);
+      return {
+        ...i,
+        producto: (cat?.nombre) || i.producto || i.cod_producto,
+        tipo:     (cat?.tipo    || i.tipo    || ''),
+        familia:  (cat?.familia || i.familia || ''),
+      };
     });
+
+    // Normalizar tipo
+    this._allData.forEach(i => {
+      if (i.tipo) i.tipo = i.tipo.charAt(0).toUpperCase() + i.tipo.slice(1).toLowerCase();
+    });
+
     const tipos    = [...new Set(this._allData.map(i => i.tipo).filter(Boolean))].sort();
     const familias = [...new Set(this._allData.map(i => i.familia).filter(Boolean))].sort();
 
@@ -4609,8 +4641,10 @@ const InventarioPage = {
           <p style="font-size:12px;font-weight:600;color:var(--orange);margin-bottom:12px">➕ Nuevo producto — rellena los datos</p>
           <div class="form-grid" style="padding:0">
             <div class="form-field">
-              <label>Cód. Producto (auto)</label>
-              <input class="form-input" id="inv-cod" readonly style="background:var(--bg);color:var(--gray-muted);font-family:monospace;cursor:default" tabindex="-1">
+              <label>Cód. Producto <span style="font-weight:400;color:var(--gray-muted)">(asignado automáticamente)</span></label>
+              <input class="form-input" id="inv-cod" readonly
+                style="background:var(--bg);color:var(--green);font-family:monospace;font-weight:700;font-size:15px;cursor:default;letter-spacing:1px"
+                tabindex="-1" title="Código generado automáticamente — formato P + número">
             </div>
             <div class="form-field">
               <label>Nombre base *</label>
@@ -4757,22 +4791,15 @@ const InventarioPage = {
   // Calcula el siguiente código de producto manteniendo el mismo formato que los existentes
   // Ej: si hay "P001","P002" → devuelve "P003"; si hay "001","002" → "003"
   _calcNextCod(allProds) {
-    if (!allProds || allProds.length === 0) return '001';
-    // Extraer partes numéricas finales de cada cod_producto
-    const entries = allProds
-      .map(p => {
-        const m = (p.cod_producto || '').match(/^(.*?)(\d+)$/);
-        return m ? { prefix: m[1], num: parseInt(m[2]), len: m[2].length } : null;
-      })
-      .filter(Boolean);
-    if (entries.length === 0) {
-      const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
-      return String(maxId + 1).padStart(3, '0');
-    }
-    const maxEntry = entries.reduce((best, e) => e.num > best.num ? e : best, entries[0]);
-    const nextNum  = maxEntry.num + 1;
-    const padded   = String(nextNum).padStart(maxEntry.len, '0');
-    return maxEntry.prefix + padded;
+    // Formato siempre P + número incremental (P001, P002, ... P099, P100, ...)
+    // Busca el mayor número entre los códigos que empiecen por P seguido de dígitos
+    const nums = (allProds || [])
+      .map(p => { const m = (p.cod_producto || '').match(/^[Pp](\d+)$/); return m ? parseInt(m[1]) : 0; })
+      .filter(n => n > 0);
+    const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+    // Padding mínimo de 3 dígitos (P001), crece si hace falta (P1000)
+    const padLen = Math.max(3, String(next).length);
+    return 'P' + String(next).padStart(padLen, '0');
   },
 
   // Actualiza en tiempo real la vista previa del nombre de producto concatenado
@@ -5012,11 +5039,19 @@ const ConfigPage = {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Exportar datos (JSON)
           </button>
-          <button class="btn btn-secondary" onclick="ConfigPage.triggerReimport()">
+          <button class="btn btn-secondary" onclick="ConfigPage.triggerImportProductos()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
-            Reimportar desde Excel
+            Actualizar catálogo de productos
+          </button>
+          <input type="file" id="import-productos-input" accept=".xlsx,.xls" style="display:none">
+          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Solo lee la pestaña «Productos» — no toca técnicos, averías ni inventario</p>
+          <div style="height:1px;background:var(--border);margin:4px 0"></div>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerReimport()">
+            Reimportar Excel completo (activos + inventario)
           </button>
           <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
+          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Actualiza activos, inventario, productos y técnicos del Excel. No toca averías.</p>
+          <div style="height:1px;background:var(--border);margin:4px 0"></div>
           <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
             Borrar todos los datos
           </button>
@@ -5089,12 +5124,102 @@ const ConfigPage = {
     // Guardar todos los técnicos para filtrado local sin releer BD
     ConfigPage._allTecnicos = allTecnicos;
 
+    // Reimport completo — NO borra datos, solo upsert (averías nunca se tocan)
     document.getElementById('reimport-input')?.addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
-      await DataService.clearAll();
-      await App.runImport(file);
+      e.target.value = '';
+      toast('Reimportando Excel...', '');
+      try {
+        await App.runImport(file);
+      } catch(err) {
+        toast('Error al reimportar: ' + err.message, 'error');
+      }
     });
+
+    // Import solo pestaña Productos
+    document.getElementById('import-productos-input')?.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      e.target.value = '';
+      try {
+        toast('Actualizando catálogo de productos...', '');
+        const { total, nuevos, actualizados } = await ConfigPage._importSoloProductos(file);
+        toast(`${total} productos en catálogo · ${actualizados} entradas de inventario actualizadas · ${nuevos} nuevos (stock 0) ✓`, 'success');
+      } catch(err) {
+        toast('Error: ' + err.message, 'error');
+      }
+    });
+  },
+
+  async _importSoloProductos(file) {
+    const ALMACENES = ['Miramar', 'Xeresa', 'Murcia', 'Alcacer', 'Algemesi'];
+
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true, raw: false });
+    const sheet = wb.Sheets['Productos'];
+    if (!sheet) throw new Error('No se encontró la pestaña «Productos» en el Excel');
+
+    const productos = ImportService._parseProductos(sheet);
+    if (!productos.length) throw new Error('La pestaña Productos está vacía o no tiene datos válidos');
+
+    // 1) Actualizar catálogo de productos
+    await db.productos.bulkPut(productos);
+
+    // Mapa rápido cod → producto para propagación
+    const prodMap = new Map(productos.filter(p => p.cod_producto).map(p => [p.cod_producto, p]));
+
+    // 2) Leer inventario actual y separar nuevos vs existentes
+    const invActual = await db.inventario.toArray();
+    const codsEnInv = new Set(invActual.map(i => i.cod_producto));
+    const nuevos = productos.filter(p => p.cod_producto && !codsEnInv.has(p.cod_producto));
+
+    // 3) Propagar nombre/tipo/familia a entradas de inventario ya existentes
+    const entradasActualizadas = invActual
+      .filter(i => prodMap.has(i.cod_producto))
+      .map(i => {
+        const p = prodMap.get(i.cod_producto);
+        // Construir nombre completo igual que el parser: producto + tamaños
+        const sizes = [p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' / ');
+        const nombreCompleto = p.producto + (sizes ? ' — ' + sizes : '');
+        return {
+          ...i,
+          producto: nombreCompleto || i.producto,
+          tipo:     p.tipo    || i.tipo,
+          familia:  p.familia || i.familia,
+        };
+      });
+    if (entradasActualizadas.length > 0) {
+      await db.inventario.bulkPut(entradasActualizadas);
+    }
+
+    // 4) Crear entradas con 0 unidades en todos los almacenes para los nuevos
+    if (nuevos.length > 0) {
+      const entradasNuevas = [];
+      for (const p of nuevos) {
+        const sizes = [p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' / ');
+        const nombreCompleto = p.producto + (sizes ? ' — ' + sizes : '');
+        for (const alm of ALMACENES) {
+          entradasNuevas.push({
+            id:           `${p.cod_producto}_${alm}`,
+            cod_producto: p.cod_producto,
+            producto:     nombreCompleto || p.cod_producto,
+            tipo:         p.tipo    || '',
+            familia:      p.familia || '',
+            unidad_medida: '',
+            almacen:      alm,
+            unidades:     0,
+          });
+        }
+      }
+      await db.inventario.bulkPut(entradasNuevas);
+    }
+
+    return { total: productos.length, nuevos: nuevos.length, actualizados: entradasActualizadas.length };
+  },
+
+  triggerImportProductos() {
+    document.getElementById('import-productos-input')?.click();
   },
 
   _filterTecTable() {
