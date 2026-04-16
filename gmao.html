@@ -5043,6 +5043,11 @@ const ConfigPage = {
           <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
           <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Actualiza activos, inventario, productos y técnicos del Excel. No toca averías.</p>
           <div style="height:1px;background:var(--border);margin:4px 0"></div>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.exportAverias()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar registro de averías (Excel)
+          </button>
+          <div style="height:1px;background:var(--border);margin:4px 0"></div>
           <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
             Borrar todos los datos
           </button>
@@ -5448,6 +5453,27 @@ const ConfigPage = {
     toast('Datos exportados correctamente', 'success');
   },
 
+  async exportAverias() {
+    toast('Generando Excel...', 'info');
+    const averias = await db.averias.toArray();
+    averias.sort((a, b) => (a.fecha_inicio || '').localeCompare(b.fecha_inicio || ''));
+    const cols = ['id','id_activo','almacen','zona','linea','equipo','tipo','criticidad','estado',
+                  'descripcion','tecnico','fecha_inicio','hora_inicio','fecha_fin','hora_fin',
+                  'duracion','solucion','materiales','coste','zona_limpia'];
+    const headers = ['ID','Activo','Almacén','Zona','Línea','Equipo','Tipo','Criticidad','Estado',
+                     'Descripción','Técnico','Fecha inicio','Hora inicio','Fecha fin','Hora fin',
+                     'Duración (min)','Solución','Materiales','Coste (€)','Zona limpia'];
+    const rows = averias.map(av => cols.map(c => {
+      if (c === 'zona_limpia') return av.zona_limpia === false ? 'No' : 'Sí';
+      return av[c] ?? '';
+    }));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Averías');
+    XLSX.writeFile(wb, `GMAO_Averias_${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast(`${averias.length} averías exportadas`, 'success');
+  },
+
   triggerReimport() {
     document.getElementById('reimport-input')?.click();
   },
@@ -5649,6 +5675,37 @@ const App = {
     await Router.handle();
     this.updateBadges();
     this._initSessionWatcher();
+    this._checkWeeklyBackup();
+  },
+
+  async _checkWeeklyBackup() {
+    const user = UserService.getUser();
+    if (!user || user.nombre !== 'Fernando') return;
+
+    const KEY = 'gmao_last_backup';
+    const last = localStorage.getItem(KEY);
+    const now = Date.now();
+    const siete_dias = 7 * 24 * 60 * 60 * 1000;
+    if (last && (now - parseInt(last)) < siete_dias) return;
+
+    // Han pasado más de 7 días (o nunca se ha hecho backup)
+    await new Promise(r => setTimeout(r, 1500)); // esperar a que cargue la UI
+    toast('📦 Backup semanal automático — descargando copia de seguridad...', 'info');
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const json = await DataService.exportJSON();
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fecha = new Date().toISOString().slice(0, 10);
+      a.href = url; a.download = `GMAO_Backup_${fecha}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      localStorage.setItem(KEY, String(now));
+      toast('✅ Copia de seguridad descargada correctamente', 'success');
+    } catch(e) {
+      console.error('[weeklyBackup]', e);
+      toast('⚠️ No se pudo generar el backup automático', 'error');
+    }
   },
 
   _initSessionWatcher() {
