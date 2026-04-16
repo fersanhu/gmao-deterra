@@ -3941,6 +3941,9 @@ const AveriasPage = {
     if (cerrarAhora) {
       const sol = document.getElementById('av-solucion')?.value.trim();
       if (!sol) { toast('Indica la solución aplicada para cerrar la avería', 'error'); return; }
+      const durH = parseInt(document.getElementById('av-dur-h')?.value) || 0;
+      const durM = parseInt(document.getElementById('av-dur-m')?.value) || 0;
+      if (durH * 60 + durM < 5) { toast('La duración debe ser de al menos 5 minutos', 'error'); return; }
     }
 
     // Bloquear submit — deshabilitar botón para evitar doble envío
@@ -4498,21 +4501,38 @@ const AveriasPage = {
     const fechaFin = document.getElementById('cl-fecha').value;
     const horaFin  = document.getElementById('cl-hora').value + ':00';
     let duracion = '';
+    const _resetBtn = () => { AveriasPage._saving = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✓ Confirmar cierre'; } };
     if (a.fecha_inicio && a.hora_inicio && fechaFin) {
       try {
         const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${a.fecha_inicio}T${a.hora_inicio}`);
-        if (diff > 0 && diff < 5 * 60000) {
-          AveriasPage._saving = false;
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✓ Confirmar cierre'; }
+        if (diff <= 0) {
+          _resetBtn();
+          alert('⚠️ La hora de cierre no puede ser anterior o igual a la de inicio.\nRevisa la fecha y hora antes de continuar.');
+          return;
+        }
+        if (diff < 5 * 60000) {
+          _resetBtn();
           alert('⚠️ La duración de la avería es inferior a 5 minutos.\nRevisa la fecha y hora de cierre antes de continuar.');
           return;
         }
-        if (diff > 0) {
-          const h = Math.floor(diff/3600000);
-          const m = Math.floor((diff%3600000)/60000);
-          duracion = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
-        }
-      } catch(e) {}
+        const h = Math.floor(diff/3600000);
+        const m = Math.floor((diff%3600000)/60000);
+        duracion = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+      } catch(e) {
+        _resetBtn();
+        alert('⚠️ No se pudo calcular la duración. Revisa la fecha y hora de inicio y cierre.');
+        return;
+      }
+    } else {
+      _resetBtn();
+      alert('⚠️ Introduce la fecha y hora de cierre para calcular la duración.');
+      return;
+    }
+
+    if (!duracion) {
+      _resetBtn();
+      alert('⚠️ La duración no puede ser 0. Revisa la fecha y hora de cierre.');
+      return;
     }
 
     // Build materiales string from repuestos + free text
