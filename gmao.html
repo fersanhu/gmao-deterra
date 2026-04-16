@@ -1554,6 +1554,7 @@ const UserService = {
   canManageConfig()     { return this._user?.rol === 'Admin'; },
   canMoveInventario()   { return ['Admin','Responsable'].includes(this._user?.rol); },
   canDeleteAveria()     { return ['Admin','Responsable'].includes(this._user?.rol); },
+  canEditAveria()       { return ['Admin','Responsable'].includes(this._user?.rol); },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3276,6 +3277,7 @@ const AveriasPage = {
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
        ${UserService.canDeleteAveria() ? `<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="AveriasPage._deleteAveria('${UI.esc(id)}')">🗑 Eliminar</button>` : ''}
+       ${UserService.canEditAveria() ? `<button class="btn btn-secondary" onclick="AveriasPage.openEdit('${UI.esc(id)}')">✏️ Editar</button>` : ''}
        ${canCurso ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="AveriasPage._marcarEnCurso('${UI.esc(id)}')">▶ En curso</button>` : ''}
        ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">✓ Cerrar avería</button>` : ''}`);
   },
@@ -3365,6 +3367,141 @@ const AveriasPage = {
     toast('Avería marcada En curso', '');
     App.updateBadges();
     await AveriasPage.render();
+  },
+
+  async openEdit(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    const allTecnicos = await DataService.getTecnicos(true);
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
+    const tecOpts = '<option value="">Sin asignar</option>' + allTecnicos.map(t => `<option${t.nombre===a.tecnico?' selected':''}>${UI.esc(t.nombre)}</option>`).join('');
+
+    Modal.open('Editar avería', `
+      <form id="edit-averia-form" class="form-grid">
+        <div class="form-field">
+          <label>Almacén</label>
+          <select class="form-input" id="ea-almacen">
+            ${almacenes.map(alm => `<option${a.almacen===alm?' selected':''}>${alm}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Zona</label>
+          <input class="form-input" id="ea-zona" value="${UI.esc(a.zona||'')}">
+        </div>
+        <div class="form-field">
+          <label>Línea</label>
+          <input class="form-input" id="ea-linea" value="${UI.esc(a.linea||'')}">
+        </div>
+        <div class="form-field">
+          <label>Equipo</label>
+          <input class="form-input" id="ea-equipo" value="${UI.esc(a.equipo||'')}">
+        </div>
+        <div class="form-field">
+          <label>Fecha inicio</label>
+          <input class="form-input" type="date" id="ea-fecha-inicio" value="${a.fecha_inicio||''}">
+        </div>
+        <div class="form-field">
+          <label>Hora inicio</label>
+          <input class="form-input" type="time" id="ea-hora-inicio" value="${a.hora_inicio||''}">
+        </div>
+        <div class="form-field full">
+          <label>Descripción</label>
+          <textarea class="form-input" id="ea-desc" rows="3">${UI.esc(a.descripcion||'')}</textarea>
+        </div>
+        <div class="form-field">
+          <label>Técnico</label>
+          <select class="form-input" id="ea-tecnico">${tecOpts}</select>
+        </div>
+        <div class="form-field">
+          <label>Tipo</label>
+          <select class="form-input" id="ea-tipo">
+            <option value="">—</option>
+            ${tipos.map(t=>`<option${a.tipo===t?' selected':''}>${UI.esc(t)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Criticidad</label>
+          <select class="form-input" id="ea-criticidad">
+            ${['Alta','Moderada','Baja'].map(c=>`<option${a.criticidad===c?' selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Estado</label>
+          <select class="form-input" id="ea-estado">
+            ${['Abierta','En curso','Cerrada'].map(e=>`<option${a.estado===e?' selected':''}>${e}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fecha fin</label>
+          <input class="form-input" type="date" id="ea-fecha-fin" value="${a.fecha_fin||''}">
+        </div>
+        <div class="form-field">
+          <label>Hora fin</label>
+          <input class="form-input" type="time" id="ea-hora-fin" value="${a.hora_fin||''}">
+        </div>
+        <div class="form-field">
+          <label>Duración (min)</label>
+          <input class="form-input" type="number" id="ea-duracion" min="0" value="${a.duracion||''}">
+        </div>
+        <div class="form-field full">
+          <label>Solución aplicada</label>
+          <textarea class="form-input" id="ea-solucion" rows="2">${UI.esc(a.solucion||'')}</textarea>
+        </div>
+        <div class="form-field">
+          <label>Materiales</label>
+          <input class="form-input" id="ea-materiales" value="${UI.esc(a.materiales||'')}">
+        </div>
+        <div class="form-field">
+          <label>Coste (€)</label>
+          <input class="form-input" type="number" id="ea-coste" min="0" step="0.01" value="${a.coste||''}">
+        </div>
+        <div class="form-field">
+          <label>Zona limpia y revisada</label>
+          <select class="form-input" id="ea-zona-limpia">
+            <option value="true"${a.zona_limpia !== false ? ' selected':''}>Sí</option>
+            <option value="false"${a.zona_limpia === false ? ' selected':''}>No</option>
+          </select>
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="AveriasPage._saveEdit('${UI.esc(id)}')">Guardar cambios</button>`
+    );
+  },
+
+  async _saveEdit(id) {
+    const a = await DataService.getAveria(id);
+    if (!a) return;
+    const updated = {
+      ...a,
+      almacen:     document.getElementById('ea-almacen').value,
+      zona:        document.getElementById('ea-zona').value.trim(),
+      linea:       document.getElementById('ea-linea').value.trim(),
+      equipo:      document.getElementById('ea-equipo').value.trim(),
+      fecha_inicio:document.getElementById('ea-fecha-inicio').value,
+      hora_inicio: document.getElementById('ea-hora-inicio').value,
+      descripcion: document.getElementById('ea-desc').value.trim(),
+      tecnico:     document.getElementById('ea-tecnico').value,
+      tipo:        document.getElementById('ea-tipo').value,
+      criticidad:  document.getElementById('ea-criticidad').value,
+      estado:      document.getElementById('ea-estado').value,
+      fecha_fin:   document.getElementById('ea-fecha-fin').value,
+      hora_fin:    document.getElementById('ea-hora-fin').value,
+      duracion:    document.getElementById('ea-duracion').value,
+      solucion:    document.getElementById('ea-solucion').value.trim(),
+      materiales:  document.getElementById('ea-materiales').value.trim(),
+      coste:       parseFloat(document.getElementById('ea-coste').value) || 0,
+      zona_limpia: document.getElementById('ea-zona-limpia').value === 'true',
+    };
+    try {
+      await DataService.saveAveria(updated);
+      Modal.close();
+      toast('Avería actualizada', 'success');
+      await AveriasPage.render();
+    } catch(e) {
+      console.error('[saveEdit]', e);
+      toast('Error al guardar', 'error');
+    }
   },
 
   async openNew() {
