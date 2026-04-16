@@ -354,7 +354,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 select.form-input{cursor:pointer}
 
 /* ── Partes/repuestos rows: multi-columna en escritorio ── */
-.partes-row{display:grid;grid-template-columns:1fr 120px 72px 1fr auto;gap:8px;align-items:end}
+.partes-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:end}
 .repuestos-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end}
 .materiales-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
 
@@ -1175,6 +1175,10 @@ const DataService = {
       return [];
     }
   },
+  async getFotosAll() {
+    try { return await db.fotos_averias.toArray(); }
+    catch(e) { return []; }
+  },
   async uploadFoto(averia_id, file) {
     const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const slug = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -1549,6 +1553,7 @@ const UserService = {
   canConvertIncidencia(){ return ['Admin','Responsable'].includes(this._user?.rol); },
   canManageConfig()     { return this._user?.rol === 'Admin'; },
   canMoveInventario()   { return ['Admin','Responsable'].includes(this._user?.rol); },
+  canDeleteAveria()     { return ['Admin','Responsable'].includes(this._user?.rol); },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3130,7 +3135,7 @@ const AveriasPage = {
         <table class="table-clickable">
           <thead><tr>
             <th>ID</th><th>Fecha</th><th>Almacén</th><th>Equipo</th>
-            <th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th><th>Duración</th>
+            <th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th><th>Duración</th><th title="Tiene fotos">📷</th>
           </tr></thead>
           <tbody id="av-tbody"></tbody>
         </table>
@@ -3145,7 +3150,12 @@ const AveriasPage = {
       avAlmacenFilter.title = 'Solo puedes ver tu centro';
     }
 
-    this._data = await DataService.getAverias(almacenGlobal ? { almacen:almacenGlobal } : {});
+    const [_averias, _fotos] = await Promise.all([
+      DataService.getAverias(almacenGlobal ? { almacen:almacenGlobal } : {}),
+      DataService.getFotosAll().catch(() => []),
+    ]);
+    this._data = _averias;
+    this._fotosSet = new Set(_fotos.map(f => f.averia_id));
 
     // Pre-seleccionar "Abierta" por defecto para que todos los usuarios vean las averías abiertas al entrar
     const estadoFilter = document.getElementById('av-f-estado');
@@ -3180,7 +3190,8 @@ const AveriasPage = {
   _renderTable() {
     const tbody = document.getElementById('av-tbody');
     if (!tbody) return;
-    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="9">${UI.empty()}</td></tr>`; return; }
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="10">${UI.empty()}</td></tr>`; return; }
+    const fotosSet = this._fotosSet || new Set();
     tbody.innerHTML = this._filtered.map(a => `
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
@@ -3192,6 +3203,7 @@ const AveriasPage = {
         <td>${UI.criticidadBadge(a.criticidad)}</td>
         <td>${UI.estadoBadge(a.estado)}</td>
         <td>${UI.formatDuration(a.duracion)}</td>
+        <td style="text-align:center">${fotosSet.has(a.id) ? '📷' : ''}</td>
       </tr>`).join('');
   },
 
@@ -3263,8 +3275,31 @@ const AveriasPage = {
         ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       ${UserService.canDeleteAveria() ? `<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="AveriasPage._deleteAveria('${UI.esc(id)}')">🗑 Eliminar</button>` : ''}
        ${canCurso ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="AveriasPage._marcarEnCurso('${UI.esc(id)}')">▶ En curso</button>` : ''}
        ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">✓ Cerrar avería</button>` : ''}`);
+  },
+
+  async _deleteAveria(id) {
+    if (!confirm('¿Eliminar esta avería? Esta acción no se puede deshacer.')) return;
+    try {
+      await db.averias.delete(id);
+      // Borrar también partes de trabajo y fotos asociadas
+      try {
+        const partes = await DataService.getPartesByAveria(id);
+        await Promise.all(partes.map(p => db.partes_trabajo.delete(p.id)));
+      } catch(e) {}
+      try {
+        const fotos = await DataService.getFotosByAveria(id);
+        await Promise.all(fotos.map(f => db.fotos_averias.delete(f.id)));
+      } catch(e) {}
+      Modal.close();
+      toast('Avería eliminada', 'success');
+      await AveriasPage.render();
+    } catch(e) {
+      console.error('[deleteAveria]', e);
+      toast('Error al eliminar la avería', 'error');
+    }
   },
 
   // Añadir fotos desde el panel de detalle (avería abierta/en curso)
@@ -3404,10 +3439,6 @@ const AveriasPage = {
             <div>
               <small style="color:var(--gray-muted)">Fecha</small>
               <input class="form-input" type="date" id="av-parte-fecha" value="${today}" style="margin-top:2px">
-            </div>
-            <div>
-              <small style="color:var(--gray-muted)">Horas</small>
-              <input class="form-input" type="number" id="av-parte-horas" min="0" step="0.5" value="1" style="margin-top:2px" placeholder="h">
             </div>
             <div>
               <small style="color:var(--gray-muted)">Notas (opcional)</small>
@@ -3905,10 +3936,6 @@ const AveriasPage = {
               <input class="form-input" type="date" id="cl-parte-fecha" value="${today}" style="margin-top:2px">
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Horas</small>
-              <input class="form-input" type="number" id="cl-parte-horas" min="0" step="0.5" value="1" style="margin-top:2px" placeholder="h">
-            </div>
-            <div>
               <small style="color:var(--gray-muted)">Notas (opcional)</small>
               <input class="form-input" id="cl-parte-notas" style="margin-top:2px" placeholder="Qué hizo este técnico...">
             </div>
@@ -4149,19 +4176,15 @@ const AveriasPage = {
     const tecnico = document.getElementById('av-parte-tec')?.value;
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
     const fecha = document.getElementById('av-parte-fecha')?.value || new Date().toISOString().slice(0,10);
-    const horas = parseFloat(document.getElementById('av-parte-horas')?.value) || 0;
     const notas = document.getElementById('av-parte-notas')?.value.trim() || '';
     const existing = AveriasPage._partesNuevos.find(p => p.tecnico === tecnico);
     if (existing) {
-      existing.fecha = fecha; existing.horas = horas; existing.notas = notas;
+      existing.fecha = fecha; existing.notas = notas;
     } else {
-      AveriasPage._partesNuevos.push({
-        id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, horas, notas
-      });
+      AveriasPage._partesNuevos.push({ id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, notas });
     }
     AveriasPage._renderPartesListNew();
     document.getElementById('av-parte-tec').value = '';
-    document.getElementById('av-parte-horas').value = 1;
     document.getElementById('av-parte-notas').value = '';
   },
 
@@ -4181,10 +4204,6 @@ const AveriasPage = {
       <div class="parte-item" style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;border:1px solid var(--border)">
         <span class="parte-nombre" style="font-weight:600;flex-shrink:0">👤 ${UI.esc(p.tecnico)}</span>
         <span class="parte-fecha" style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
-        <input type="number" min="0" step="0.5" value="${p.horas}"
-          style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;flex-shrink:0"
-          onchange="AveriasPage._updateParteHorasNew(${i}, this.value)" title="Horas">
-        <span style="color:var(--gray-muted);font-size:11px;flex-shrink:0">h</span>
         <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
           class="parte-notas" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
           onchange="AveriasPage._updateParteNotasNew(${i}, this.value)">
@@ -4204,19 +4223,15 @@ const AveriasPage = {
     const tecnico = document.getElementById('cl-parte-tec')?.value;
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
     const fecha = document.getElementById('cl-parte-fecha')?.value || new Date().toISOString().slice(0,10);
-    const horas = parseFloat(document.getElementById('cl-parte-horas')?.value) || 0;
     const notas = document.getElementById('cl-parte-notas')?.value.trim() || '';
     const existing = AveriasPage._partesSeleccionados.find(p => p.tecnico === tecnico);
     if (existing) {
-      existing.fecha = fecha; existing.horas = horas; existing.notas = notas;
+      existing.fecha = fecha; existing.notas = notas;
     } else {
-      AveriasPage._partesSeleccionados.push({
-        id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, horas, notas
-      });
+      AveriasPage._partesSeleccionados.push({ id: `pt_${Date.now()}`, averia_id: '', tecnico, fecha, notas });
     }
     AveriasPage._renderPartesList();
     document.getElementById('cl-parte-tec').value = '';
-    document.getElementById('cl-parte-horas').value = 1;
     document.getElementById('cl-parte-notas').value = '';
   },
 
@@ -4236,10 +4251,6 @@ const AveriasPage = {
       <div class="parte-item" style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:8px 10px;font-size:12px;border:1px solid var(--border)">
         <span class="parte-nombre" style="font-weight:600;flex-shrink:0">👤 ${UI.esc(p.tecnico)}</span>
         <span class="parte-fecha" style="color:var(--gray-muted);flex-shrink:0">${UI.esc(p.fecha)}</span>
-        <input type="number" min="0" step="0.5" value="${p.horas}"
-          style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;flex-shrink:0"
-          onchange="AveriasPage._updateParteHoras(${i}, this.value)" title="Horas">
-        <span style="color:var(--gray-muted);font-size:11px;flex-shrink:0">h</span>
         <input type="text" value="${UI.esc(p.notas)}" placeholder="Notas…"
           class="parte-notas" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"
           onchange="AveriasPage._updateParteNotas(${i}, this.value)">
