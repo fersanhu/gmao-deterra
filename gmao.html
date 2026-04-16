@@ -3134,9 +3134,17 @@ const AveriasPage = {
     <div class="card">
       <div class="table-wrap">
         <table class="table-clickable">
-          <thead><tr>
-            <th>ID</th><th>Fecha</th><th>Almacén</th><th>Equipo</th>
-            <th>Descripción</th><th>Técnico</th><th>Criticidad</th><th>Estado</th><th>Duración</th><th title="Tiene fotos">📷</th>
+          <thead><tr id="av-thead">
+            <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="Ordenar">ID <span id="av-sort-id"></span></th>
+            <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="Ordenar">Fecha <span id="av-sort-fecha_inicio"></span></th>
+            <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="Ordenar">Almacén <span id="av-sort-almacen"></span></th>
+            <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="Ordenar">Equipo <span id="av-sort-equipo"></span></th>
+            <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="Ordenar">Descripción <span id="av-sort-descripcion"></span></th>
+            <th onclick="AveriasPage._setSort('tecnico')"     style="cursor:pointer;user-select:none" title="Ordenar">Técnico <span id="av-sort-tecnico"></span></th>
+            <th onclick="AveriasPage._setSort('criticidad')"  style="cursor:pointer;user-select:none" title="Ordenar">Criticidad <span id="av-sort-criticidad"></span></th>
+            <th onclick="AveriasPage._setSort('estado')"      style="cursor:pointer;user-select:none" title="Ordenar">Estado <span id="av-sort-estado"></span></th>
+            <th onclick="AveriasPage._setSort('duracion')"    style="cursor:pointer;user-select:none" title="Ordenar">Duración <span id="av-sort-duracion"></span></th>
+            <th title="Tiene fotos">📷</th>
           </tr></thead>
           <tbody id="av-tbody"></tbody>
         </table>
@@ -3188,12 +3196,44 @@ const AveriasPage = {
     this._renderTable();
   },
 
+  _setSort(key) {
+    if (this._sortKey === key) {
+      this._sortDir = this._sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this._sortKey = key;
+      this._sortDir = key === 'fecha_inicio' ? 'desc' : 'asc';
+    }
+    this._renderTable();
+  },
+
   _renderTable() {
     const tbody = document.getElementById('av-tbody');
     if (!tbody) return;
     if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="10">${UI.empty()}</td></tr>`; return; }
+
+    // Ordenar
+    const key = this._sortKey || 'fecha_inicio';
+    const dir = this._sortDir || 'desc';
+    const critOrder = { 'Alta': 0, 'Moderada': 1, 'Baja': 2 };
+    const durVal = v => { if (!v) return -1; const p = v.split(':').map(Number); return (p[0]||0)*60 + (p[1]||0); };
+    const sorted = [...this._filtered].sort((a, b) => {
+      let va = a[key] ?? '', vb = b[key] ?? '';
+      if (key === 'criticidad') { va = critOrder[va] ?? 9; vb = critOrder[vb] ?? 9; }
+      else if (key === 'duracion') { va = durVal(va); vb = durVal(vb); }
+      else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Actualizar indicadores en cabecera
+    ['id','fecha_inicio','almacen','equipo','descripcion','tecnico','criticidad','estado','duracion'].forEach(k => {
+      const el = document.getElementById(`av-sort-${k}`);
+      if (el) el.textContent = k === key ? (dir === 'asc' ? ' ↑' : ' ↓') : '';
+    });
+
     const fotosSet = this._fotosSet || new Set();
-    tbody.innerHTML = this._filtered.map(a => `
+    tbody.innerHTML = sorted.map(a => `
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
         <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
@@ -4461,6 +4501,12 @@ const AveriasPage = {
     if (a.fecha_inicio && a.hora_inicio && fechaFin) {
       try {
         const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${a.fecha_inicio}T${a.hora_inicio}`);
+        if (diff > 0 && diff < 5 * 60000) {
+          AveriasPage._saving = false;
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✓ Confirmar cierre'; }
+          alert('⚠️ La duración de la avería es inferior a 5 minutos.\nRevisa la fecha y hora de cierre antes de continuar.');
+          return;
+        }
         if (diff > 0) {
           const h = Math.floor(diff/3600000);
           const m = Math.floor((diff%3600000)/60000);
