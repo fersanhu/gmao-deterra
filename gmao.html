@@ -1315,10 +1315,7 @@ const DataService = {
     allProds.forEach(p => { prodMap[p.cod_producto] = p; });
     return invArr.map(inv => {
       const prod = prodMap[inv.cod_producto] || {};
-      const sizes = [prod.tamano, prod.tamano2, prod.tamano3, prod.tamano4].filter(Boolean).join(' / ');
-      const nombreCompleto = prod.producto
-        ? prod.producto + (sizes ? ' — ' + sizes : '')
-        : (inv.producto || inv.cod_producto);
+      const nombreCompleto = prod.producto || inv.producto || inv.cod_producto;
       return {
         inv_id: inv.id,
         cod_producto: inv.cod_producto,
@@ -1332,16 +1329,10 @@ const DataService = {
   },
 
   // Devuelve todos los productos del catálogo ordenados por código
-  // El campo `producto` devuelto incluye los tamaños concatenados
   async getAllProductos() {
     const arr = await db.productos.toArray();
-    return arr.map(p => {
-      const sizes = [p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' / ');
-      return {
-        ...p,
-        producto: p.producto + (sizes ? ' — ' + sizes : ''),
-      };
-    }).sort((a, b) => (a.cod_producto || '').localeCompare(b.cod_producto || ''));
+    return arr.map(p => ({ ...p }))
+      .sort((a, b) => (a.cod_producto || '').localeCompare(b.cod_producto || ''));
   },
 
   // Busca un producto en el catálogo por código exacto
