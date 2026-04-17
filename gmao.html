@@ -1399,39 +1399,56 @@ const DataService = {
 
   async deductStock(items, averia_id, usuario) {
     // items: [{ cod_producto, almacen, cantidad, nombre }]
-    // El descuento se hace vía RPC para ser ATÓMICO y evitar race conditions
-    // cuando varios usuarios descuentan el mismo producto a la vez.
-    // Fallback al método client-side si el RPC todavía no existe en Supabase.
     const now = new Date();
     const fecha = now.toISOString().slice(0,10);
     for (const item of items) {
       if (!item.cod_producto || !item.cantidad) continue;
-      // Si no hay almacén, intentar leerlo del inventario por código de producto
-      if (!item.almacen) {
-        console.warn('[deductStock] item sin almacén, se intentará sin filtro de almacén:', item.cod_producto);
-      }
       const normAlm = item.almacen ? normalizeAlmacen(item.almacen) : '';
 
-      // 1) Descuento atómico en la base de datos — sin race condition
-      const { error: rpcErr } = await sb.rpc('deduct_stock_safe', {
-        p_cod: item.cod_producto,
-        p_alm: normAlm,
-        p_qty: item.cantidad,
-      });
-      if (rpcErr) {
-        // RPC no disponible (SQL no ejecutado aún): fallback client-side
-        console.warn('[deductStock] RPC no disponible, usando fallback:', rpcErr.message);
-        const invArr = await db.inventario
-          .where('cod_producto').equals(item.cod_producto)
-          .filter(r => !normAlm || normalizeAlmacen(r.almacen) === normAlm)
-          .toArray();
-        if (invArr.length > 0) {
-          const inv = invArr[0];
-          await db.inventario.put({ ...inv, unidades: Math.max(0, (inv.unidades||0) - item.cantidad) });
+      // 1) Intentar RPC atómico
+      let rpcOk = false;
+      try {
+        const { error: rpcErr } = await sb.rpc('deduct_stock_safe', {
+          p_cod: item.cod_producto,
+          p_alm: normAlm,
+          p_qty: item.cantidad,
+        });
+        if (!rpcErr) rpcOk = true;
+        else console.warn('[deductStock] RPC error:', rpcErr.message);
+      } catch(e) {
+        console.warn('[deductStock] RPC exception:', e.message);
+      }
+
+      // 2) Si RPC falló O para verificar: leer fila real y hacer update directo
+      if (!rpcOk) {
+        try {
+          // Leer todas las filas con ese cod_producto desde Supabase directamente
+          const { data: rows, error: selErr } = await sb.from('inventario')
+            .select('id, unidades, almacen')
+            .eq('cod_producto', item.cod_producto);
+          if (selErr) throw new Error(selErr.message);
+
+          // Buscar la fila correcta tolerando variantes de casing/acentos
+          const match = (rows || []).find(r =>
+            !normAlm || normalizeAlmacen(r.almacen) === normAlm
+          );
+          if (match) {
+            const newUds = Math.max(0, (match.unidades || 0) - item.cantidad);
+            const { error: updErr } = await sb.from('inventario')
+              .update({ unidades: newUds })
+              .eq('id', match.id);
+            if (updErr) throw new Error(updErr.message);
+            rpcOk = true;
+          } else {
+            console.warn('[deductStock] fila no encontrada:', item.cod_producto, normAlm,
+              'filas disponibles:', (rows||[]).map(r=>r.almacen));
+          }
+        } catch(e) {
+          console.error('[deductStock fallback]', e.message);
         }
       }
 
-      // 2) Registrar movimiento de auditoría (siempre, independiente del método)
+      // 3) Registrar movimiento de auditoría (siempre)
       const mov_id = `MOV-${now.getTime()}-${Math.random().toString(36).slice(2,6)}-${item.cod_producto}`;
       await db.movimientos.put({
         id: mov_id, fecha,
@@ -1441,9 +1458,13 @@ const DataService = {
         cantidad:     -item.cantidad,
         precio_unidad:    0,
         tipo_movimiento: 'Salida',
-        usuario: usuario || '',
-        notas:   `Avería ${averia_id}`,
+        usuario:      usuario || '',
+        notas:        `Avería ${averia_id}${rpcOk ? '' : ' ⚠️ descuento fallido'}`,
       });
+
+      if (!rpcOk) {
+        toast(`⚠️ No se pudo descontar ${item.cod_producto} del stock`, 'error');
+      }
     }
   },
 
