@@ -5099,11 +5099,13 @@ const InventarioPage = {
     }
 
     // Cabecera dinámica
+    const isAdmin = UserService.getUser()?.rol === 'Admin';
     const thead = document.getElementById('inv-thead');
     if (thead) thead.innerHTML = `<tr>
       <th>Cód. Producto</th><th>Producto</th><th>Tipo</th><th>Familia</th>
       ${todosMode ? '<th>Por centro</th>' : ''}
       <th style="text-align:right">Unidades</th>
+      ${isAdmin ? '<th></th>' : ''}
     </tr>`;
 
     // Subtítulo
@@ -5116,7 +5118,8 @@ const InventarioPage = {
   },
 
   _rows(arr, todosMode = false) {
-    const cols = todosMode ? 6 : 5;
+    const isAdmin = UserService.getUser()?.rol === 'Admin';
+    const cols = (todosMode ? 6 : 5) + (isAdmin ? 1 : 0);
     if (arr.length === 0) return `<tr><td colspan="${cols}">${UI.empty()}</td></tr>`;
     return arr.map(i => {
       const udsColor = i.unidades <= 0 ? 'var(--red)' : i.unidades <= 2 ? 'var(--orange)' : 'var(--gray-text)';
@@ -5127,6 +5130,9 @@ const InventarioPage = {
             .map(([k, v]) => `<span style="font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px;margin-right:3px;white-space:nowrap">${k}: <strong>${v}</strong></span>`)
             .join('')
         : '';
+      const editBtn = isAdmin
+        ? `<td style="text-align:center"><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px" onclick="InventarioPage.openEditProducto('${UI.esc(i.cod_producto||'')}')">✏️</button></td>`
+        : '';
       return `<tr>
         <td style="font-family:monospace;font-size:12px">${UI.esc(i.cod_producto||'—')}</td>
         <td style="font-weight:500">${UI.esc(i.producto||'—')}</td>
@@ -5134,6 +5140,7 @@ const InventarioPage = {
         <td>${UI.esc(i.familia||'—')}</td>
         ${todosMode ? `<td>${desglose || '—'}</td>` : ''}
         <td style="text-align:right;font-weight:600;color:${udsColor}">${i.unidades}</td>
+        ${editBtn}
       </tr>`;
     }).join('');
   },
@@ -5442,6 +5449,81 @@ const InventarioPage = {
       ? (mode === 'add' ? `sumado → ${result.newUds} uds` : `actualizado a ${result.newUds} uds`)
       : `añadido (${uds} uds)`;
     toast(`${cod} ${accion} en ${almacen}`, 'success');
+    await InventarioPage.render();
+  },
+
+  async openEditProducto(cod) {
+    const allProds = await db.productos.toArray();
+    const prod = allProds.find(p => p.cod_producto === cod);
+    if (!prod) { toast('Producto no encontrado', 'error'); return; }
+    Modal.open('Editar producto', `
+      <form onsubmit="return false">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Cód. Producto</label>
+            <input class="form-input" value="${UI.esc(prod.cod_producto)}" readonly
+              style="background:var(--bg);color:var(--green);font-family:monospace;font-weight:700;cursor:default">
+          </div>
+          <div class="form-field">
+            <label>Nombre base *</label>
+            <input class="form-input" id="ep-nombre" value="${UI.esc(prod.producto||'')}"
+              oninput="InventarioPage._updateEditPreview()">
+          </div>
+          <div class="form-field">
+            <label>Tamaño</label>
+            <input class="form-input" id="ep-tamano" value="${UI.esc(prod.tamano||'')}"
+              oninput="InventarioPage._updateEditPreview()">
+          </div>
+          <div class="form-field">
+            <label>Tamaño 2</label>
+            <input class="form-input" id="ep-tamano2" value="${UI.esc(prod.tamano2||'')}"
+              oninput="InventarioPage._updateEditPreview()">
+          </div>
+          <div class="form-field">
+            <label>Tamaño 3</label>
+            <input class="form-input" id="ep-tamano3" value="${UI.esc(prod.tamano3||'')}"
+              oninput="InventarioPage._updateEditPreview()">
+          </div>
+          <div class="form-field">
+            <label>Tamaño 4</label>
+            <input class="form-input" id="ep-tamano4" value="${UI.esc(prod.tamano4||'')}"
+              oninput="InventarioPage._updateEditPreview()">
+          </div>
+          <div class="form-field full">
+            <label>Nombre resultante</label>
+            <div id="ep-preview" style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-weight:600;font-size:13px;min-height:36px;color:var(--gray-text)">${UI.esc(prod.producto||'—')}</div>
+          </div>
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="InventarioPage._saveEditProducto('${UI.esc(cod)}')">Guardar</button>`);
+    InventarioPage._editProd = prod;
+  },
+
+  _updateEditPreview() {
+    const parts = [
+      document.getElementById('ep-nombre')?.value.trim(),
+      document.getElementById('ep-tamano')?.value.trim(),
+      document.getElementById('ep-tamano2')?.value.trim(),
+      document.getElementById('ep-tamano3')?.value.trim(),
+      document.getElementById('ep-tamano4')?.value.trim(),
+    ].filter(Boolean);
+    const el = document.getElementById('ep-preview');
+    if (el) el.textContent = parts.join(' ') || '—';
+  },
+
+  async _saveEditProducto(cod) {
+    const nombreBase = (document.getElementById('ep-nombre')?.value  || '').trim();
+    const tamano     = (document.getElementById('ep-tamano')?.value  || '').trim();
+    const tamano2    = (document.getElementById('ep-tamano2')?.value || '').trim();
+    const tamano3    = (document.getElementById('ep-tamano3')?.value || '').trim();
+    const tamano4    = (document.getElementById('ep-tamano4')?.value || '').trim();
+    if (!nombreBase) { toast('El nombre base es obligatorio', 'error'); return; }
+    const nombre = [nombreBase, tamano, tamano2, tamano3, tamano4].filter(Boolean).join(' ');
+    const prod = InventarioPage._editProd;
+    await db.productos.put({ ...prod, producto: nombre, tamano, tamano2, tamano3, tamano4 });
+    Modal.close();
+    toast(`${cod} actualizado`, 'success');
     await InventarioPage.render();
   },
 };
