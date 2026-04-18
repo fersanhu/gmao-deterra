@@ -5712,51 +5712,126 @@ const AlertService = {
     const averias = todas.filter(a => (a.fecha_inicio||'').slice(0,10) === fechaAyer);
 
     if (averias.length === 0) {
-      await this.sendMessage(`📊 <b>GMAO — Resumen ${fechaDisplay}</b>\n\nNo hubo averías registradas el día anterior.`);
+      await this.sendMessage(`GMAO - Resumen ${fechaDisplay}\n\nNo hubo averias registradas el dia anterior.`);
       return;
     }
 
-    const cerradas = averias.filter(a => a.estado === 'Cerrada').length;
-    const abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso').length;
-
-    // Tabla de averías (máx 4096 chars Telegram)
-    const filas = averias.map(a => {
-      const alm  = (a.almacen  || '—').slice(0, 9).padEnd(9);
-      const eq   = (a.equipo   || '—').slice(0, 14).padEnd(14);
-      const est  = (a.estado   || '—').slice(0, 8).padEnd(8);
-      const dur  = a.duracion ? a.duracion.slice(0,5) : '  —  ';
-      return `${alm} ${eq} ${est} ${dur}`;
+    // Ordenar por almacen, luego por duracion descendente
+    const durMin = d => { if (!d) return 0; const p = d.split(':').map(Number); return p[0]*60+(p[1]||0); };
+    averias.sort((a, b) => {
+      const c = (a.almacen||'').localeCompare(b.almacen||'');
+      return c !== 0 ? c : durMin(b.duracion) - durMin(a.duracion);
     });
 
-    const cabecera = `${'Almacén'.padEnd(9)} ${'Equipo'.padEnd(14)} ${'Estado'.padEnd(8)} Dur.`;
-    const separador = '─'.repeat(cabecera.length);
-    const tabla = [cabecera, separador, ...filas].join('\n');
+    const cerradas = averias.filter(a => a.estado === 'Cerrada').length;
+    const abiertas = averias.length - cerradas;
 
-    const resumen =
-      `📊 <b>GMAO — Averías del ${fechaDisplay}</b>\n` +
-      `Total: <b>${averias.length}</b>  ✅ Cerradas: <b>${cerradas}</b>  🔴 Pendientes: <b>${abiertas}</b>\n\n` +
-      `<pre>${tabla}</pre>`;
+    const blob = await this._renderTablaImagen(averias, fechaDisplay, cerradas, abiertas);
+    await this._sendFoto(blob, `GMAO | Averias del ${fechaDisplay} | Total: ${averias.length}  Cerradas: ${cerradas}  Pendientes: ${abiertas}`);
+  },
 
-    // Si el mensaje supera 4096 chars, enviamos primero el resumen y luego la tabla partida
-    if (resumen.length <= 4096) {
-      await this.sendMessage(resumen);
-    } else {
-      await this.sendMessage(
-        `📊 <b>GMAO — Averías del ${fechaDisplay}</b>\n` +
-        `Total: <b>${averias.length}</b>  ✅ Cerradas: <b>${cerradas}</b>  🔴 Pendientes: <b>${abiertas}</b>`
-      );
-      // Partir la tabla en bloques de 3500 chars
-      let bloque = `<pre>${cabecera}\n${separador}\n`;
-      for (const fila of filas) {
-        if ((bloque + fila + '\n</pre>').length > 3900) {
-          await this.sendMessage(bloque + '</pre>');
-          bloque = `<pre>${fila}\n`;
+  async _renderTablaImagen(averias, fechaDisplay, cerradas, abiertas) {
+    const FONT   = '13px monospace';
+    const FONT_B = 'bold 14px monospace';
+    const FONT_H = 'bold 13px monospace';
+    const PAD    = 18;
+    const ROW_H  = 26;
+    const HEAD_H = 56; // título + subtítulo
+    const COL_H  = 30; // cabecera de columna
+
+    // Columnas: [label, key, width]
+    const cols = [
+      { label: 'Almacen',     key: 'almacen',     w: 90 },
+      { label: 'Equipo',      key: 'equipo',       w: 140 },
+      { label: 'Descripcion', key: 'descripcion',  w: 220 },
+      { label: 'Estado',      key: 'estado',       w: 85 },
+      { label: 'Inicio',      key: 'hora_inicio',  w: 60 },
+      { label: 'Fin',         key: 'hora_fin',     w: 60 },
+      { label: 'Duracion',    key: 'duracion',     w: 70 },
+    ];
+
+    const totalW = cols.reduce((s, c) => s + c.w, 0) + PAD * 2;
+    const totalH = HEAD_H + COL_H + averias.length * ROW_H + PAD;
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+
+    // Fondo
+    ctx.fillStyle = '#16162a';
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    // Titulo
+    ctx.fillStyle = '#f0a030';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText(`GMAO - Averias del ${fechaDisplay}`, PAD, 26);
+
+    // Subtitulo
+    ctx.fillStyle = '#aaaacc';
+    ctx.font = '12px monospace';
+    ctx.fillText(`Total: ${averias.length}   Cerradas: ${cerradas}   Pendientes: ${abiertas}`, PAD, 46);
+
+    // Cabecera columnas
+    const hdrY = HEAD_H;
+    ctx.fillStyle = '#2e2e50';
+    ctx.fillRect(0, hdrY, totalW, COL_H);
+    ctx.fillStyle = '#ccccff';
+    ctx.font = FONT_H;
+    let x = PAD;
+    cols.forEach(col => {
+      ctx.fillText(col.label, x, hdrY + 19);
+      x += col.w;
+    });
+
+    // Separador
+    ctx.fillStyle = '#f0a030';
+    ctx.fillRect(0, hdrY + COL_H - 1, totalW, 1);
+
+    // Filas
+    averias.forEach((a, i) => {
+      const y = HEAD_H + COL_H + i * ROW_H;
+      ctx.fillStyle = i % 2 === 0 ? '#1e1e36' : '#16162a';
+      ctx.fillRect(0, y, totalW, ROW_H);
+
+      x = PAD;
+      cols.forEach((col, ci) => {
+        let val = (a[col.key] || '—');
+        if (col.key === 'duracion' && val !== '—') val = val.slice(0, 5);
+        if (col.key === 'hora_inicio' || col.key === 'hora_fin') val = (val||'—').slice(0,5);
+
+        // Color según columna/estado
+        if (col.key === 'estado') {
+          ctx.fillStyle = a.estado === 'Cerrada' ? '#44cc88' : '#ff6666';
+        } else if (col.key === 'almacen') {
+          ctx.fillStyle = '#88aaff';
         } else {
-          bloque += fila + '\n';
+          ctx.fillStyle = '#dddddd';
         }
-      }
-      if (bloque.length > 6) await this.sendMessage(bloque + '</pre>');
-    }
+        ctx.font = FONT;
+
+        // Truncar texto para que quepa en la columna
+        let txt = String(val);
+        while (ctx.measureText(txt).width > col.w - 8 && txt.length > 1) txt = txt.slice(0, -1);
+        if (txt.length < String(val).length) txt = txt.slice(0, -1) + '.';
+        ctx.fillText(txt, x, y + 17);
+        x += col.w;
+      });
+    });
+
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  },
+
+  async _sendFoto(blob, caption) {
+    const token  = this._token();
+    const chatId = this._chatId();
+    if (!token || !chatId) return;
+    const form = new FormData();
+    form.append('chat_id', chatId);
+    form.append('caption', caption);
+    form.append('photo', blob, 'resumen.png');
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.description || 'sendPhoto error'); }
   },
 };
 
