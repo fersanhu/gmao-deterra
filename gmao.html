@@ -3288,7 +3288,7 @@ const AveriasPage = {
                <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:6px;padding:5px 10px;font-size:12px">
                  <span style="font-weight:600;min-width:130px">👤 ${UI.esc(p.tecnico)}</span>
                  <span style="color:var(--gray-muted)">${UI.esc(p.fecha||'')}</span>
-                 <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${p.horas}h</span>
+                 <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${(()=>{const h=parseFloat(p.horas)||0;const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh>0&&mm>0?`${hh}h ${mm}min`:hh>0?`${hh}h`:`${mm}min`;})()}</span>
                  ${p.notas ? `<span style="color:var(--gray-muted);font-style:italic">${UI.esc(p.notas)}</span>` : ''}
                </div>`).join('')}
            </div>
@@ -3766,7 +3766,7 @@ const AveriasPage = {
       if (esTecnico) {
         AveriasPage._partesNuevos.push({
           id: `pt_${Date.now()}_0`, averia_id: '', tecnico: usuarioActual,
-          fecha: today, horas: 1, notas: ''
+          fecha: today, horas: 0, notas: ''
         });
         AveriasPage._renderPartesListNew();
       }
@@ -4237,7 +4237,7 @@ const AveriasPage = {
         averia_id: id,
         tecnico: a.tecnico,
         fecha: today,
-        horas: 1,
+        horas: 0,
         notas: ''
       });
       AveriasPage._renderPartesList();
@@ -4591,9 +4591,11 @@ const AveriasPage = {
     // Guardar partes de trabajo (aislado: si falla, el cierre continúa)
     if (AveriasPage._partesSeleccionados.length > 0) {
       try {
+        // Borrar partes anteriores de esta avería para evitar duplicados con horas incorrectas
+        await DataService.deletePartesByAveria(id);
         const partes = AveriasPage._partesSeleccionados.map((p, i) => ({
           ...p,
-          id: p.id || `pt_${id}_${i}_${Date.now()}`,
+          id: `pt_${id}_${i}_${Date.now()}`,
           averia_id: id
         }));
         await DataService.savePartes(partes);
