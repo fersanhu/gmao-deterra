@@ -5688,17 +5688,32 @@ const AlertService = {
 
   async checkAndSendDailyReport() {
     if (!this._token() || !this._chatId()) return;
-
-    const hora = new Date().getHours();
-    if (hora < 6) return; // antes de las 6h no enviamos
+    if (new Date().getHours() < 6) return;
 
     const today = new Date().toISOString().slice(0, 10);
-    const lastSent = await this._getMeta('tg_report_date');
-    if (lastSent === today) return; // ya enviado hoy
+    const LS_KEY = 'gmao_tg_sent_' + today;
+
+    // Guardia 1: localStorage — impide reenvío en el mismo dispositivo/navegador
+    if (localStorage.getItem(LS_KEY)) return;
+
+    // Guardia 2: Supabase metadata — impide reenvío entre dispositivos distintos
+    try {
+      const lastSent = await this._getMeta('tg_report_date');
+      if (lastSent === today) {
+        localStorage.setItem(LS_KEY, '1'); // sincronizar local
+        return;
+      }
+      // Marcar en ambos sitios ANTES de enviar
+      localStorage.setItem(LS_KEY, '1');
+      await this._setMeta('tg_report_date', today);
+    } catch(e) {
+      // Si falla la lectura/escritura de Supabase, la guardia local evita duplicados en este dispositivo
+      localStorage.setItem(LS_KEY, '1');
+      console.warn('[AlertService] metadata no disponible, usando guardia local:', e.message);
+    }
 
     try {
       await this._sendResumenDiario();
-      await this._setMeta('tg_report_date', today);
     } catch(e) {
       console.error('[AlertService] Error enviando resumen:', e.message);
     }
