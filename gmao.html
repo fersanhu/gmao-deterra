@@ -2666,6 +2666,8 @@ const DashboardPage = {
 const ActivosPage = {
   _data: [],
   _filtered: [],
+  _sortKey: 'almacen',
+  _sortDir: 'asc',
 
   async render() {
     const canAdmin = UserService.canManageActivos();
@@ -2673,6 +2675,7 @@ const ActivosPage = {
     <div class="page-header">
       <div><h1>Activos</h1><p class="page-subtitle" id="activos-count">Cargando...</p></div>
       ${canAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="ActivosPage.exportExcel()">⬇ Excel</button>
         <button class="btn btn-secondary" onclick="ActivosPage.openBulk()">📋 Alta masiva</button>
         <button class="btn btn-primary" onclick="ActivosPage.openNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2698,8 +2701,14 @@ const ActivosPage = {
       <div class="table-wrap">
         <table class="table-clickable">
           <thead><tr>
-            <th>ID Activo</th><th>Almacén</th><th>Zona</th><th>Línea</th>
-            <th>Tipo máquina</th><th>Equipo</th><th>Estado</th><th>Año</th>
+            <th onclick="ActivosPage._setSort('id_activo')"    style="cursor:pointer;user-select:none">ID Activo <span id="act-sort-id_activo"></span></th>
+            <th onclick="ActivosPage._setSort('almacen')"      style="cursor:pointer;user-select:none">Almacén <span id="act-sort-almacen"></span></th>
+            <th onclick="ActivosPage._setSort('zona')"         style="cursor:pointer;user-select:none">Zona <span id="act-sort-zona"></span></th>
+            <th onclick="ActivosPage._setSort('linea')"        style="cursor:pointer;user-select:none">Línea <span id="act-sort-linea"></span></th>
+            <th onclick="ActivosPage._setSort('tipo_maquina')" style="cursor:pointer;user-select:none">Tipo máquina <span id="act-sort-tipo_maquina"></span></th>
+            <th onclick="ActivosPage._setSort('equipo')"       style="cursor:pointer;user-select:none">Equipo <span id="act-sort-equipo"></span></th>
+            <th onclick="ActivosPage._setSort('estado')"       style="cursor:pointer;user-select:none">Estado <span id="act-sort-estado"></span></th>
+            <th onclick="ActivosPage._setSort('anio')"         style="cursor:pointer;user-select:none">Año <span id="act-sort-anio"></span></th>
           </tr></thead>
           <tbody id="activos-tbody"></tbody>
         </table>
@@ -2747,11 +2756,34 @@ const ActivosPage = {
     this._renderTable();
   },
 
+  _setSort(key) {
+    if (this._sortKey === key) this._sortDir = this._sortDir === 'asc' ? 'desc' : 'asc';
+    else { this._sortKey = key; this._sortDir = 'asc'; }
+    this._renderTable();
+  },
+
   _renderTable() {
     const tbody = document.getElementById('activos-tbody');
     if (!tbody) return;
-    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin activos','Prueba a cambiar los filtros')}</td></tr>`; return; }
-    tbody.innerHTML = this._filtered.map(a => `
+
+    const key = this._sortKey || 'almacen';
+    const dir = this._sortDir || 'asc';
+    const sorted = [...this._filtered].sort((a, b) => {
+      const va = (a[key] ?? ''); const vb = (b[key] ?? '');
+      const cmp = typeof va === 'number' && typeof vb === 'number'
+        ? va - vb
+        : String(va).localeCompare(String(vb));
+      return dir === 'asc' ? cmp : -cmp;
+    });
+
+    // Actualizar indicadores ↑↓
+    ['id_activo','almacen','zona','linea','tipo_maquina','equipo','estado','anio'].forEach(k => {
+      const el = document.getElementById(`act-sort-${k}`);
+      if (el) el.textContent = k === key ? (dir === 'asc' ? ' ↑' : ' ↓') : '';
+    });
+
+    if (sorted.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin activos','Prueba a cambiar los filtros')}</td></tr>`; return; }
+    tbody.innerHTML = sorted.map(a => `
       <tr onclick="ActivosPage.openDetail('${UI.esc(a.id_activo)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted)">${UI.esc(a.id_activo)}</td>
         <td>${UI.esc(a.almacen)}</td>
@@ -2817,6 +2849,26 @@ const ActivosPage = {
     { key:'proveedor',    label:'Proveedor',      w:'120px' },
     { key:'matricula',    label:'Matrícula',      w:'100px' },
   ],
+
+  async exportExcel() {
+    toast('Generando Excel...', 'info');
+    const activos = await db.activos.toArray();
+    activos.sort((a, b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.equipo||'').localeCompare(b.equipo||''));
+    const cabecera = ['ID Activo','Num','Almacén','Zona','Código Zona','Línea','Tipo Máquina','Equipo',
+      'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones'];
+    const filas = activos.map(a => [
+      a.id_activo, a.num||'', a.almacen, a.zona, a.codigo_zona, a.linea,
+      a.tipo_maquina, a.equipo, a.estado, a.anio||'', a.proveedor,
+      a.matricula, a.potencia_motor, a.ancho, a.largo, a.proteccion, a.observaciones,
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
+    // Anchos de columna
+    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30].map(w=>({wch:w}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Activos');
+    XLSX.writeFile(wb, `Activos_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast('Excel descargado ✓', 'success');
+  },
 
   openBulk() {
     const cols = ActivosPage._bulkCols;
@@ -2978,6 +3030,7 @@ const ActivosPage = {
 
     Modal.open(isEdit ? `Editar — ${activo.equipo}` : 'Nuevo activo', `
       <form id="activo-form" class="form-grid">
+        <input type="hidden" id="f-num" value="${activo?.num||0}">
         <div class="form-field">
           <label>Almacén *</label>
           <select class="form-input" id="f-almacen" required>
@@ -3039,7 +3092,23 @@ const ActivosPage = {
         </div>
         <div class="form-field">
           <label>Código zona</label>
-          <input class="form-input" id="f-czqona" value="${UI.esc(activo?.codigo_zona||'')}">
+          <input class="form-input" id="f-czona" value="${UI.esc(activo?.codigo_zona||'')}">
+        </div>
+        <div class="form-field">
+          <label>Ancho</label>
+          <input class="form-input" id="f-ancho" value="${UI.esc(activo?.ancho||'')}">
+        </div>
+        <div class="form-field">
+          <label>Largo</label>
+          <input class="form-input" id="f-largo" value="${UI.esc(activo?.largo||'')}">
+        </div>
+        <div class="form-field">
+          <label>Protección</label>
+          <input class="form-input" id="f-proteccion" value="${UI.esc(activo?.proteccion||'')}">
+        </div>
+        <div class="form-field full">
+          <label>Observaciones</label>
+          <textarea class="form-input" id="f-observaciones" rows="2" placeholder="Origen de la máquina, notas de traslado...">${UI.esc(activo?.observaciones||'')}</textarea>
         </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
@@ -3068,39 +3137,51 @@ const ActivosPage = {
   },
 
   async _saveActivo(oldId) {
-    const almacen = document.getElementById('f-almacen').value.trim();
-    let zona = document.getElementById('f-zona').value.trim();
-    if (zona === '__nueva') zona = document.getElementById('f-zona-nueva').value.trim();
-    const linea  = document.getElementById('f-linea').value.trim();
-    const equipo = document.getElementById('f-equipo').value.trim();
-    let tipo = document.getElementById('f-tipo').value;
-    if (tipo === '__otro') tipo = document.getElementById('f-tipo-otra').value.trim();
+    try {
+      const almacen = document.getElementById('f-almacen').value.trim();
+      let zona = document.getElementById('f-zona').value.trim();
+      if (zona === '__nueva') zona = document.getElementById('f-zona-nueva').value.trim();
+      const linea  = document.getElementById('f-linea').value.trim();
+      const equipo = document.getElementById('f-equipo').value.trim();
+      let tipo = document.getElementById('f-tipo').value;
+      if (tipo === '__otro') tipo = document.getElementById('f-tipo-otra').value.trim();
 
-    if (!almacen || !zona || !equipo) { toast('Almacén, zona y equipo son obligatorios', 'error'); return; }
+      if (!almacen) { toast('El almacén es obligatorio', 'error'); return; }
+      if (!zona)    { toast('La zona es obligatoria', 'error'); return; }
+      if (!equipo)  { toast('El equipo es obligatorio', 'error'); return; }
 
-    const id_activo = `${almacen}-${zona}-${linea}-${equipo}`;
-    const data = {
-      id_activo, almacen, zona, linea, equipo,
-      tipo_maquina:   tipo,
-      estado:         document.getElementById('f-estado').value,
-      anio:           parseInt(document.getElementById('f-anio').value) || null,
-      proveedor:      document.getElementById('f-proveedor').value.trim(),
-      matricula:      document.getElementById('f-matricula').value.trim(),
-      potencia_motor: document.getElementById('f-potencia').value.trim(),
-      codigo_zona:    document.getElementById('f-czqona').value.trim(),
-      num: 0, ancho:'', largo:'', proteccion:'',
-    };
+      const id_activo = `${almacen}-${zona}-${linea}-${equipo}`;
+      const data = {
+        id_activo, almacen, zona, linea, equipo,
+        tipo_maquina:   tipo,
+        estado:         document.getElementById('f-estado').value,
+        anio:           parseInt(document.getElementById('f-anio').value) || null,
+        proveedor:      document.getElementById('f-proveedor').value.trim(),
+        matricula:      document.getElementById('f-matricula').value.trim(),
+        potencia_motor: document.getElementById('f-potencia').value.trim(),
+        codigo_zona:    document.getElementById('f-czona').value.trim(),
+        ancho:          document.getElementById('f-ancho').value.trim(),
+        largo:          document.getElementById('f-largo').value.trim(),
+        proteccion:     document.getElementById('f-proteccion').value.trim(),
+        observaciones:  document.getElementById('f-observaciones').value.trim(),
+        num: parseInt(document.getElementById('f-num').value) || 0,
+      };
 
-    if (oldId && oldId !== id_activo) {
-      await db.activos.delete(oldId);
-      // Update references in averias
-      const refs = await db.averias.where('id_activo').equals(oldId).toArray();
-      await Promise.all(refs.map(av => db.averias.put({...av, id_activo})));
+      // Guardar primero; sólo si tiene éxito eliminamos el registro antiguo
+      await DataService.saveActivo(data);
+      if (oldId && oldId !== id_activo) {
+        await db.activos.delete(oldId);
+        // Update references in averias
+        const refs = await db.averias.where('id_activo').equals(oldId).toArray();
+        await Promise.all(refs.map(av => db.averias.put({...av, id_activo})));
+      }
+      Modal.close();
+      toast(oldId ? 'Activo actualizado ✓' : 'Activo creado ✓', 'success');
+      await ActivosPage.render();
+    } catch(e) {
+      console.error('[saveActivo]', e);
+      toast('Error al guardar: ' + (e.message || String(e)), 'error');
     }
-    await DataService.saveActivo(data);
-    Modal.close();
-    toast(oldId ? 'Activo actualizado ✓' : 'Activo creado ✓', 'success');
-    await ActivosPage.render();
   },
 
   async _deleteActivo(id) {
