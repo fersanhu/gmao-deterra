@@ -1984,11 +1984,7 @@ const DashboardPage = {
 
     content.innerHTML = `
     <div class="kpi-grid">
-      <div class="kpi-card kpi-red" style="cursor:pointer" onclick="Router.navigate('averias')" title="Ver averías abiertas">
-        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-        <div class="kpi-body"><div class="kpi-value">${s.avAbiertas}</div><div class="kpi-label">Averías abiertas</div><div class="kpi-sub">${almacen||'Todos los almacenes'}</div></div>
-      </div>
-      <div class="kpi-card kpi-orange" style="cursor:pointer" onclick="Router.navigate('incidencias')" title="Ver incidencias activas">
+<div class="kpi-card kpi-orange" style="cursor:pointer" onclick="Router.navigate('incidencias')" title="Ver incidencias activas">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <div class="kpi-body"><div class="kpi-value">${s.incActivas}</div><div class="kpi-label">Incidencias activas</div><div class="kpi-sub">Abiertas o en curso</div></div>
       </div>
@@ -2086,16 +2082,6 @@ const DashboardPage = {
       </div>
     </div>
 
-    <div class="charts-row" style="margin-bottom:16px">
-      <div class="chart-wrap">
-        <div class="chart-title">Averías abiertas por criticidad</div>
-        <canvas id="chart-criticidad" height="200"></canvas>
-      </div>
-      <div class="card" style="box-shadow:var(--shadow)">
-        <div class="card-header"><span class="card-title">Abiertas por almacén</span></div>
-        <div id="almacen-bars"></div>
-      </div>
-    </div>
 
     <!-- ═══ SLICER GLOBAL ═══ -->
     <div class="pbi-slicer-bar">
@@ -2155,8 +2141,8 @@ const DashboardPage = {
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div>
-          <span class="chart-title" style="margin:0;font-size:15px">Duración media por zona</span>
-          <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">Tiempo medio de resolución (min)</span>
+          <span class="chart-title" style="margin:0;font-size:15px">Duración total por zona</span>
+          <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">Tiempo total de resolución (min)</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div class="pbi-ctrl-group">
@@ -2230,15 +2216,6 @@ const DashboardPage = {
       <div style="position:relative;height:180px"><canvas id="chart-resolucion"></canvas></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Últimas averías abiertas</span>
-          <button class="btn btn-sm btn-secondary" onclick="Router.navigate('averias')">Ver todas →</button>
-        </div>
-        <div class="table-wrap" id="recent-table"></div>
-      </div>
-    </div>
     `;
 
     // KPI técnicos — filtrado por almacén
@@ -2267,56 +2244,7 @@ const DashboardPage = {
 
 
 
-    // Chart: criticidad
-    if (this._chartCrit) { this._chartCrit.destroy(); this._chartCrit = null; }
-    const ctxC = document.getElementById('chart-criticidad');
-    if (ctxC) {
-      const c = s.porCriticidad;
-      this._chartCrit = new Chart(ctxC, {
-        type: 'doughnut',
-        data: {
-          labels: ['Alta', 'Moderada', 'Baja', 'Otra'],
-          datasets: [{ data: [c.Alta, c.Moderada, c.Baja, c.Otra], backgroundColor: ['#C20019','#E87146','#2e7d32','#aaa'], borderWidth: 0, hoverOffset: 4 }]
-        },
-        options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ padding:16, font:{size:12} } } }, cutout:'60%' }
-      });
-    }
-
-    // Barras por almacén
-    const barsEl = document.getElementById('almacen-bars');
-    if (barsEl) {
-      const almacenes = ['Algemesi','Miramar','Xeresa','Alcacer','Murcia'];
-      const max = Math.max(1, ...almacenes.map(a => s.byAlmacen[a]||0));
-      barsEl.innerHTML = almacenes.map(a => {
-        const n = s.byAlmacen[a] || 0;
-        return `<div class="almacen-bar">
-          <span class="almacen-bar-label">${a}</span>
-          <div class="almacen-bar-track"><div class="almacen-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
-          <span class="almacen-bar-count">${n}</span>
-        </div>`;
-      }).join('');
-    }
-
     // Gráfica zonas — _allAverias se llena en el then de arriba; aquí esperamos a que esté listo
-
-    // Tabla últimas averías
-    const tEl = document.getElementById('recent-table');
-    if (tEl) {
-      if (s.ultimas.length === 0) {
-        tEl.innerHTML = '<p style="color:var(--gray-muted);font-size:13px;padding:16px 0">No hay averías abiertas ✓</p>';
-      } else {
-        tEl.innerHTML = `<table>
-          <thead><tr><th>Almacén</th><th>Equipo</th><th>Técnico</th><th>Critic.</th><th>Fecha</th></tr></thead>
-          <tbody>${s.ultimas.map(a => `<tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
-            <td>${UI.esc(a.almacen)}</td>
-            <td class="col-truncate">${UI.esc(a.equipo||a.descripcion||'—')}</td>
-            <td>${UI.esc(a.tecnico||'—')}</td>
-            <td>${UI.criticidadBadge(a.criticidad)}</td>
-            <td style="white-space:nowrap;color:var(--gray-muted)">${a.fecha_inicio ? a.fecha_inicio.slice(0,10) : '—'}</td>
-          </tr>`).join('')}</tbody>
-        </table>`;
-      }
-    }
   },
 
   _setTypeBtn(type) {
@@ -2495,17 +2423,18 @@ const DashboardPage = {
   _rebuildDuracionChart() {
     const orden = document.getElementById('dur-orden')?.value || 'desc';
     const top   = parseInt(document.getElementById('dur-top')?.value || '10');
-    const avs   = this._applyGF(this._allAverias || []).filter(a => !isNaN(parseFloat(a.duracion)));
+    const durToMin = d => { if (!d) return NaN; const p = String(d).split(':').map(Number); return isNaN(p[0]) ? NaN : p[0]*60 + (p[1]||0); };
+    const avs   = this._applyGF(this._allAverias || []).filter(a => { const m = durToMin(a.duracion); return !isNaN(m) && m > 0; });
 
     const grupos = {};
     avs.forEach(a => {
       const z = (a.zona || '').trim() || '(sin zona)';
       if (!grupos[z]) grupos[z] = { suma: 0, n: 0 };
-      grupos[z].suma += parseFloat(a.duracion);
+      grupos[z].suma += durToMin(a.duracion);
       grupos[z].n    += 1;
     });
 
-    let entries = Object.entries(grupos).map(([z, g]) => [z, Math.round(g.suma / g.n)]);
+    let entries = Object.entries(grupos).map(([z, g]) => [z, Math.round(g.suma)]);
     const maxVal = entries.length > 0 ? Math.max(...entries.map(([,v]) => v)) || 1 : 1;
 
     if      (orden === 'desc') entries.sort((a,b) => b[1] - a[1]);
@@ -2530,7 +2459,7 @@ const DashboardPage = {
       type: 'bar',
       data: {
         labels: entries.map(([z]) => z),
-        datasets: [{ label: 'Min. medios', data: entries.map(([,v]) => v), backgroundColor: colors, borderRadius: 5, borderSkipped: false }]
+        datasets: [{ label: 'Min. totales', data: entries.map(([,v]) => v), backgroundColor: colors, borderRadius: 5, borderSkipped: false }]
       },
       options: {
         indexAxis: 'y',
@@ -2538,7 +2467,7 @@ const DashboardPage = {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: item => ` ${item.parsed.x} min de media` } }
+          tooltip: { callbacks: { label: item => ` ${item.parsed.x} min totales` } }
         },
         scales: {
           x: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
@@ -2661,6 +2590,77 @@ const DashboardPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// UTILIDAD: modal de validación de cambios al importar Excel
+// ═══════════════════════════════════════════════════════════════════
+function _showImportDiff(title, changes, labels, onApply) {
+  document.getElementById('import-diff-modal')?.remove();
+
+  const renderNew = ch => {
+    const info = Object.entries(ch.record)
+      .filter(([k]) => labels[k])
+      .map(([k,v]) => `${labels[k]}: ${v===null||v===undefined||v===''?'—':v}`)
+      .slice(0, 7).join(' · ');
+    return `<div style="font-size:12px;color:var(--gray-muted);margin-top:4px">${info}</div>`;
+  };
+
+  const renderMod = ch => ch.fields.map(f =>
+    `<div style="font-size:12px;margin-top:2px">
+       <span style="color:var(--gray-muted)">${labels[f.name]||f.name}:</span>
+       <span style="color:#e57373;text-decoration:line-through">&nbsp;${f.old||'—'}&nbsp;</span>
+       → <span style="color:#66bb6a">&nbsp;${f.new||'—'}</span>
+     </div>`
+  ).join('');
+
+  const items = changes.map((ch, i) => `
+    <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <label style="display:flex;gap:10px;cursor:pointer;align-items:flex-start">
+        <input type="checkbox" class="diff-cb" data-idx="${i}" checked style="margin-top:3px;flex-shrink:0">
+        <div>
+          <strong style="font-size:13px">${ch.id}</strong>
+          <span style="font-size:11px;margin-left:8px;font-weight:700;color:${ch.type==='new'?'#66bb6a':'#ffa726'}">
+            ${ch.type==='new'?'NUEVO':'MODIFICADO'}
+          </span>
+          ${ch.type==='new' ? renderNew(ch) : renderMod(ch)}
+        </div>
+      </label>
+    </div>`).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'import-diff-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
+  modal.innerHTML = `
+    <div style="background:var(--card-bg);border-radius:12px;width:100%;max-width:720px;padding:24px;margin-bottom:40px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0;font-size:17px">${title}</h3>
+        <button onclick="document.getElementById('import-diff-modal').remove()"
+          style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-muted);line-height:1">✕</button>
+      </div>
+      <p style="color:var(--gray-muted);font-size:13px;margin-bottom:10px">
+        ${changes.length} cambio${changes.length!==1?'s':''} detectado${changes.length!==1?'s':''}
+      </p>
+      <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:12px">
+        <input type="checkbox" id="diff-sel-all" checked
+          onchange="document.querySelectorAll('#import-diff-modal .diff-cb').forEach(cb=>cb.checked=this.checked)">
+        Seleccionar todos
+      </label>
+      <div style="max-height:420px;overflow-y:auto;padding-right:4px">${items}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-secondary" onclick="document.getElementById('import-diff-modal').remove()">Cancelar</button>
+        <button class="btn btn-primary" id="diff-apply-btn">Aplicar seleccionados</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('diff-apply-btn').onclick = async () => {
+    const selected = [...document.querySelectorAll('#import-diff-modal .diff-cb')]
+      .filter(cb => cb.checked)
+      .map(cb => changes[+cb.dataset.idx].record);
+    modal.remove();
+    await onApply(selected);
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // PAGE: ACTIVOS
 // ═══════════════════════════════════════════════════════════════════
 const ActivosPage = {
@@ -2676,6 +2676,8 @@ const ActivosPage = {
       <div><h1>Activos</h1><p class="page-subtitle" id="activos-count">Cargando...</p></div>
       ${canAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary" onclick="ActivosPage.exportExcel()">⬇ Excel</button>
+        <button class="btn btn-secondary" onclick="ActivosPage.openImportExcel()">⬆ Importar</button>
+        <input type="file" id="activos-import-input" accept=".xlsx,.xls" style="display:none">
         <button class="btn btn-secondary" onclick="ActivosPage.openBulk()">📋 Alta masiva</button>
         <button class="btn btn-primary" onclick="ActivosPage.openNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2737,6 +2739,11 @@ const ActivosPage = {
     ['activos-search','filter-almacen-act','filter-zona-act','filter-estado-act'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
       document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
+    });
+    document.getElementById('activos-import-input')?.addEventListener('change', async e => {
+      const file = e.target.files[0]; if (!file) return;
+      e.target.value = '';
+      await ActivosPage._doImportActivos(file);
     });
   },
 
@@ -2868,6 +2875,59 @@ const ActivosPage = {
     XLSX.utils.book_append_sheet(wb, ws, 'Activos');
     XLSX.writeFile(wb, `Activos_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
     toast('Excel descargado ✓', 'success');
+  },
+
+  openImportExcel() {
+    document.getElementById('activos-import-input')?.click();
+  },
+
+  async _doImportActivos(file) {
+    const LABELS = {
+      id_activo:'ID Activo', num:'Num', almacen:'Almacén', zona:'Zona', codigo_zona:'Cód.Zona',
+      linea:'Línea', tipo_maquina:'Tipo máquina', equipo:'Equipo', estado:'Estado', anio:'Año',
+      proveedor:'Proveedor', matricula:'Matrícula', potencia_motor:'Potencia motor',
+      ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones'
+    };
+    try {
+      toast('Leyendo Excel...', 'info');
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type:'array', raw:false });
+      const sheet = wb.Sheets['Activos'];
+      if (!sheet) throw new Error('No se encontró la pestaña «Activos»');
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+      if (rows.length < 2) throw new Error('Excel sin datos');
+      const [, ...dataRows] = rows;
+      const imported = dataRows.filter(r => r[0]).map(r => ({
+        id_activo: String(r[0]).trim(), num: r[1], almacen: r[2], zona: r[3], codigo_zona: r[4],
+        linea: r[5], tipo_maquina: r[6], equipo: r[7], estado: r[8], anio: r[9],
+        proveedor: r[10], matricula: r[11], potencia_motor: r[12], ancho: r[13],
+        largo: r[14], proteccion: r[15], observaciones: r[16]
+      }));
+      const existentes = await db.activos.toArray();
+      const exMap = new Map(existentes.map(a => [a.id_activo, a]));
+      const changes = [];
+      for (const imp of imported) {
+        const ex = exMap.get(imp.id_activo);
+        if (!ex) {
+          changes.push({ id: imp.id_activo, type:'new', fields:[], record: imp });
+        } else {
+          const fields = Object.keys(LABELS).filter(k => k !== 'id_activo').reduce((acc, k) => {
+            const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
+            if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
+            return acc;
+          }, []);
+          if (fields.length) changes.push({ id: imp.id_activo, type:'modified', fields, record: { ...ex, ...imp } });
+        }
+      }
+      if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
+      _showImportDiff('Validar cambios — Activos', changes, LABELS, async selected => {
+        try {
+          for (const rec of selected) await db.activos.put(rec);
+          toast(`${selected.length} activo${selected.length!==1?'s':''} actualizado${selected.length!==1?'s':''} ✓`, 'success');
+          await ActivosPage.render();
+        } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
+      });
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
   },
 
   openBulk() {
@@ -5980,6 +6040,12 @@ const ConfigPage = {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Exportar registro de averías (Excel)
           </button>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerImportAverias()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 3v12"/></svg>
+            Importar averías (Excel)
+          </button>
+          <input type="file" id="import-averias-input" accept=".xlsx,.xls" style="display:none">
+          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Importa el Excel exportado y valida cada cambio antes de guardar</p>
           <div style="height:1px;background:var(--border);margin:4px 0"></div>
           <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
             Borrar todos los datos
@@ -6103,6 +6169,13 @@ const ConfigPage = {
       } catch(err) {
         toast('Error al reimportar: ' + err.message, 'error');
       }
+    });
+
+    // Import averías desde Excel exportado
+    document.getElementById('import-averias-input')?.addEventListener('change', async e => {
+      const file = e.target.files[0]; if (!file) return;
+      e.target.value = '';
+      await ConfigPage._doImportAverias(file);
     });
 
     // Import solo pestaña Productos
@@ -6444,6 +6517,65 @@ const ConfigPage = {
     XLSX.utils.book_append_sheet(wb, ws, 'Averías');
     XLSX.writeFile(wb, `GMAO_Averias_${new Date().toISOString().slice(0,10)}.xlsx`);
     toast(`${averias.length} averías exportadas`, 'success');
+  },
+
+  triggerImportAverias() {
+    document.getElementById('import-averias-input')?.click();
+  },
+
+  async _doImportAverias(file) {
+    const LABELS = {
+      id:'ID', id_activo:'Activo', almacen:'Almacén', zona:'Zona', linea:'Línea', equipo:'Equipo',
+      tipo:'Tipo', criticidad:'Criticidad', estado:'Estado', descripcion:'Descripción', tecnico:'Técnico',
+      fecha_inicio:'Fecha inicio', hora_inicio:'Hora inicio', fecha_fin:'Fecha fin', hora_fin:'Hora fin',
+      duracion:'Duración (min)', solucion:'Solución', materiales:'Materiales', coste:'Coste (€)', zona_limpia:'Zona limpia'
+    };
+    try {
+      toast('Leyendo Excel...', 'info');
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type:'array', raw:false });
+      const sheet = wb.Sheets['Averías'];
+      if (!sheet) throw new Error('No se encontró la pestaña «Averías»');
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+      if (rows.length < 2) throw new Error('Excel sin datos');
+      const [, ...dataRows] = rows;
+      const imported = dataRows.filter(r => r[0]).map(r => ({
+        id: String(r[0]).trim(), id_activo: r[1], almacen: r[2], zona: r[3], linea: r[4], equipo: r[5],
+        tipo: r[6], criticidad: r[7], estado: r[8], descripcion: r[9], tecnico: r[10],
+        fecha_inicio: r[11], hora_inicio: r[12], fecha_fin: r[13], hora_fin: r[14],
+        duracion: r[15], solucion: r[16], materiales: r[17], coste: r[18],
+        zona_limpia: r[19] === 'No' ? false : null
+      }));
+      const existentes = await db.averias.toArray();
+      const exMap = new Map(existentes.map(a => [String(a.id), a]));
+      const changes = [];
+      for (const imp of imported) {
+        const ex = exMap.get(imp.id);
+        if (!ex) {
+          changes.push({ id: imp.id, type:'new', fields:[], record: imp });
+        } else {
+          const fields = Object.keys(LABELS).filter(k => k !== 'id').reduce((acc, k) => {
+            let ov, nv;
+            if (k === 'zona_limpia') {
+              ov = ex.zona_limpia === false ? 'No' : 'Sí';
+              nv = imp.zona_limpia === false ? 'No' : 'Sí';
+            } else {
+              ov = String(ex[k] ?? ''); nv = String(imp[k] ?? '');
+            }
+            if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
+            return acc;
+          }, []);
+          if (fields.length) changes.push({ id: imp.id, type:'modified', fields, record: { ...ex, ...imp } });
+        }
+      }
+      if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
+      _showImportDiff('Validar cambios — Averías', changes, LABELS, async selected => {
+        try {
+          for (const rec of selected) await db.averias.put(rec);
+          toast(`${selected.length} avería${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
+        } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
+      });
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
   },
 
   triggerReimport() {
