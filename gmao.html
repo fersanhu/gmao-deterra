@@ -571,6 +571,11 @@ select.form-input{cursor:pointer}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
         <span class="nav-label">Movimientos</span>
       </div>
+      <div class="nav-item" data-route="inspecciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
+        <span class="nav-label">Inspecciones</span>
+        <span class="nav-badge" id="badge-inspecciones" style="display:none">0</span>
+      </div>
       <div class="nav-item" data-route="config">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
         <span class="nav-label">Configuración</span>
@@ -725,6 +730,7 @@ const db = {
   partes_trabajo: makeTable('partes_trabajo', 'id'),
   fotos_averias:  makeTable('fotos_averias',  'id'),
   metadata:       makeTable('metadata',       'key'),
+  inspecciones:   makeTable('inspecciones',   'id'),
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -1702,7 +1708,7 @@ const Router = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
-    const titles = { dashboard:'Dashboard', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', config:'Configuración' };
+    const titles = { dashboard:'Dashboard', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', config:'Configuración' };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -7243,6 +7249,262 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PAGE: INSPECCIONES OCA
+// ═══════════════════════════════════════════════════════════════════
+const InspeccionesPage = {
+  _data: [],
+  _filtered: [],
+  _TIPOS: ['Eléctrica','Gas','Contra incendios','Elevadores','Legionela','Presión','Otra'],
+  _ALMACENES: ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'],
+  _RESULTADOS: ['Favorable','Condicional','Desfavorable'],
+
+  async render() {
+    const almacenGlobal = getAlmacenFilter();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Inspecciones OCA</h1><p class="page-subtitle" id="insp-count">Cargando...</p></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="InspeccionesPage.exportExcel()">📊 Excel</button>
+        <button class="btn btn-primary" onclick="InspeccionesPage.openForm(null)">+ Nueva inspección</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <input type="search" class="search-box" id="insp-search" placeholder="Buscar empresa, tipo, observaciones...">
+        <select class="filter-select" id="insp-f-almacen">
+          <option value="">Todos los almacenes</option>
+          ${this._ALMACENES.map(a=>`<option${almacenGlobal===a?' selected':''}>${a}</option>`).join('')}
+        </select>
+        <select class="filter-select" id="insp-f-tipo">
+          <option value="">Todos los tipos</option>
+          ${this._TIPOS.map(t=>`<option>${t}</option>`).join('')}
+        </select>
+        <select class="filter-select" id="insp-f-resultado">
+          <option value="">Todos los resultados</option>
+          ${this._RESULTADOS.map(r=>`<option>${r}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <table class="data-table">
+        <thead><tr>
+          <th>Almacén</th><th>Tipo</th><th>Empresa</th><th>Fecha</th>
+          <th>Resultado</th><th>Próxima</th><th>Estado</th><th>Doc.</th><th></th>
+        </tr></thead>
+        <tbody id="insp-tbody"><tr><td colspan="9">${UI.loading()}</td></tr></tbody>
+      </table>
+    </div>`;
+
+    ['insp-search','insp-f-almacen','insp-f-tipo','insp-f-resultado'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => this._applyFilter());
+      document.getElementById(id)?.addEventListener('change', () => this._applyFilter());
+    });
+
+    this._data = await db.inspecciones.toArray();
+    this._data.sort((a,b) => (a.proxima||'').localeCompare(b.proxima||''));
+    this._applyFilter();
+  },
+
+  _diasHasta(fecha) {
+    if (!fecha) return null;
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const f = new Date(fecha); f.setHours(0,0,0,0);
+    return Math.round((f - hoy) / 86400000);
+  },
+
+  _semaforo(dias) {
+    if (dias === null) return '';
+    if (dias < 0)  return `<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">VENCIDA</span>`;
+    if (dias <= 30) return `<span style="background:#f97316;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
+    if (dias <= 60) return `<span style="background:#eab308;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
+    return `<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
+  },
+
+  _applyFilter() {
+    const search  = document.getElementById('insp-search')?.value.toLowerCase() || '';
+    const almacen = document.getElementById('insp-f-almacen')?.value || '';
+    const tipo    = document.getElementById('insp-f-tipo')?.value || '';
+    const result  = document.getElementById('insp-f-resultado')?.value || '';
+    this._filtered = this._data.filter(i =>
+      (!almacen || i.almacen === almacen) &&
+      (!tipo    || i.tipo    === tipo) &&
+      (!result  || i.resultado === result) &&
+      (!search  || [i.empresa,i.tipo,i.almacen,i.observaciones].some(f=>(f||'').toLowerCase().includes(search)))
+    );
+    document.getElementById('insp-count').textContent = `${this._filtered.length} inspección(es)`;
+    this._renderTable();
+    this._updateBadge();
+  },
+
+  _updateBadge() {
+    const proximas = this._data.filter(i => { const d = this._diasHasta(i.proxima); return d !== null && d <= 30; }).length;
+    const badge = document.getElementById('badge-inspecciones');
+    if (badge) { badge.textContent = proximas; badge.style.display = proximas > 0 ? '' : 'none'; }
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('insp-tbody');
+    if (!tbody) return;
+    if (!this._filtered.length) { tbody.innerHTML = `<tr><td colspan="9">${UI.empty()}</td></tr>`; return; }
+    tbody.innerHTML = this._filtered.map(i => {
+      const dias = this._diasHasta(i.proxima);
+      const resBadge = i.resultado === 'Favorable'
+        ? `<span class="badge badge-green">Favorable</span>`
+        : i.resultado === 'Desfavorable'
+        ? `<span class="badge badge-red">Desfavorable</span>`
+        : i.resultado ? `<span class="badge" style="background:var(--orange-muted);color:var(--orange)">${UI.esc(i.resultado)}</span>` : '—';
+      const docBtn = i.documento
+        ? `<a href="${UI.esc(i.documento)}" target="_blank" title="Ver PDF" style="font-size:18px;text-decoration:none">📄</a>`
+        : `<span style="color:var(--gray-muted);font-size:12px">—</span>`;
+      return `<tr>
+        <td><strong>${UI.esc(i.almacen)}</strong></td>
+        <td>${UI.esc(i.tipo)}</td>
+        <td>${UI.esc(i.empresa||'—')}</td>
+        <td style="white-space:nowrap">${UI.formatDate(i.fecha)}</td>
+        <td>${resBadge}</td>
+        <td style="white-space:nowrap">${UI.formatDate(i.proxima)}</td>
+        <td>${this._semaforo(dias)}</td>
+        <td style="text-align:center">${docBtn}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="InspeccionesPage.openForm('${UI.esc(i.id)}')">✏️</button>
+          <button class="btn btn-sm btn-secondary" style="color:var(--red)" onclick="InspeccionesPage.deleteInspeccion('${UI.esc(i.id)}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  },
+
+  async openForm(id) {
+    const insp = id ? await db.inspecciones.get(id) : null;
+    const isEdit = !!insp;
+    Modal.open(isEdit ? `Editar inspección` : 'Nueva inspección', `
+      <form id="insp-form" class="form-grid">
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="fi-almacen" required>
+            <option value="">Seleccionar...</option>
+            ${this._ALMACENES.map(a=>`<option${insp?.almacen===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Tipo inspección *</label>
+          <select class="form-input" id="fi-tipo" required>
+            <option value="">Seleccionar...</option>
+            ${this._TIPOS.map(t=>`<option${insp?.tipo===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Empresa inspectora</label>
+          <input class="form-input" id="fi-empresa" value="${UI.esc(insp?.empresa||'')}" placeholder="Nombre de la empresa">
+        </div>
+        <div class="form-field">
+          <label>Resultado</label>
+          <select class="form-input" id="fi-resultado">
+            <option value="">—</option>
+            ${this._RESULTADOS.map(r=>`<option${insp?.resultado===r?' selected':''}>${r}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fecha inspección</label>
+          <input class="form-input" type="date" id="fi-fecha" value="${insp?.fecha||''}">
+        </div>
+        <div class="form-field">
+          <label>Próxima inspección</label>
+          <input class="form-input" type="date" id="fi-proxima" value="${insp?.proxima||''}">
+        </div>
+        <div class="form-field full">
+          <label>Observaciones / Deficiencias</label>
+          <textarea class="form-input" id="fi-observaciones" rows="3" placeholder="Deficiencias encontradas, condiciones...">${UI.esc(insp?.observaciones||'')}</textarea>
+        </div>
+        <div class="form-field full">
+          <label>Certificado PDF ${insp?.documento?'<a href="'+UI.esc(insp.documento)+'" target="_blank" style="margin-left:8px;font-size:12px">📄 Ver actual</a>':''}</label>
+          <input class="form-input" type="file" id="fi-pdf" accept="application/pdf">
+          <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.':'Sube el certificado de la inspección (PDF)'}</span>
+        </div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" id="insp-save-btn" onclick="InspeccionesPage.saveInspeccion('${id||''}')">
+         ${isEdit ? 'Guardar cambios' : 'Crear inspección'}
+       </button>`);
+  },
+
+  async saveInspeccion(oldId) {
+    try {
+      const almacen = document.getElementById('fi-almacen').value;
+      const tipo    = document.getElementById('fi-tipo').value;
+      if (!almacen) { toast('El almacén es obligatorio', 'error'); return; }
+      if (!tipo)    { toast('El tipo de inspección es obligatorio', 'error'); return; }
+
+      const btn = document.getElementById('insp-save-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+      const fecha    = document.getElementById('fi-fecha').value;
+      const proxima  = document.getElementById('fi-proxima').value;
+      const empresa  = document.getElementById('fi-empresa').value.trim();
+      const resultado= document.getElementById('fi-resultado').value;
+      const obs      = document.getElementById('fi-observaciones').value.trim();
+      const pdfFile  = document.getElementById('fi-pdf').files[0];
+
+      const id = oldId || `OCA-${fecha||new Date().toISOString().slice(0,10).replace(/-/g,'')}-${almacen}-${tipo.replace(/\s/g,'')}`;
+
+      // Subir PDF si se seleccionó
+      let docUrl = oldId ? (await db.inspecciones.get(oldId))?.documento || '' : '';
+      if (pdfFile) {
+        const statusEl = document.getElementById('fi-pdf-status');
+        if (statusEl) statusEl.textContent = 'Subiendo PDF…';
+        try {
+          const path = `${almacen}/${tipo.replace(/\s/g,'_')}/${id}.pdf`;
+          const { data: upData, error: upErr } = await sb.storage
+            .from('inspecciones-docs')
+            .upload(path, pdfFile, { upsert: true, contentType: 'application/pdf' });
+          if (upErr) throw new Error(upErr.message);
+          const { data: urlData } = sb.storage.from('inspecciones-docs').getPublicUrl(path);
+          docUrl = urlData.publicUrl;
+        } catch(e) {
+          toast('⚠️ PDF no subido: ' + e.message, 'error');
+        }
+      }
+
+      await db.inspecciones.put({ id, almacen, tipo, empresa, fecha, proxima, resultado, observaciones: obs, documento: docUrl });
+      Modal.close();
+      toast(oldId ? 'Inspección actualizada ✓' : 'Inspección registrada ✓', 'success');
+      await InspeccionesPage.render();
+    } catch(e) {
+      console.error('[saveInspeccion]', e);
+      toast('Error al guardar: ' + (e.message || String(e)), 'error');
+      const btn = document.getElementById('insp-save-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+    }
+  },
+
+  async deleteInspeccion(id) {
+    if (!confirm('¿Eliminar esta inspección? No se puede deshacer.')) return;
+    try {
+      await db.inspecciones.delete(id);
+      toast('Inspección eliminada', '');
+      await InspeccionesPage.render();
+    } catch(e) {
+      toast('Error al eliminar: ' + e.message, 'error');
+    }
+  },
+
+  async exportExcel() {
+    const data = await db.inspecciones.toArray();
+    data.sort((a,b)=>(a.almacen||'').localeCompare(b.almacen||'')||(a.tipo||'').localeCompare(b.tipo||''));
+    const cab = ['Almacén','Tipo','Empresa','Fecha','Resultado','Próxima inspección','Días restantes','Observaciones','Documento'];
+    const filas = data.map(i => {
+      const dias = this._diasHasta(i.proxima);
+      return [i.almacen, i.tipo, i.empresa||'', i.fecha||'', i.resultado||'', i.proxima||'',
+        dias !== null ? dias : '', i.observaciones||'', i.documento||''];
+    });
+    const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
+    ws['!cols'] = [10,16,18,12,14,18,12,30,40].map(w=>({wch:w}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inspecciones');
+    XLSX.writeFile(wb, `Inspecciones_OCA_${new Date().toISOString().slice(0,10)}.xlsx`);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
 Router.register('dashboard',  async () => DashboardPage.render());
@@ -7252,6 +7514,7 @@ Router.register('incidencias',async () => IncidenciasPage.render());
 Router.register('inventario',  async () => InventarioPage.render());
 Router.register('movimientos', async () => MovimientosPage.render());
 Router.register('partes',      async () => PartesPage.render());
+Router.register('inspecciones',async () => InspeccionesPage.render());
 Router.register('config',      async () => ConfigPage.render());
 
 // ═══════════════════════════════════════════════════════════════════
