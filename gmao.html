@@ -4403,7 +4403,7 @@ const AveriasPage = {
     document.getElementById('cl-hora').addEventListener('change', updateDur);
     updateDur();
     // Store almacen for deduction
-    AveriasPage._closeAlmacen = a.almacen || '';
+    AveriasPage._closeAlmacen = a.almacen || (a.id_activo ? a.id_activo.split('-')[0] : '');
     AveriasPage._productosCache = productos;
 
     // Cascada repuestos: tipo → familia → producto
@@ -4495,7 +4495,7 @@ const AveriasPage = {
     if (!prod) return;
     const existing = AveriasPage._repuestosNuevos.find(r => r.cod_producto === cod);
     if (existing) { existing.cantidad += qty; }
-    else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: prod.almacen || '' }); }
+    else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: document.getElementById('av-almacen')?.value || '' }); }
     AveriasPage._renderRepuestosNewList();
     // Reset selects
     const tipoEl = document.getElementById('mat-tipo');
