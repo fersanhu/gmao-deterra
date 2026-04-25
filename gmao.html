@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMAO · Deterra</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -582,6 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -646,6 +648,7 @@ const { createClient } = supabase;
 const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const ANTHROPIC_KEY = () => localStorage.getItem('gmao_anthropic_key') || '';
 
 // Supabase limita a 1000 filas por petición (max_rows del servidor).
 // Esta función pagina automáticamente hasta traer todos los registros.
@@ -2635,7 +2638,7 @@ function _showImportDiff(title, changes, labels, onApply) {
   modal.id = 'import-diff-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
   modal.innerHTML = `
-    <div style="background:var(--card-bg);border-radius:12px;width:100%;max-width:720px;padding:24px;margin-bottom:40px">
+    <div style="background:#1e1e2e;border-radius:12px;width:100%;max-width:720px;padding:24px;margin-bottom:40px;color:#e2e2f0;box-shadow:0 8px 32px rgba(0,0,0,.6)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <h3 style="margin:0;font-size:17px">${title}</h3>
         <button onclick="document.getElementById('import-diff-modal').remove()"
@@ -2903,11 +2906,26 @@ const ActivosPage = {
       const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
       if (rows.length < 2) throw new Error('Excel sin datos');
       const [, ...dataRows] = rows;
+      const _s = v => (v === null || v === undefined) ? '' : String(v).trim();
+      const _i = v => { const n = parseInt(v); return isNaN(n) ? null : n; };
       const imported = dataRows.filter(r => r[0]).map(r => ({
-        id_activo: String(r[0]).trim(), num: r[1], almacen: r[2], zona: r[3], codigo_zona: r[4],
-        linea: r[5], tipo_maquina: r[6], equipo: r[7], estado: r[8], anio: r[9],
-        proveedor: r[10], matricula: r[11], potencia_motor: r[12], ancho: r[13],
-        largo: r[14], proteccion: r[15], observaciones: r[16]
+        id_activo:     _s(r[0]),
+        num:           _i(r[1]),
+        almacen:       _s(r[2]),
+        zona:          _s(r[3]),
+        codigo_zona:   _s(r[4]),
+        linea:         _s(r[5]),
+        tipo_maquina:  _s(r[6]),
+        equipo:        _s(r[7]),
+        estado:        _s(r[8]) || 'Operativo',
+        anio:          _i(r[9]),
+        proveedor:     _s(r[10]),
+        matricula:     _s(r[11]),
+        potencia_motor:_s(r[12]),
+        ancho:         _s(r[13]),
+        largo:         _s(r[14]),
+        proteccion:    _s(r[15]),
+        observaciones: _s(r[16]),
       }));
       const existentes = await db.activos.toArray();
       const exMap = new Map(existentes.map(a => [a.id_activo, a]));
@@ -3277,10 +3295,16 @@ const AveriasPage = {
     document.getElementById('content').innerHTML = `
     <div class="page-header">
       <div><h1>Averías</h1><p class="page-subtitle" id="averias-count">Cargando...</p></div>
-      <button class="btn btn-primary" onclick="AveriasPage.openNew()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nueva avería
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="ConfigPage.exportAverias()">⬇ Excel</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('av-import-input').click()">⬆ Importar</button>
+        <input type="file" id="av-import-input" accept=".xlsx,.xls" style="display:none"
+          onchange="ConfigPage._doImportAverias(this.files[0]).then(()=>this.value='')">
+        <button class="btn btn-primary" onclick="AveriasPage.openNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva avería
+        </button>
+      </div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
@@ -5180,10 +5204,17 @@ const InventarioPage = {
     document.getElementById('content').innerHTML = `
     <div class="page-header">
       <div><h1>Inventario</h1><p class="page-subtitle" id="inv-subtitle">Cargando...</p></div>
-      ${canManage ? `<button class="btn btn-primary" onclick="InventarioPage.openNew()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Añadir al inventario
-      </button>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="InventarioPage.exportExcel()">⬇ Excel</button>
+        ${canManage ? `
+        <button class="btn btn-secondary" onclick="document.getElementById('inv-import-input').click()">⬆ Importar</button>
+        <input type="file" id="inv-import-input" accept=".xlsx,.xls" style="display:none"
+          onchange="InventarioPage.importExcel(this.files[0]).then(()=>this.value='')">
+        <button class="btn btn-primary" onclick="InventarioPage.openNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir al inventario
+        </button>` : ''}
+      </div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap;gap:10px">
@@ -5696,6 +5727,77 @@ const InventarioPage = {
     toast(`${cod} actualizado`, 'success');
     await InventarioPage.render();
   },
+
+  async exportExcel() {
+    toast('Generando Excel...', 'info');
+    const inv = await db.inventario.toArray();
+    inv.sort((a,b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.cod_producto||'').localeCompare(b.cod_producto||''));
+    const cab = ['Cód. Producto','Producto','Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida'];
+    const filas = inv.map(i => [
+      i.cod_producto, i.producto, i.tipo||'', i.familia||'',
+      i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
+    ws['!cols'] = [14,35,15,15,12,10,12,12].map(w=>({wch:w}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    XLSX.writeFile(wb, `Inventario_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast('Excel descargado ✓', 'success');
+  },
+
+  async importExcel(file) {
+    const LABELS = {
+      cod_producto:'Cód. Producto', producto:'Producto', tipo:'Tipo', familia:'Familia',
+      almacen:'Almacén', unidades:'Unidades', precio_unidad:'Precio unidad', unidad_medida:'Unidad medida'
+    };
+    try {
+      toast('Leyendo Excel...', 'info');
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type:'array', raw:false });
+      const sheet = wb.Sheets['Inventario'];
+      if (!sheet) throw new Error('No se encontró la pestaña «Inventario»');
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+      if (rows.length < 2) throw new Error('Excel sin datos');
+      const _s = v => String(v ?? '').trim();
+      const _n = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      const imported = rows.slice(1).filter(r => r[0]).map(r => ({
+        cod_producto:  _s(r[0]),
+        producto:      _s(r[1]),
+        tipo:          _s(r[2]),
+        familia:       _s(r[3]),
+        almacen:       _s(r[4]),
+        unidades:      _n(r[5]),
+        precio_unidad: _n(r[6]),
+        unidad_medida: _s(r[7]),
+      }));
+      const existentes = await db.inventario.toArray();
+      const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${i.almacen}`, i]));
+      const changes = [];
+      for (const imp of imported) {
+        const key = `${imp.cod_producto}_${imp.almacen}`;
+        const ex = exMap.get(key);
+        const id = ex?.id || key;
+        if (!ex) {
+          changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { id, ...imp } });
+        } else {
+          const fields = Object.keys(LABELS).filter(k => k !== 'cod_producto').reduce((acc, k) => {
+            const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
+            if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
+            return acc;
+          }, []);
+          if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp } });
+        }
+      }
+      if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
+      _showImportDiff('Validar cambios — Inventario', changes, LABELS, async selected => {
+        try {
+          for (const rec of selected) await db.inventario.put(rec);
+          toast(`${selected.length} línea${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
+          await InventarioPage.render();
+        } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
+      });
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -6065,6 +6167,22 @@ const ConfigPage = {
 
       <!-- Alertas Telegram -->
       ${canAdmin ? `<div class="card">
+        <div class="card-header"><span class="card-title">API Inteligencia Artificial</span></div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
+          Clave de API de Anthropic (Claude) para el análisis automático de PDFs de inspección. Se guarda solo en este dispositivo, nunca en el servidor.
+        </p>
+        <div class="form-field" style="margin:0 0 8px 0">
+          <label>Anthropic API Key</label>
+          <input class="form-input" type="password" id="cfg-anthropic-key"
+            placeholder="sk-ant-..."
+            value="${localStorage.getItem('gmao_anthropic_key')||''}"
+            onchange="localStorage.setItem('gmao_anthropic_key',this.value);toast('API key guardada ✓','success')">
+        </div>
+        <p style="font-size:11px;color:var(--gray-muted);margin:0">
+          Obtén tu clave en <code>console.anthropic.com</code>. Cada dispositivo debe configurarla por separado.
+        </p>
+      </div></div>
+      <div class="card" style="margin-bottom:16px"><div style="padding:16px">
         <div class="card-header"><span class="card-title">Alertas Telegram</span></div>
         <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
           El primer inicio de sesión del día a partir de las 6:00h enviará automáticamente un resumen de las averías del día anterior a todos los centros.
@@ -7249,12 +7367,72 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PDF PARSER — extrae texto y llama a Claude para parsear campos OCA
+// ═══════════════════════════════════════════════════════════════════
+async function extractPdfText(file) {
+  const pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(s => s.str).join(' ') + '\n';
+  }
+  return fullText.trim();
+}
+
+async function parseOcaWithClaude(text) {
+  const prompt = `Eres un asistente que extrae datos de certificados de inspección OCA (organismos de control autorizados) en España.
+Del siguiente texto extraído de un certificado PDF, identifica estos campos y devuelve SOLO un JSON válido, sin texto adicional:
+
+{
+  "empresa": "nombre de la empresa inspectora/OCA",
+  "tipo": "uno de: Eléctrica, Gas, Contra incendios, Elevadores, Legionela, Presión, Instalación frigorífica, Transformador, Otra",
+  "fecha": "fecha de la inspección en formato YYYY-MM-DD",
+  "resultado": "uno de: Favorable, Condicional, Desfavorable",
+  "proxima": "fecha de la próxima inspección obligatoria en formato YYYY-MM-DD",
+  "almacen": "nombre del almacén o instalación si aparece",
+  "observaciones": "deficiencias o condiciones importantes mencionadas, resumidas"
+}
+
+Si algún campo no aparece claramente en el texto, usa null.
+
+TEXTO DEL CERTIFICADO:
+${text.slice(0, 8000)}`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 512,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if (!resp.ok) throw new Error(`Claude API ${resp.status}`);
+  const data = await resp.json();
+  const raw = data.content[0].text.trim();
+  const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0];
+  if (!jsonStr) throw new Error('No se pudo extraer JSON de la respuesta');
+  return JSON.parse(jsonStr);
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // PAGE: INSPECCIONES OCA
 // ═══════════════════════════════════════════════════════════════════
 const InspeccionesPage = {
   _data: [],
   _filtered: [],
-  _TIPOS: ['Eléctrica','Gas','Contra incendios','Elevadores','Legionela','Presión','Otra'],
+  _sortKey: 'proxima',
+  _sortDir: 'asc',
+  _TIPOS: ['Eléctrica','Gas','Contra incendios','Elevadores','Legionela','Presión','Instalación frigorífica','Transformador','Otra'],
   _ALMACENES: ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'],
   _RESULTADOS: ['Favorable','Condicional','Desfavorable'],
 
@@ -7288,8 +7466,13 @@ const InspeccionesPage = {
     <div class="card">
       <table class="data-table">
         <thead><tr>
-          <th>Almacén</th><th>Tipo</th><th>Empresa</th><th>Fecha</th>
-          <th>Resultado</th><th>Próxima</th><th>Estado</th><th>Doc.</th><th></th>
+          <th onclick="InspeccionesPage._setSort('almacen')"   style="cursor:pointer;user-select:none">Almacén <span id="insp-sort-almacen"></span></th>
+          <th onclick="InspeccionesPage._setSort('tipo')"      style="cursor:pointer;user-select:none">Tipo <span id="insp-sort-tipo"></span></th>
+          <th onclick="InspeccionesPage._setSort('empresa')"   style="cursor:pointer;user-select:none">Empresa <span id="insp-sort-empresa"></span></th>
+          <th onclick="InspeccionesPage._setSort('fecha')"     style="cursor:pointer;user-select:none">Fecha <span id="insp-sort-fecha"></span></th>
+          <th onclick="InspeccionesPage._setSort('resultado')" style="cursor:pointer;user-select:none">Resultado <span id="insp-sort-resultado"></span></th>
+          <th onclick="InspeccionesPage._setSort('proxima')"   style="cursor:pointer;user-select:none">Próxima <span id="insp-sort-proxima"></span></th>
+          <th>Estado</th><th>Doc.</th><th></th>
         </tr></thead>
         <tbody id="insp-tbody"><tr><td colspan="9">${UI.loading()}</td></tr></tbody>
       </table>
@@ -7302,6 +7485,12 @@ const InspeccionesPage = {
 
     this._data = await db.inspecciones.toArray();
     this._data.sort((a,b) => (a.proxima||'').localeCompare(b.proxima||''));
+    this._applyFilter();
+  },
+
+  _setSort(key) {
+    if (this._sortKey === key) this._sortDir = this._sortDir === 'asc' ? 'desc' : 'asc';
+    else { this._sortKey = key; this._sortDir = 'asc'; }
     this._applyFilter();
   },
 
@@ -7331,9 +7520,14 @@ const InspeccionesPage = {
       (!result  || i.resultado === result) &&
       (!search  || [i.empresa,i.tipo,i.almacen,i.observaciones].some(f=>(f||'').toLowerCase().includes(search)))
     );
+    const k = this._sortKey, d = this._sortDir === 'asc' ? 1 : -1;
+    this._filtered.sort((a, b) => d * (a[k]||'').localeCompare(b[k]||''));
     document.getElementById('insp-count').textContent = `${this._filtered.length} inspección(es)`;
     this._renderTable();
     this._updateBadge();
+    document.querySelectorAll('[id^="insp-sort-"]').forEach(el => el.textContent = '');
+    const si = document.getElementById(`insp-sort-${k}`);
+    if (si) si.textContent = this._sortDir === 'asc' ? ' ▲' : ' ▼';
   },
 
   _updateBadge() {
@@ -7354,11 +7548,11 @@ const InspeccionesPage = {
         ? `<span class="badge badge-red">Desfavorable</span>`
         : i.resultado ? `<span class="badge" style="background:var(--orange-muted);color:var(--orange)">${UI.esc(i.resultado)}</span>` : '—';
       const docBtn = i.documento
-        ? `<a href="${UI.esc(i.documento)}" target="_blank" title="Ver PDF" style="font-size:18px;text-decoration:none">📄</a>`
+        ? `<button onclick="InspeccionesPage.openPdf('${UI.esc(i.id)}')" title="Ver PDF" style="background:none;border:none;cursor:pointer;font-size:18px;padding:0">📄</button>`
         : `<span style="color:var(--gray-muted);font-size:12px">—</span>`;
       return `<tr>
         <td><strong>${UI.esc(i.almacen)}</strong></td>
-        <td>${UI.esc(i.tipo)}</td>
+        <td>${UI.esc(i.tipo)}${i.num_registro?`<br><span style="font-size:11px;color:var(--gray-muted)">${UI.esc(i.num_registro)}</span>`:''}</td>
         <td>${UI.esc(i.empresa||'—')}</td>
         <td style="white-space:nowrap">${UI.formatDate(i.fecha)}</td>
         <td>${resBadge}</td>
@@ -7397,6 +7591,10 @@ const InspeccionesPage = {
           <input class="form-input" id="fi-empresa" value="${UI.esc(insp?.empresa||'')}" placeholder="Nombre de la empresa">
         </div>
         <div class="form-field">
+          <label>Nº Registro instalación</label>
+          <input class="form-input" id="fi-num-registro" value="${UI.esc(insp?.num_registro||'')}" placeholder="Ej: IF/001562-1">
+        </div>
+        <div class="form-field">
           <label>Resultado</label>
           <select class="form-input" id="fi-resultado">
             <option value="">—</option>
@@ -7418,13 +7616,46 @@ const InspeccionesPage = {
         <div class="form-field full">
           <label>Certificado PDF ${insp?.documento?'<a href="'+UI.esc(insp.documento)+'" target="_blank" style="margin-left:8px;font-size:12px">📄 Ver actual</a>':''}</label>
           <input class="form-input" type="file" id="fi-pdf" accept="application/pdf">
-          <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.':'Sube el certificado de la inspección (PDF)'}</span>
+          <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.':'Sube el certificado y los campos se rellenarán automáticamente ✨'}</span>
         </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" id="insp-save-btn" onclick="InspeccionesPage.saveInspeccion('${id||''}')">
          ${isEdit ? 'Guardar cambios' : 'Crear inspección'}
        </button>`);
+
+    // Auto-parseo al seleccionar PDF
+    document.getElementById('fi-pdf')?.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+      const status = document.getElementById('fi-pdf-status');
+      const saveBtn = document.getElementById('insp-save-btn');
+      status.textContent = '🔍 Leyendo PDF…';
+      if (saveBtn) saveBtn.disabled = true;
+      try {
+        const text = await extractPdfText(file);
+        if (!text || text.length < 50) throw new Error('PDF sin texto legible (posiblemente escaneado)');
+        status.textContent = '🤖 Analizando con IA…';
+        const campos = await parseOcaWithClaude(text);
+        // Rellenar campos del formulario
+        if (campos.empresa)  document.getElementById('fi-empresa').value  = campos.empresa;
+        if (campos.fecha)    document.getElementById('fi-fecha').value    = campos.fecha;
+        if (campos.proxima)  document.getElementById('fi-proxima').value  = campos.proxima;
+        if (campos.resultado && InspeccionesPage._RESULTADOS.includes(campos.resultado))
+          document.getElementById('fi-resultado').value = campos.resultado;
+        if (campos.tipo && InspeccionesPage._TIPOS.includes(campos.tipo))
+          document.getElementById('fi-tipo').value = campos.tipo;
+        if (campos.almacen && InspeccionesPage._ALMACENES.includes(campos.almacen))
+          document.getElementById('fi-almacen').value = campos.almacen;
+        if (campos.observaciones) document.getElementById('fi-observaciones').value = campos.observaciones;
+        status.textContent = '✅ Campos rellenados automáticamente — revisa y confirma';
+      } catch(e) {
+        status.textContent = '⚠️ No se pudo analizar: ' + e.message + '. Rellena los campos manualmente.';
+        console.warn('[parsePDF]', e);
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    });
   },
 
   async saveInspeccion(oldId) {
@@ -7439,32 +7670,34 @@ const InspeccionesPage = {
 
       const fecha    = document.getElementById('fi-fecha').value;
       const proxima  = document.getElementById('fi-proxima').value;
-      const empresa  = document.getElementById('fi-empresa').value.trim();
-      const resultado= document.getElementById('fi-resultado').value;
-      const obs      = document.getElementById('fi-observaciones').value.trim();
-      const pdfFile  = document.getElementById('fi-pdf').files[0];
+      const empresa     = document.getElementById('fi-empresa').value.trim();
+      const num_registro= document.getElementById('fi-num-registro').value.trim();
+      const resultado   = document.getElementById('fi-resultado').value;
+      const obs         = document.getElementById('fi-observaciones').value.trim();
+      const pdfFile     = document.getElementById('fi-pdf').files[0];
 
-      const id = oldId || `OCA-${fecha||new Date().toISOString().slice(0,10).replace(/-/g,'')}-${almacen}-${tipo.replace(/\s/g,'')}`;
+      const idSuffix = num_registro ? `-${num_registro.replace(/[^a-zA-Z0-9]/g,'')}` : '';
+      const id = oldId || `OCA-${fecha||new Date().toISOString().slice(0,10).replace(/-/g,'')}-${almacen}-${tipo.replace(/\s/g,'')}${idSuffix}`;
 
       // Subir PDF si se seleccionó
       let docUrl = oldId ? (await db.inspecciones.get(oldId))?.documento || '' : '';
       if (pdfFile) {
         const statusEl = document.getElementById('fi-pdf-status');
-        if (statusEl) statusEl.textContent = 'Subiendo PDF…';
+        if (statusEl) statusEl.textContent = 'Guardando PDF…';
         try {
-          const path = `${almacen}/${tipo.replace(/\s/g,'_')}/${id}.pdf`;
-          const { data: upData, error: upErr } = await sb.storage
-            .from('inspecciones-docs')
-            .upload(path, pdfFile, { upsert: true, contentType: 'application/pdf' });
-          if (upErr) throw new Error(upErr.message);
-          const { data: urlData } = sb.storage.from('inspecciones-docs').getPublicUrl(path);
-          docUrl = urlData.publicUrl;
+          docUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = () => reject(new Error('Error leyendo el archivo'));
+            reader.readAsDataURL(pdfFile);
+          });
+          if (statusEl) statusEl.textContent = '✅ PDF listo';
         } catch(e) {
-          toast('⚠️ PDF no subido: ' + e.message, 'error');
+          toast('⚠️ PDF no procesado: ' + e.message, 'error');
         }
       }
 
-      await db.inspecciones.put({ id, almacen, tipo, empresa, fecha, proxima, resultado, observaciones: obs, documento: docUrl });
+      await db.inspecciones.put({ id, almacen, tipo, empresa, num_registro, fecha, proxima, resultado, observaciones: obs, documento: docUrl });
       Modal.close();
       toast(oldId ? 'Inspección actualizada ✓' : 'Inspección registrada ✓', 'success');
       await InspeccionesPage.render();
@@ -7473,6 +7706,23 @@ const InspeccionesPage = {
       toast('Error al guardar: ' + (e.message || String(e)), 'error');
       const btn = document.getElementById('insp-save-btn');
       if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+    }
+  },
+
+  async openPdf(id) {
+    const insp = await db.inspecciones.get(id);
+    if (!insp?.documento) { toast('No hay PDF adjunto', 'error'); return; }
+    try {
+      const base64 = insp.documento.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch(e) {
+      toast('Error abriendo PDF: ' + e.message, 'error');
     }
   },
 
