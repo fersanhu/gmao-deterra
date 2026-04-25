@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadro de Mando — Inspecciones Reglamentarias</title>
+<style>
+  :root {
+    --verde: #1a7f4b; --verde-bg: #e8f7ef; --verde-borde: #a3d9bc;
+    --amarillo: #b45309; --amarillo-bg: #fffbeb; --amarillo-borde: #fcd34d;
+    --rojo: #b91c1c; --rojo-bg: #fef2f2; --rojo-borde: #fca5a5;
+    --gris: #4b5563; --gris-bg: #f3f4f6; --gris-borde: #d1d5db;
+    --azul: #1d4ed8; --azul-bg: #eff6ff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#f8fafc; color:#1e293b; font-size:13px; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); color:white; padding:20px 32px; display:flex; justify-content:space-between; align-items:center; }
+  .header h1 { font-size:20px; font-weight:700; letter-spacing:.3px; }
+  .header .meta { text-align:right; font-size:12px; opacity:.85; line-height:1.6; }
+  .header .fecha { font-size:14px; font-weight:600; opacity:1; }
+
+  /* SUMMARY CARDS */
+  .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:20px 32px 0; }
+  .card { border-radius:10px; padding:16px 20px; display:flex; align-items:center; gap:14px; border:1px solid; }
+  .card.rojo { background:var(--rojo-bg); border-color:var(--rojo-borde); }
+  .card.amarillo { background:var(--amarillo-bg); border-color:var(--amarillo-borde); }
+  .card.verde { background:var(--verde-bg); border-color:var(--verde-borde); }
+  .card.gris { background:var(--gris-bg); border-color:var(--gris-borde); }
+  .card .numero { font-size:36px; font-weight:800; line-height:1; }
+  .card.rojo .numero { color:var(--rojo); }
+  .card.amarillo .numero { color:var(--amarillo); }
+  .card.verde .numero { color:var(--verde); }
+  .card.gris .numero { color:var(--gris); }
+  .card .label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; line-height:1.4; }
+  .card.rojo .label { color:var(--rojo); }
+  .card.amarillo .label { color:var(--amarillo); }
+  .card.verde .label { color:var(--verde); }
+  .card.gris .label { color:var(--gris); }
+
+  /* ALERTAS */
+  .alertas { padding:20px 32px; }
+  .alertas h2 { font-size:14px; font-weight:700; margin-bottom:12px; color:#0f172a; text-transform:uppercase; letter-spacing:.4px; }
+  .alerta-lista { display:flex; flex-direction:column; gap:7px; }
+  .alerta { display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:8px; border-left:4px solid; font-size:12.5px; }
+  .alerta.rojo { background:var(--rojo-bg); border-color:var(--rojo); }
+  .alerta.amarillo { background:var(--amarillo-bg); border-color:var(--amarillo); }
+  .alerta .badge { font-weight:700; font-size:11px; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+  .alerta.rojo .badge { background:var(--rojo); color:white; }
+  .alerta.amarillo .badge { background:var(--amarillo); color:white; }
+  .alerta .centro { font-weight:700; color:#0f172a; min-width:160px; }
+  .alerta .tipo { color:#475569; min-width:180px; }
+  .alerta .fecha-info { color:#64748b; font-style:italic; }
+
+  /* TABLA PRINCIPAL */
+  .tabla-section { padding:20px 32px; }
+  .tabla-section h2 { font-size:14px; font-weight:700; margin-bottom:12px; color:#0f172a; text-transform:uppercase; letter-spacing:.4px; }
+
+  .filtros { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .filtro-btn { padding:5px 14px; border-radius:20px; border:1px solid #cbd5e1; background:white; cursor:pointer; font-size:11.5px; font-weight:600; color:#475569; transition:all .2s; }
+  .filtro-btn:hover, .filtro-btn.activo { background:#1e3a5f; color:white; border-color:#1e3a5f; }
+
+  table { width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  th { background:#1e3a5f; color:white; padding:10px 12px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px; font-weight:600; white-space:nowrap; }
+  td { padding:9px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#f8fafc; }
+  tr.tr-rojo td:first-child { border-left:3px solid var(--rojo); }
+  tr.tr-amarillo td:first-child { border-left:3px solid var(--amarillo); }
+  tr.tr-verde td:first-child { border-left:3px solid var(--verde); }
+  tr.tr-gris td:first-child { border-left:3px solid var(--gris-borde); }
+
+  .badge-estado { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:5px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .badge-estado.rojo { background:var(--rojo-bg); color:var(--rojo); border:1px solid var(--rojo-borde); }
+  .badge-estado.amarillo { background:var(--amarillo-bg); color:var(--amarillo); border:1px solid var(--amarillo-borde); }
+  .badge-estado.verde { background:var(--verde-bg); color:var(--verde); border:1px solid var(--verde-borde); }
+  .badge-estado.gris { background:var(--gris-bg); color:var(--gris); border:1px solid var(--gris-borde); }
+
+  .badge-tipo { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:700; background:#e0f2fe; color:#0369a1; }
+  .badge-tipo.at { background:#fce7f3; color:#9d174d; }
+  .badge-tipo.frio { background:#e0e7ff; color:#3730a3; }
+  .badge-tipo.pci { background:#ffedd5; color:#9a3412; }
+  .badge-tipo.gas { background:#f0fdf4; color:#166534; border:1px solid #86efac; }
+  .badge-tipo.aire { background:#f5f3ff; color:#5b21b6; }
+  .badge-tipo.leg { background:#fef9c3; color:#854d0e; }
+
+  .dias-restantes { font-weight:700; font-size:12px; }
+  .dias-restantes.rojo { color:var(--rojo); }
+  .dias-restantes.amarillo { color:var(--amarillo); }
+  .dias-restantes.verde { color:var(--verde); }
+  .dias-restantes.gris { color:var(--gris); }
+
+  /* LEYENDA */
+  .leyenda { padding:12px 32px 24px; display:flex; gap:20px; flex-wrap:wrap; align-items:center; }
+  .ley-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color:#475569; }
+  .ley-dot { width:10px; height:10px; border-radius:50%; }
+  .ley-dot.rojo { background:var(--rojo); }
+  .ley-dot.amarillo { background:var(--amarillo); }
+  .ley-dot.verde { background:var(--verde); }
+  .ley-dot.gris { background:var(--gris-borde); }
+
+  /* CALENDARIO ANUAL */
+  .cal-section { padding:0 32px 24px; }
+  .cal-section h2 { font-size:14px; font-weight:700; margin-bottom:14px; color:#0f172a; text-transform:uppercase; letter-spacing:.4px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:6px; }
+  .cal-mes { background:white; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .cal-mes-header { background:#1e3a5f; color:white; text-align:center; padding:6px 4px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .cal-mes.actual .cal-mes-header { background:#2d6a9f; }
+  .cal-eventos { padding:5px 4px; min-height:60px; display:flex; flex-direction:column; gap:3px; }
+  .cal-evento { font-size:9.5px; padding:2px 5px; border-radius:3px; line-height:1.3; font-weight:600; }
+  .cal-evento.rojo { background:var(--rojo-bg); color:var(--rojo); }
+  .cal-evento.amarillo { background:var(--amarillo-bg); color:var(--amarillo); }
+  .cal-evento.verde { background:var(--verde-bg); color:var(--verde); }
+
+  /* TABLA CENTROS */
+  .resumen-centros { padding:20px 32px; }
+  .resumen-centros h2 { font-size:14px; font-weight:700; margin-bottom:12px; color:#0f172a; text-transform:uppercase; letter-spacing:.4px; }
+  .centro-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .centro-card { background:white; border-radius:10px; border:1px solid #e2e8f0; padding:14px 16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .centro-card h3 { font-size:13px; font-weight:700; color:#0f172a; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+  .centro-card .semaforo { display:flex; gap:4px; }
+  .centro-card .dot { width:9px; height:9px; border-radius:50%; }
+  .centro-insp { display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid #f8fafc; font-size:11.5px; }
+  .centro-insp:last-child { border-bottom:none; }
+
+  @media print { body { background:white; } .header { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📋 Cuadro de Mando — Inspecciones Reglamentarias</h1>
+    <div style="font-size:12px;opacity:.8;margin-top:4px;">Departamento de Mantenimiento · Cítricos Guillem / SAT Versol</div>
+  </div>
+  <div class="meta">
+    <div class="fecha" id="fechaHoy"></div>
+    <div>Última actualización: abril 2026</div>
+    <div>6 centros · 7 tipos de inspección</div>
+  </div>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="summary" id="summaryCards"></div>
+
+<!-- ALERTAS -->
+<div class="alertas">
+  <h2>⚠️ Alertas prioritarias</h2>
+  <div class="alerta-lista" id="alertaLista"></div>
+</div>
+
+<!-- TABLA PRINCIPAL -->
+<div class="tabla-section">
+  <h2>📊 Registro completo de inspecciones</h2>
+  <div class="filtros">
+    <button class="filtro-btn activo" onclick="filtrar('todos',this)">Todos</button>
+    <button class="filtro-btn" onclick="filtrar('rojo',this)">🔴 Vencidas</button>
+    <button class="filtro-btn" onclick="filtrar('amarillo',this)">🟡 Próximas (&lt;6 meses)</button>
+    <button class="filtro-btn" onclick="filtrar('verde',this)">🟢 Al día</button>
+    <button class="filtro-btn" onclick="filtrar('BT',this)">BT</button>
+    <button class="filtro-btn" onclick="filtrar('AT',this)">AT</button>
+    <button class="filtro-btn" onclick="filtrar('PCI',this)">PCI</button>
+    <button class="filtro-btn" onclick="filtrar('Frío',this)">Frío</button>
+  </div>
+  <table id="tablaInspecciones">
+    <thead>
+      <tr>
+        <th>Centro</th>
+        <th>Instalación</th>
+        <th>Última inspección</th>
+        <th>Próxima inspección</th>
+        <th>Días restantes</th>
+        <th>Estado</th>
+        <th>Resultado último</th>
+        <th>Periodicidad</th>
+      </tr>
+    </thead>
+    <tbody id="tablaBody"></tbody>
+  </table>
+</div>
+
+<!-- CALENDARIO -->
+<div class="cal-section">
+  <h2>📅 Calendario de vencimientos 2026–2027</h2>
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<div class="leyenda">
+  <strong style="font-size:11.5px;color:#475569;">LEYENDA:</strong>
+  <div class="ley-item"><div class="ley-dot rojo"></div> <b>VENCIDA</b> — Inspección pendiente de realizar (fecha superada)</div>
+  <div class="ley-item"><div class="ley-dot amarillo"></div> <b>PRÓXIMA</b> — Vence en menos de 6 meses</div>
+  <div class="ley-item"><div class="ley-dot verde"></div> <b>AL DÍA</b> — Sin actuación inmediata</div>
+  <div class="ley-item"><div class="ley-dot gris"></div> <b>SIN DATOS</b> — Documentación pendiente de verificar</div>
+</div>
+
+<script>
+const HOY = new Date(); // fecha dinámica — se actualiza cada vez que se abre
+
+// ============================================================
+// BASE DE DATOS DE INSPECCIONES
+// Extraída de los documentos OCA de cada centro
+// ============================================================
+const inspecciones = [
+  // ---- VERSOL ALCASSER ----
+  // BT: OCA BT 2024.pdf — insp. 10/01/2024, FAVORABLE, próxima 10/01/2029
+  { centro:'Versol Alcasser', tipo:'BT', ultimaInsp:'2024-01-10', proximaInsp:'2029-01-10', resultado:'FAVORABLE', periodicidad:'5 años', fuente:'OCA BT 2024.pdf' },
+  // AT: OCA 2025.pdf — insp. 19/07/2025, FAVORABLE, próxima 19/07/2028
+  { centro:'Versol Alcasser', tipo:'AT', ultimaInsp:'2025-07-19', proximaInsp:'2028-07-19', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'OCA AT 2025.pdf' },
+  // PCI: OCA PCI.pdf — insp. 15/01/2025, FAVORABLE con defectos leves, próxima 15/01/2028
+  { centro:'Versol Alcasser', tipo:'PCI', ultimaInsp:'2025-01-15', proximaInsp:'2028-01-15', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'OCA PCI.pdf' },
+  // Gasoil: cert. gas 2023 — insp. 25/09/2023, FAVORABLE, próxima 25/09/2028
+  { centro:'Versol Alcasser', tipo:'Gasoil', ultimaInsp:'2023-09-25', proximaInsp:'2028-09-25', resultado:'FAVORABLE', periodicidad:'5 años', fuente:'certificado instal. periodica gas.pdf' },
+  // Frío: IF-V-0005-24 + IF-V-0006-24 — insp. 05/06/2024, FAVORABLE, próxima 05/06/2026 ⚠️ URGENTE
+  { centro:'Versol Alcasser', tipo:'Frío', ultimaInsp:'2024-06-05', proximaInsp:'2026-06-05', resultado:'FAVORABLE', periodicidad:'2 años (Niv.B)', fuente:'IF-V-0005-24 / IF-V-0006-24', nota:'⚠️ Vence 05/06/2026 — programar renovación urgente' },
+  // Aire/EP: Sin OCA encontrada
+  { centro:'Versol Alcasser', tipo:'Aire/EP', ultimaInsp:null, proximaInsp:null, resultado:'SIN DATOS', periodicidad:'Variable', fuente:'-', nota:'No se ha localizado OCA de equipos a presión' },
+
+  // ---- MIRAMAR ----
+  // BT: CERTOCA BT 2022 — insp. 27/12/2022, CONDICIONADA (próxima 27/12/2027)
+  { centro:'Miramar', tipo:'BT', ultimaInsp:'2022-12-27', proximaInsp:'2027-12-27', resultado:'CONDICIONADA', periodicidad:'5 años', fuente:'46-BT-IP-0082-22-01 CERTOCA.pdf', nota:'Condicionada en origen — verificar subsanación' },
+  // AT: OCA 2025.pdf — insp. 02/08/2025, FAVORABLE, próxima 02/08/2028
+  { centro:'Miramar', tipo:'AT', ultimaInsp:'2025-08-02', proximaInsp:'2028-08-02', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'OCA AT 2025.pdf' },
+  // PCI: OCA 2025 — insp. 31/03/2025, CONDICIONADA, plazo corrección 30/09/2025 (VENCIDO), próxima 31/03/2028
+  { centro:'Miramar', tipo:'PCI', ultimaInsp:'2025-03-31', proximaInsp:'2028-03-31', resultado:'CONDICIONADA', periodicidad:'3 años', fuente:'OCA 2025 Favorable defectos graves.pdf', nota:'⚠️ Plazo corrección 30/09/2025 VENCIDO — verificar subsanación con OCA' },
+  // Frío: IF-V-006-25 + IF-V-007-25 — insp. 05/11/2025, FAVORABLE, próxima 05/11/2027
+  { centro:'Miramar', tipo:'Frío', ultimaInsp:'2025-11-05', proximaInsp:'2027-11-05', resultado:'FAVORABLE', periodicidad:'2 años', fuente:'IF-V-006-25 / IF-V-007-25' },
+  // Aire/EP: Inspeccion periodica.pdf — insp. 19/12/2024, FAVORABLE, próxima 19/12/2027
+  { centro:'Miramar', tipo:'Aire/EP', ultimaInsp:'2024-12-19', proximaInsp:'2027-12-19', resultado:'FAVORABLE', periodicidad:'3 años (Niv.C)', fuente:'Inspeccion periodica EP 2024.pdf' },
+
+  // ---- LOS RAMOS (MURCIA) ----
+  // BT: CERT 25BT-MU1953 — insp. 10/10/2025, CONDICIONADA, próxima 10/10/2030 (una vez favorable)
+  { centro:'Los Ramos (Murcia)', tipo:'BT', ultimaInsp:'2025-10-10', proximaInsp:'2030-10-10', resultado:'CONDICIONADA', periodicidad:'5 años', fuente:'CERTIFICADO 25BT-MU1953_00.pdf', nota:'⚠️ Pendiente subsanación defectos — plazo 6 meses desde 10/10/2025 (hasta abr-2026)' },
+  // AT: Cert 24AT-MU2309 — insp. 27/11/2024, FAVORABLE, próxima 21/11/2027
+  { centro:'Los Ramos (Murcia)', tipo:'AT', ultimaInsp:'2024-11-27', proximaInsp:'2027-11-21', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'Certificado 24AT-MU2309_00.pdf' },
+  // PCI: OCa 2025 — insp. 24/02/2025, FAVORABLE sin defecto, próxima 24/02/2028
+  { centro:'Los Ramos (Murcia)', tipo:'PCI', ultimaInsp:'2025-02-24', proximaInsp:'2028-02-24', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'OCa 2025.pdf' },
+  // EP Presión: IF CITRICOS GUILLEM 2 — insp. 23/01/2024, FAVORABLE, próxima 23/01/2029
+  { centro:'Los Ramos (Murcia)', tipo:'Aire/EP', ultimaInsp:'2024-01-23', proximaInsp:'2029-01-23', resultado:'FAVORABLE', periodicidad:'5 años', fuente:'IF CITRICOS GUILLEM 2.pdf' },
+
+  // ---- XERESA ----
+  // BT: 46-BT-IP-0012-26-00 — insp. 04/02/2026, CONDICIONADA, próxima 04/02/2031
+  { centro:'Xeresa', tipo:'BT', ultimaInsp:'2026-02-04', proximaInsp:'2031-02-04', resultado:'CONDICIONADA', periodicidad:'5 años', fuente:'46-BT-IP-0012-26-00 CERTOCA_D.pdf', nota:'⚠️ Subsanar defectos antes del 04/08/2026' },
+  // AT: 46-AT-IP-0006-26-00 — insp. 09/01/2026, FAVORABLE, próxima 09/01/2029
+  { centro:'Xeresa', tipo:'AT', ultimaInsp:'2026-01-09', proximaInsp:'2029-01-09', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'46-AT-IP-0006-26-00 CERTOCA_F.pdf' },
+  // Frío: CER_IF_002239-1 — insp. 02/12/2025, FAVORABLE con defectos leves, próxima 02/12/2027
+  { centro:'Xeresa', tipo:'Frío', ultimaInsp:'2025-12-02', proximaInsp:'2027-12-02', resultado:'FAVORABLE', periodicidad:'2 años', fuente:'CER_IF_002239-1 FAVORABLE 02_12_25.PDF' },
+  // Gasoil: Sin OCA periódica localizada (solo contrato)
+  { centro:'Xeresa', tipo:'Gasoil', ultimaInsp:null, proximaInsp:null, resultado:'SIN DATOS', periodicidad:'5-10 años', fuente:'-', nota:'No se ha localizado certificado OCA de gasoil vigente' },
+
+  // ---- PEIRÓ-CAMARÓ (ALGEMESÍ) ----
+  // BT: OCA BT 2025 Favorable — cond. 28/01/2025, subsanada → FAVORABLE 04/07/2025, próxima 28/01/2030
+  { centro:'Peiró-Camaró (Algemesí)', tipo:'BT', ultimaInsp:'2025-07-04', proximaInsp:'2030-01-28', resultado:'FAVORABLE', periodicidad:'5 años', fuente:'OCA BT 2025 Favorable.pdf', nota:'Condicionada inicial 28/01/2025, subsanada y FAVORABLE el 04/07/2025' },
+  // AT: OCA 2023 — insp. 05/07/2023, FAVORABLE, próxima 05/07/2026 ⚠️ URGENTE
+  { centro:'Peiró-Camaró (Algemesí)', tipo:'AT', ultimaInsp:'2023-07-05', proximaInsp:'2026-07-05', resultado:'FAVORABLE', periodicidad:'3 años', fuente:'OCA AT 2023.pdf', nota:'⚠️ Vence jul-2026 — programar revisión' },
+  // Frío: CER_IF_002227-1 — insp. 25/11/2025, DESFAVORABLE defectos graves, subsanar antes 25/05/2026 ⚠️ URGENTE
+  { centro:'Peiró-Camaró (Algemesí)', tipo:'Frío', ultimaInsp:'2025-11-25', proximaInsp:'2026-05-25', resultado:'DESFAVORABLE', periodicidad:'2 años', fuente:'CER_IF_002227-1.PDF', nota:'⚠️ DEFECTOS GRAVES — subsanar antes del 25/05/2026 y nueva inspección OCA' },
+  // PCI: Sin datos
+  { centro:'Peiró-Camaró (Algemesí)', tipo:'PCI', ultimaInsp:null, proximaInsp:null, resultado:'SIN DATOS', periodicidad:'3 años', fuente:'-', nota:'Sin OCA de PCI localizada — verificar si aplica' },
+
+];
+
+// ============================================================
+// LÓGICA DE ESTADO
+// ============================================================
+function calcEstado(prox, resultado) {
+  // DESFAVORABLE siempre rojo aunque la fecha no haya vencido
+  if (resultado && resultado.toUpperCase().includes('DESFAVORABLE')) return 'rojo';
+  if (!prox) return 'gris';
+  const d = new Date(prox);
+  const diff = (d - HOY) / 86400000;
+  if (diff < 0) return 'rojo';
+  if (diff <= 90) return 'rojo';   // menos de 3 meses → rojo
+  if (diff <= 180) return 'amarillo';
+  return 'verde';
+}
+
+function diasTexto(prox) {
+  if (!prox) return '—';
+  const d = new Date(prox);
+  const diff = Math.round((d - HOY) / 86400000);
+  if (diff < 0) return `${Math.abs(diff)} días VENCIDA`;
+  if (diff === 0) return 'HOY';
+  return `${diff} días`;
+}
+
+function fmtFecha(s) {
+  if (!s) return '—';
+  const [y,m,d] = s.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${parseInt(d)} ${meses[parseInt(m)-1]} ${y}`;
+}
+
+function badgeTipo(tipo) {
+  const map = { BT:'bt', AT:'at', Frío:'frio', PCI:'pci', Gasoil:'gas', 'Aire/EP':'aire', Legionella:'leg' };
+  const cls = map[tipo] || 'bt';
+  return `<span class="badge-tipo ${cls}">${tipo}</span>`;
+}
+
+// ============================================================
+// RENDER SUMMARY CARDS
+// ============================================================
+const estados = inspecciones.map(i => calcEstado(i.proximaInsp, i.resultado));
+const nRojo = estados.filter(e=>e==='rojo').length;
+const nAmar = estados.filter(e=>e==='amarillo').length;
+const nVerde = estados.filter(e=>e==='verde').length;
+const nGris = estados.filter(e=>e==='gris').length;
+
+const hoyStr = `${HOY.getFullYear()}-${String(HOY.getMonth()+1).padStart(2,'0')}-${String(HOY.getDate()).padStart(2,'0')}`;
+document.getElementById('fechaHoy').textContent = `📅 ${fmtFecha(hoyStr)}`;
+
+document.getElementById('summaryCards').innerHTML = `
+  <div class="card rojo"><div class="numero">${nRojo}</div><div><div class="label">🔴 Vencidas</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Requieren acción inmediata</div></div></div>
+  <div class="card amarillo"><div class="numero">${nAmar}</div><div><div class="label">🟡 Próximas</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Vencen en &lt;6 meses</div></div></div>
+  <div class="card verde"><div class="numero">${nVerde}</div><div><div class="label">🟢 Al día</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Sin actuación inmediata</div></div></div>
+  <div class="card gris"><div class="numero">${nGris}</div><div><div class="label">⚪ Sin datos</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Documentación a verificar</div></div></div>
+`;
+
+// ============================================================
+// RENDER ALERTAS
+// ============================================================
+const alertas = inspecciones
+  .map(i => ({ ...i, estado: calcEstado(i.proximaInsp, i.resultado), dias: i.proximaInsp ? Math.round((new Date(i.proximaInsp) - HOY) / 86400000) : null }))
+  .filter(i => i.estado === 'rojo' || i.estado === 'amarillo')
+  .sort((a,b) => (a.dias||9999) - (b.dias||9999));
+
+document.getElementById('alertaLista').innerHTML = alertas.map(a => `
+  <div class="alerta ${a.estado}">
+    <span class="badge">${a.estado === 'rojo' ? (a.resultado && a.resultado.includes('DESFAVORABLE') ? '🔴 DESFAVORABLE' : (a.dias !== null && a.dias < 0 ? '🔴 VENCIDA' : '🔴 URGENTE')) : '🟡 PRÓXIMA'}</span>
+    <span class="centro">${a.centro}</span>
+    <span class="tipo">${badgeTipo(a.tipo)} ${a.tipo}</span>
+    <span class="fecha-info">
+      ${a.proximaInsp ? `Próxima: <b>${fmtFecha(a.proximaInsp)}</b>` : 'Sin fecha registrada'}
+      ${a.dias !== null ? ` · ${Math.abs(a.dias)} días ${a.dias < 0 ? 'vencida' : 'restantes'}` : ''}
+    </span>
+    ${a.nota ? `<span style="font-size:11px;color:#6b7280;margin-left:auto;font-style:italic">${a.nota.replace(/[🔴🟡⚠️]/g,'').trim()}</span>` : ''}
+  </div>
+`).join('');
+
+// ============================================================
+// RENDER TABLA
+// ============================================================
+let filtroActual = 'todos';
+
+function filtrar(f, btn) {
+  filtroActual = f;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
+  if(btn) btn.classList.add('activo');
+  renderTabla();
+}
+
+function renderTabla() {
+  const datos = inspecciones
+    .map(i => ({ ...i, estado: calcEstado(i.proximaInsp, i.resultado) }))
+    .filter(i => {
+      if (filtroActual === 'todos') return true;
+      if (['rojo','amarillo','verde','gris'].includes(filtroActual)) return i.estado === filtroActual;
+      return i.tipo === filtroActual;
+    })
+    .sort((a,b) => {
+      const ord = {rojo:0,amarillo:1,gris:2,verde:3};
+      return ord[a.estado] - ord[b.estado];
+    });
+
+  document.getElementById('tablaBody').innerHTML = datos.map(i => {
+    const dias = i.proximaInsp ? Math.round((new Date(i.proximaInsp) - HOY) / 86400000) : null;
+    const estadoLabel = i.resultado && i.resultado.includes('DESFAVORABLE') ? 'DESFAVORABLE' : { rojo:'URGENTE', amarillo:'PRÓXIMA', verde:'AL DÍA', gris:'SIN DATOS' }[i.estado];
+    return `
+    <tr class="tr-${i.estado}">
+      <td><b>${i.centro}</b></td>
+      <td>${badgeTipo(i.tipo)}</td>
+      <td>${fmtFecha(i.ultimaInsp)}</td>
+      <td style="font-weight:600">${fmtFecha(i.proximaInsp)}</td>
+      <td><span class="dias-restantes ${i.estado}">${diasTexto(i.proximaInsp)}</span></td>
+      <td><span class="badge-estado ${i.estado}">${estadoLabel}</span></td>
+      <td style="color:#475569;font-size:11.5px">${i.resultado}</td>
+      <td style="color:#64748b;font-size:11px">${i.periodicidad}</td>
+    </tr>`;
+  }).join('');
+}
+
+renderTabla();
+
+// ============================================================
+// RENDER CALENDARIO
+// ============================================================
+const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+
+function renderCalendario() {
+  const cal = document.getElementById('calGrid');
+  // Show months from today to 18 months ahead
+  const mesToShow = [];
+  const hoyM = HOY.getMonth(), hoyY = HOY.getFullYear();
+  for(let i=0; i<18; i++) {
+    const m = (hoyM + i) % 12;
+    const y = hoyY + Math.floor((hoyM + i) / 12);
+    mesToShow.push({ year: y, month: m });
+  }
+
+  // Gather events per month — all states
+  const eventos = {};
+  inspecciones.forEach(i => {
+    if (!i.proximaInsp) return;
+    const d = new Date(i.proximaInsp);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    const estado = calcEstado(i.proximaInsp, i.resultado);
+    // Show only rojo/amarillo in calendar (vencidas or upcoming)
+    if (estado === 'gris') return;
+    if (!mesToShow.find(m => m.year === d.getFullYear() && m.month === d.getMonth())) return;
+    if (!eventos[key]) eventos[key] = [];
+    eventos[key].push({ label:`${i.centro.split(' ')[0]} ${i.tipo}`, estado });
+  });
+
+  cal.innerHTML = mesToShow.map(({year, month}) => {
+    const isActual = (year === hoyY && month === hoyM);
+    const key = `${year}-${month}`;
+    const evs = eventos[key] || [];
+    return `
+    <div class="cal-mes ${isActual?'actual':''}">
+      <div class="cal-mes-header">${meses[month]}<br><span style="font-size:9px;font-weight:400">${year}</span></div>
+      <div class="cal-eventos">
+        ${evs.length === 0 ? '<span style="font-size:9px;color:#cbd5e1;font-style:italic">—</span>' :
+          evs.map(e => `<div class="cal-evento ${e.estado}">${e.label}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+renderCalendario();
+</script>
+
+</body>
+</html>
