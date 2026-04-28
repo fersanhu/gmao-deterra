@@ -356,7 +356,7 @@ select.form-input{cursor:pointer}
 
 /* ── Partes/repuestos rows: multi-columna en escritorio ── */
 .partes-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:end}
-.repuestos-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:8px;align-items:end}
+.repuestos-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end}
 .materiales-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
 
 /* Prevenir que los hijos de cualquier grid desborden su celda */
@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1341,6 +1341,7 @@ const DataService = {
         tipo:    prod.tipo    || inv.tipo    || '',
         familia: prod.familia || inv.familia || '',
         unidades: inv.unidades || 0,
+        precio_unidad: inv.precio_unidad || 0,
         almacen: inv.almacen,
       };
     }).filter(p => p.unidades > 0).sort((a,b) => a.producto.localeCompare(b.producto));
@@ -1361,7 +1362,7 @@ const DataService = {
 
   // Guarda o actualiza una entrada de inventario.
   // mode: 'replace' | 'add'  (qué hacer si ya existe esa combinación cod+almacen)
-  async saveInventarioEntry({ cod_producto, producto, tipo, familia, unidad_medida = '', almacen, unidades, mode = 'replace' }) {
+  async saveInventarioEntry({ cod_producto, producto, tipo, familia, unidad_medida = '', almacen, unidades, precio_unidad = 0, mode = 'replace' }) {
     const normAlm = normalizeAlmacen(almacen);
 
     // Buscar si ya existe registro en inventario para esa combinación cod+sitio
@@ -1378,12 +1379,13 @@ const DataService = {
       ? (match ? (match.unidades || 0) + unidades : unidades)
       : unidades;
 
+    const precioFinal = precio_unidad || match?.precio_unidad || 0;
     if (match) {
-      await db.inventario.put({ ...match, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds });
+      await db.inventario.put({ ...match, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds, precio_unidad: precioFinal });
     } else {
       // Usar clave compuesta igual que en la importación para consistencia
       const newId = (cod_producto && normAlm) ? `${cod_producto}_${normAlm}` : `MAN-${Date.now()}`;
-      await db.inventario.put({ id: newId, cod_producto, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades });
+      await db.inventario.put({ id: newId, cod_producto, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades, precio_unidad: precioFinal });
     }
 
     // Registrar movimiento de Entrada
@@ -3751,6 +3753,9 @@ const AveriasPage = {
     const todosProds = await db.productos.toArray();
     todosProds.forEach(p => { if (p.tipo && p.tipo.toLowerCase()==='repuestos') p.tipo='Repuestos'; });
     const matTipos = [...new Set(todosProds.map(p => p.tipo).filter(Boolean))].sort();
+    // Caché de precios por cod_producto (desde inventario)
+    const todosInv = await db.inventario.toArray();
+    AveriasPage._matInvCache = todosInv;
     const now = new Date();
     const today = now.toISOString().slice(0,10);
     const hh = String(now.getHours()).padStart(2,'0');
@@ -3880,7 +3885,7 @@ const AveriasPage = {
             </div>
             <div class="form-field full">
               <label>Repuestos utilizados</label>
-              <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:8px;align-items:end;margin-bottom:6px">
+              <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:6px">
                 <div>
                   <small style="color:var(--gray-muted)">Tipo</small>
                   <select class="form-input" id="mat-tipo" style="margin-top:2px">
@@ -3903,10 +3908,6 @@ const AveriasPage = {
                 <div>
                   <small style="color:var(--gray-muted)">Cant.</small>
                   <input class="form-input" type="number" id="mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
-                </div>
-                <div>
-                  <small style="color:var(--gray-muted)">Precio/ud</small>
-                  <input class="form-input" type="number" id="mat-precio" min="0" step="0.01" value="0" style="width:70px;margin-top:2px">
                 </div>
                 <div style="padding-top:18px">
                   <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuestoNew()">+ Añadir</button>
@@ -4363,10 +4364,6 @@ const AveriasPage = {
               <small style="color:var(--gray-muted)">Cant.</small>
               <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:60px;margin-top:2px" placeholder="Uds">
             </div>
-            <div>
-              <small style="color:var(--gray-muted)">Precio/ud</small>
-              <input class="form-input" type="number" id="cl-prod-precio" min="0" step="0.01" value="0" style="width:70px;margin-top:2px">
-            </div>
             <div class="partes-btn-wrap" style="padding-top:18px">
               <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
             </div>
@@ -4490,12 +4487,13 @@ const AveriasPage = {
     if (!cod) { toast('Selecciona un producto de la cascada', 'error'); return; }
     const qty = parseInt(document.getElementById('cl-prod-qty').value) || 1;
     if (qty < 1) { toast('La cantidad debe ser mayor que 0', 'error'); return; }
-    const precio = parseFloat(document.getElementById('cl-prod-precio').value) || 0;
     const prod = AveriasPage._productosCache.find(p => p.cod_producto === cod);
     if (!prod) return;
+    // Precio desde inventario (ya incluido en _productosCache vía getProductosByAlmacen)
+    const precio = prod.precio_unidad || 0;
     // If already in list, increase quantity
     const existing = AveriasPage._repuestosSeleccionados.find(r => r.cod_producto === cod);
-    if (existing) { existing.cantidad += qty; existing.precio_unidad = precio; }
+    if (existing) { existing.cantidad += qty; }
     else { AveriasPage._repuestosSeleccionados.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, precio_unidad: precio, almacen: AveriasPage._closeAlmacen }); }
     AveriasPage._renderRepuestosList();
     // Reset cascading selects
@@ -4506,7 +4504,6 @@ const AveriasPage = {
     sel.innerHTML = '<option value="">— Producto —</option>';
     sel.disabled = true;
     document.getElementById('cl-prod-qty').value = 1;
-    document.getElementById('cl-prod-precio').value = 0;
   },
 
   _renderRepuestosList() {
@@ -4538,11 +4535,15 @@ const AveriasPage = {
     const cod = sel?.value;
     if (!cod) { toast('Selecciona un producto primero', 'error'); return; }
     const qty = parseInt(document.getElementById('mat-qty').value) || 1;
-    const precio = parseFloat(document.getElementById('mat-precio').value) || 0;
     const prod = (AveriasPage._matProdCache || []).find(p => p.cod_producto === cod);
     if (!prod) return;
+    // Precio desde inventario (almacén seleccionado o primer registro disponible)
+    const almacenSel = normalizeAlmacen(document.getElementById('av-almacen')?.value || '');
+    const invRows = (AveriasPage._matInvCache || []).filter(i => i.cod_producto === cod);
+    const invMatch = invRows.find(i => normalizeAlmacen(i.almacen) === almacenSel) || invRows[0];
+    const precio = invMatch?.precio_unidad || 0;
     const existing = AveriasPage._repuestosNuevos.find(r => r.cod_producto === cod);
-    if (existing) { existing.cantidad += qty; existing.precio_unidad = precio; }
+    if (existing) { existing.cantidad += qty; }
     else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, precio_unidad: precio, almacen: document.getElementById('av-almacen')?.value || '' }); }
     AveriasPage._renderRepuestosNewList();
     // Reset selects
@@ -4552,7 +4553,6 @@ const AveriasPage = {
     if (famEl)  { famEl.innerHTML = '<option value="">— Familia —</option>'; famEl.disabled = true; }
     sel.innerHTML = '<option value="">— Producto —</option>'; sel.disabled = true;
     document.getElementById('mat-qty').value = 1;
-    document.getElementById('mat-precio').value = 0;
     // Actualizar hidden text field para el campo materiales del avería
     document.getElementById('av-materiales').value = AveriasPage._repuestosNuevos.map(r=>`${r.nombre} (${r.cantidad} uds)`).join(', ');
   },
@@ -5489,6 +5489,10 @@ const InventarioPage = {
               <label>Unidades *</label>
               <input class="form-input" type="number" id="inv-uds" min="0" step="1" value="0" required>
             </div>
+            <div class="form-field">
+              <label>Precio unidad (€)</label>
+              <input class="form-input" type="number" id="inv-precio" min="0" step="0.01" value="0" placeholder="0.00">
+            </div>
           </div>
         </div>
 
@@ -5576,9 +5580,13 @@ const InventarioPage = {
       infoEl.innerHTML =
         `<strong style="color:var(--gray-text)">${UI.esc(prod.producto)}</strong>` +
         ` <span style="font-family:monospace">[${UI.esc(prod.cod_producto)}]</span>` +
-        (sizes   ? `<br>Tamaño: ${UI.esc(sizes)}`       : '') +
+        (sizes        ? `<br>Tamaño: ${UI.esc(sizes)}`         : '') +
         (prod.familia ? `<br>Familia: ${UI.esc(prod.familia)}` : '');
       infoEl.style.display = '';
+      // Pre-rellenar precio desde inventario si existe
+      const invMatch = (InventarioPage._invCache || []).find(i => i.cod_producto === val && i.precio_unidad);
+      const precioEl = document.getElementById('inv-precio');
+      if (precioEl) precioEl.value = invMatch?.precio_unidad || 0;
     }
     document.getElementById('inv-stock-row').style.display = '';
     InventarioPage._checkDuplicate();
@@ -5626,6 +5634,9 @@ const InventarioPage = {
     if (match) {
       document.getElementById('inv-dup-uds').textContent = ` (actualmente: ${match.unidades} uds)`;
       dupMsg.style.display = '';
+      // Pre-rellenar precio del registro exacto para este almacén
+      const precioEl = document.getElementById('inv-precio');
+      if (precioEl && match.precio_unidad) precioEl.value = match.precio_unidad;
     } else {
       dupMsg.style.display = 'none';
     }
@@ -5636,8 +5647,9 @@ const InventarioPage = {
     const isNuevo = sel === '__NUEVO__';
     const tipo    = document.getElementById('inv-tipo')?.value    || '';
     const familia = document.getElementById('inv-familia')?.value || '';
-    const almacen = document.getElementById('inv-almacen')?.value || '';
-    const uds     = parseInt(document.getElementById('inv-uds')?.value) || 0;
+    const almacen     = document.getElementById('inv-almacen')?.value || '';
+    const uds         = parseInt(document.getElementById('inv-uds')?.value) || 0;
+    const precio_unidad = parseFloat(document.getElementById('inv-precio')?.value) || 0;
     const modeEl  = document.querySelector('input[name="inv-mode"]:checked');
     const mode    = modeEl ? modeEl.value : 'replace';
 
@@ -5682,7 +5694,7 @@ const InventarioPage = {
 
     const result = await DataService.saveInventarioEntry({
       cod_producto: cod, producto: nombre, tipo, familia, unidad_medida,
-      almacen, unidades: uds, mode,
+      almacen, unidades: uds, precio_unidad, mode,
     });
 
     InventarioPage._invCache = null;
@@ -5772,14 +5784,22 @@ const InventarioPage = {
   async exportExcel() {
     toast('Generando Excel...', 'info');
     const inv = await db.inventario.toArray();
+    const prods = await db.productos.toArray();
+    const prodMap = new Map(prods.map(p => [p.cod_producto, p]));
     inv.sort((a,b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.cod_producto||'').localeCompare(b.cod_producto||''));
-    const cab = ['Cód. Producto','Producto','Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida'];
-    const filas = inv.map(i => [
-      i.cod_producto, i.producto, i.tipo||'', i.familia||'',
-      i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||''
-    ]);
+    const cab = ['ID','Cód. Producto','Producto','Tamaño','Tamaño 2','Tamaño 3','Tamaño 4',
+                 'Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida'];
+    const filas = inv.map(i => {
+      const p = prodMap.get(i.cod_producto) || {};
+      return [
+        i.id||'', i.cod_producto, i.producto||'',
+        p.tamano||'', p.tamano2||'', p.tamano3||'', p.tamano4||'',
+        i.tipo||'', i.familia||'',
+        i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||''
+      ];
+    });
     const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
-    ws['!cols'] = [14,35,15,15,12,10,12,12].map(w=>({wch:w}));
+    ws['!cols'] = [20,14,30,12,12,12,12,15,15,12,10,12,12].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
     XLSX.writeFile(wb, `Inventario_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -5788,7 +5808,9 @@ const InventarioPage = {
 
   async importExcel(file) {
     const LABELS = {
-      cod_producto:'Cód. Producto', producto:'Producto', tipo:'Tipo', familia:'Familia',
+      cod_producto:'Cód. Producto', producto:'Producto',
+      tamano:'Tamaño', tamano2:'Tamaño 2', tamano3:'Tamaño 3', tamano4:'Tamaño 4',
+      tipo:'Tipo', familia:'Familia',
       almacen:'Almacén', unidades:'Unidades', precio_unidad:'Precio unidad', unidad_medida:'Unidad medida'
     };
     try {
@@ -5801,15 +5823,22 @@ const InventarioPage = {
       if (rows.length < 2) throw new Error('Excel sin datos');
       const _s = v => String(v ?? '').trim();
       const _n = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
-      const imported = rows.slice(1).filter(r => r[0]).map(r => ({
-        cod_producto:  _s(r[0]),
-        producto:      _s(r[1]),
-        tipo:          _s(r[2]),
-        familia:       _s(r[3]),
-        almacen:       _s(r[4]),
-        unidades:      _n(r[5]),
-        precio_unidad: _n(r[6]),
-        unidad_medida: _s(r[7]),
+      // Columnas: ID(0), Cód(1), Producto(2), Tam(3), Tam2(4), Tam3(5), Tam4(6),
+      //           Tipo(7), Familia(8), Almacén(9), Uds(10), Precio(11), UdMedida(12)
+      const imported = rows.slice(1).filter(r => r[1]).map(r => ({
+        id:            _s(r[0]),
+        cod_producto:  _s(r[1]),
+        producto:      _s(r[2]),
+        tamano:        _s(r[3]),
+        tamano2:       _s(r[4]),
+        tamano3:       _s(r[5]),
+        tamano4:       _s(r[6]),
+        tipo:          _s(r[7]),
+        familia:       _s(r[8]),
+        almacen:       _s(r[9]),
+        unidades:      _n(r[10]),
+        precio_unidad: _n(r[11]),
+        unidad_medida: _s(r[12]),
       }));
       const existentes = await db.inventario.toArray();
       const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
@@ -5834,7 +5863,16 @@ const InventarioPage = {
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
       _showImportDiff('Validar cambios — Inventario', changes, LABELS, async selected => {
         try {
-          for (const rec of selected) await db.inventario.put(rec);
+          const allProds = await db.productos.toArray();
+          const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
+          for (const rec of selected) {
+            // Guardar en inventario (sin campos de productos)
+            const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
+            await db.inventario.put(invRec);
+            // Actualizar tamaños en productos si existen
+            const prod = prodMap.get(rec.cod_producto);
+            if (prod) await db.productos.put({ ...prod, tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'', tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+          }
           toast(`${selected.length} línea${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
           await InventarioPage.render();
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
