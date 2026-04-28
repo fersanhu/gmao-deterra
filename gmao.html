@@ -356,7 +356,7 @@ select.form-input{cursor:pointer}
 
 /* ── Partes/repuestos rows: multi-columna en escritorio ── */
 .partes-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:end}
-.repuestos-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end}
+.repuestos-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:8px;align-items:end}
 .materiales-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
 
 /* Prevenir que los hijos de cualquier grid desborden su celda */
@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v3</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1465,7 +1465,7 @@ const DataService = {
         producto:     item.nombre || item.cod_producto,
         almacen:      normAlm,
         cantidad:     -item.cantidad,
-        precio_unidad:    0,
+        precio_unidad:    item.precio_unidad || 0,
         tipo_movimiento: 'Salida',
         usuario:      usuario || '',
         notas:        `Avería ${averia_id}${rpcOk ? '' : ' ⚠️ descuento fallido'}`,
@@ -2097,6 +2097,7 @@ const DashboardPage = {
       <span class="pbi-slicer-label">Filtros</span>
       <button class="chart-pill active" id="gf-todo"   onclick="DashboardPage._setGF('periodo','')">Todo</button>
       <button class="chart-pill"        id="gf-dia"    onclick="DashboardPage._setGF('periodo','dia')">Hoy</button>
+      <button class="chart-pill"        id="gf-ayer"   onclick="DashboardPage._setGF('periodo','ayer')">Ayer</button>
       <button class="chart-pill"        id="gf-semana" onclick="DashboardPage._setGF('periodo','semana')">Semana</button>
       <button class="chart-pill"        id="gf-mes"    onclick="DashboardPage._setGF('periodo','mes')">Mes</button>
       <div class="pbi-sep"></div>
@@ -2270,6 +2271,8 @@ const DashboardPage = {
     const { periodo, almacen, estado, crossZona, crossTec } = this._gf;
     const ahora = new Date();
     const hoy   = ahora.toISOString().slice(0, 10);
+    const ayerD = new Date(ahora); ayerD.setDate(ahora.getDate() - 1);
+    const ayer  = ayerD.toISOString().slice(0, 10);
     const lunes = new Date(ahora); lunes.setDate(ahora.getDate() - ahora.getDay() + (ahora.getDay()===0?-6:1));
     const inicioSemana = lunes.toISOString().slice(0, 10);
     const inicioMes    = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-01`;
@@ -2281,6 +2284,7 @@ const DashboardPage = {
       if (periodo) {
         const f = (a.fecha_inicio || '').slice(0, 10);
         if (periodo === 'dia'    && f !== hoy)        return false;
+        if (periodo === 'ayer'   && f !== ayer)       return false;
         if (periodo === 'semana' && f < inicioSemana) return false;
         if (periodo === 'mes'   && f < inicioMes)     return false;
       }
@@ -2292,7 +2296,7 @@ const DashboardPage = {
     if (!this._gf) this._gf = { periodo:'', almacen:'', estado:'', crossZona:'', crossTec:'' };
     this._gf[key] = val;
     if (key === 'periodo') {
-      ['todo','dia','semana','mes'].forEach(id => {
+      ['todo','dia','ayer','semana','mes'].forEach(id => {
         const b = document.getElementById(`gf-${id}`);
         if (b) b.className = `chart-pill${(id === val || (id==='todo' && val==='')) ? ' active' : ''}`;
       });
@@ -2304,7 +2308,7 @@ const DashboardPage = {
     this._gf = { periodo:'', almacen:'', estado:'', crossZona:'', crossTec:'' };
     const alm = document.getElementById('gf-almacen'); if (alm) alm.value = '';
     const est = document.getElementById('gf-estado');  if (est) est.value = '';
-    ['todo','dia','semana','mes'].forEach(id => {
+    ['todo','dia','ayer','semana','mes'].forEach(id => {
       const b = document.getElementById(`gf-${id}`);
       if (b) b.className = `chart-pill${id === 'todo' ? ' active' : ''}`;
     });
@@ -3319,7 +3323,7 @@ const AveriasPage = {
         </select>
         <select class="filter-select" id="av-f-crit">
           <option value="">Toda criticidad</option>
-          <option>Alta</option><option>Moderada</option><option>Baja</option>
+          <option>Alta</option><option>Moderada</option><option>Baja</option><option>Preventivo</option>
         </select>
       </div>
     </div>
@@ -3329,6 +3333,7 @@ const AveriasPage = {
           <thead><tr id="av-thead">
             <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="Ordenar">ID <span id="av-sort-id"></span></th>
             <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="Ordenar">Fecha <span id="av-sort-fecha_inicio"></span></th>
+            <th onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="Ordenar">Hora <span id="av-sort-hora_inicio"></span></th>
             <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="Ordenar">Almacén <span id="av-sort-almacen"></span></th>
             <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="Ordenar">Equipo <span id="av-sort-equipo"></span></th>
             <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="Ordenar">Descripción <span id="av-sort-descripcion"></span></th>
@@ -3401,12 +3406,12 @@ const AveriasPage = {
   _renderTable() {
     const tbody = document.getElementById('av-tbody');
     if (!tbody) return;
-    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="10">${UI.empty()}</td></tr>`; return; }
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="11">${UI.empty()}</td></tr>`; return; }
 
     // Ordenar
     const key = this._sortKey || 'fecha_inicio';
     const dir = this._sortDir || 'desc';
-    const critOrder = { 'Alta': 0, 'Moderada': 1, 'Baja': 2 };
+    const critOrder = { 'Alta': 0, 'Moderada': 1, 'Baja': 2, 'Preventivo': 3 };
     const durVal = v => { if (!v) return -1; const p = v.split(':').map(Number); return (p[0]||0)*60 + (p[1]||0); };
     const sorted = [...this._filtered].sort((a, b) => {
       let va = a[key] ?? '', vb = b[key] ?? '';
@@ -3419,7 +3424,7 @@ const AveriasPage = {
     });
 
     // Actualizar indicadores en cabecera
-    ['id','fecha_inicio','almacen','equipo','descripcion','tecnico','criticidad','estado','duracion'].forEach(k => {
+    ['id','fecha_inicio','hora_inicio','almacen','equipo','descripcion','tecnico','criticidad','estado','duracion'].forEach(k => {
       const el = document.getElementById(`av-sort-${k}`);
       if (el) el.textContent = k === key ? (dir === 'asc' ? ' ↑' : ' ↓') : '';
     });
@@ -3429,6 +3434,7 @@ const AveriasPage = {
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
         <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
+        <td style="white-space:nowrap;color:var(--gray-muted);font-size:12px">${a.hora_inicio ? a.hora_inicio.slice(0,5) : '—'}</td>
         <td>${UI.esc(a.almacen||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
@@ -3655,7 +3661,7 @@ const AveriasPage = {
         <div class="form-field">
           <label>Criticidad</label>
           <select class="form-input" id="ea-criticidad">
-            ${['Alta','Moderada','Baja'].map(c=>`<option${a.criticidad===c?' selected':''}>${c}</option>`).join('')}
+            ${['Alta','Moderada','Baja','Preventivo'].map(c=>`<option${a.criticidad===c?' selected':''}>${c}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -3832,7 +3838,7 @@ const AveriasPage = {
           <label>Criticidad *</label>
           <select class="form-input" id="av-criticidad" required>
             <option value="">Seleccionar...</option>
-            <option>Alta</option><option selected>Moderada</option><option>Baja</option>
+            <option>Alta</option><option selected>Moderada</option><option>Baja</option><option>Preventivo</option>
           </select>
         </div>
         <div class="form-field">
@@ -3874,7 +3880,7 @@ const AveriasPage = {
             </div>
             <div class="form-field full">
               <label>Repuestos utilizados</label>
-              <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:6px">
+              <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:8px;align-items:end;margin-bottom:6px">
                 <div>
                   <small style="color:var(--gray-muted)">Tipo</small>
                   <select class="form-input" id="mat-tipo" style="margin-top:2px">
@@ -3897,6 +3903,10 @@ const AveriasPage = {
                 <div>
                   <small style="color:var(--gray-muted)">Cant.</small>
                   <input class="form-input" type="number" id="mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
+                </div>
+                <div>
+                  <small style="color:var(--gray-muted)">Precio/ud</small>
+                  <input class="form-input" type="number" id="mat-precio" min="0" step="0.01" value="0" style="width:70px;margin-top:2px">
                 </div>
                 <div style="padding-top:18px">
                   <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuestoNew()">+ Añadir</button>
@@ -4353,6 +4363,10 @@ const AveriasPage = {
               <small style="color:var(--gray-muted)">Cant.</small>
               <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:60px;margin-top:2px" placeholder="Uds">
             </div>
+            <div>
+              <small style="color:var(--gray-muted)">Precio/ud</small>
+              <input class="form-input" type="number" id="cl-prod-precio" min="0" step="0.01" value="0" style="width:70px;margin-top:2px">
+            </div>
             <div class="partes-btn-wrap" style="padding-top:18px">
               <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
             </div>
@@ -4476,12 +4490,13 @@ const AveriasPage = {
     if (!cod) { toast('Selecciona un producto de la cascada', 'error'); return; }
     const qty = parseInt(document.getElementById('cl-prod-qty').value) || 1;
     if (qty < 1) { toast('La cantidad debe ser mayor que 0', 'error'); return; }
+    const precio = parseFloat(document.getElementById('cl-prod-precio').value) || 0;
     const prod = AveriasPage._productosCache.find(p => p.cod_producto === cod);
     if (!prod) return;
     // If already in list, increase quantity
     const existing = AveriasPage._repuestosSeleccionados.find(r => r.cod_producto === cod);
-    if (existing) { existing.cantidad += qty; }
-    else { AveriasPage._repuestosSeleccionados.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: AveriasPage._closeAlmacen }); }
+    if (existing) { existing.cantidad += qty; existing.precio_unidad = precio; }
+    else { AveriasPage._repuestosSeleccionados.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, precio_unidad: precio, almacen: AveriasPage._closeAlmacen }); }
     AveriasPage._renderRepuestosList();
     // Reset cascading selects
     const tipoEl = document.getElementById('cl-tipo');
@@ -4491,6 +4506,7 @@ const AveriasPage = {
     sel.innerHTML = '<option value="">— Producto —</option>';
     sel.disabled = true;
     document.getElementById('cl-prod-qty').value = 1;
+    document.getElementById('cl-prod-precio').value = 0;
   },
 
   _renderRepuestosList() {
@@ -4501,6 +4517,7 @@ const AveriasPage = {
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
         <span style="flex:1"><strong>[${UI.esc(r.cod_producto)}]</strong> ${UI.esc(r.nombre)}</span>
         <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${r.cantidad} uds</span>
+        ${r.precio_unidad ? `<span style="color:var(--gray-muted)">${(r.cantidad * r.precio_unidad).toFixed(2)} €</span>` : ''}
         <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="AveriasPage._removeRepuesto(${i})">×</button>
       </div>`).join('');
   },
@@ -4521,11 +4538,12 @@ const AveriasPage = {
     const cod = sel?.value;
     if (!cod) { toast('Selecciona un producto primero', 'error'); return; }
     const qty = parseInt(document.getElementById('mat-qty').value) || 1;
+    const precio = parseFloat(document.getElementById('mat-precio').value) || 0;
     const prod = (AveriasPage._matProdCache || []).find(p => p.cod_producto === cod);
     if (!prod) return;
     const existing = AveriasPage._repuestosNuevos.find(r => r.cod_producto === cod);
-    if (existing) { existing.cantidad += qty; }
-    else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, almacen: document.getElementById('av-almacen')?.value || '' }); }
+    if (existing) { existing.cantidad += qty; existing.precio_unidad = precio; }
+    else { AveriasPage._repuestosNuevos.push({ cod_producto: cod, nombre: prod.producto, cantidad: qty, precio_unidad: precio, almacen: document.getElementById('av-almacen')?.value || '' }); }
     AveriasPage._renderRepuestosNewList();
     // Reset selects
     const tipoEl = document.getElementById('mat-tipo');
@@ -4534,6 +4552,7 @@ const AveriasPage = {
     if (famEl)  { famEl.innerHTML = '<option value="">— Familia —</option>'; famEl.disabled = true; }
     sel.innerHTML = '<option value="">— Producto —</option>'; sel.disabled = true;
     document.getElementById('mat-qty').value = 1;
+    document.getElementById('mat-precio').value = 0;
     // Actualizar hidden text field para el campo materiales del avería
     document.getElementById('av-materiales').value = AveriasPage._repuestosNuevos.map(r=>`${r.nombre} (${r.cantidad} uds)`).join(', ');
   },
@@ -4546,6 +4565,7 @@ const AveriasPage = {
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:12px">
         <span style="flex:1"><strong>[${UI.esc(r.cod_producto)}]</strong> ${UI.esc(r.nombre)}</span>
         <span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 8px;font-weight:600">${r.cantidad} uds</span>
+        ${r.precio_unidad ? `<span style="color:var(--gray-muted)">${(r.cantidad * r.precio_unidad).toFixed(2)} €</span>` : ''}
         <button type="button" style="color:var(--red);font-size:16px;background:none;border:none;cursor:pointer;padding:0 4px"
           onclick="AveriasPage._repuestosNuevos.splice(${i},1);AveriasPage._renderRepuestosNewList();document.getElementById('av-materiales').value=AveriasPage._repuestosNuevos.map(r=>r.nombre+' ('+r.cantidad+' uds)').join(', ')">×</button>
       </div>`).join('');
@@ -4754,7 +4774,7 @@ const AveriasPage = {
       ...a, estado:'Cerrada', solucion,
       tecnico: tecnicoPrincipal,
       materiales: materialesCombinados,
-      coste: 0, // El coste se gestiona en el módulo de Inventario
+      coste: AveriasPage._repuestosSeleccionados.reduce((s,r) => s + (r.precio_unidad||0)*r.cantidad, 0),
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
       zona_limpia: zonaLimpia,
     });
@@ -5331,6 +5351,14 @@ const InventarioPage = {
             .map(([k, v]) => `<span style="font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px;margin-right:3px;white-space:nowrap">${k}: <strong>${v}</strong></span>`)
             .join('')
         : '';
+      const udsCell = (!todosMode && isAdmin)
+        ? `<td style="text-align:right">
+             <input type="number" min="0" value="${i.unidades||0}"
+               style="width:64px;text-align:right;font-weight:600;color:${udsColor};padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:transparent;font-size:13px"
+               onchange="InventarioPage._saveInlineUds('${UI.esc(i.id||'')}', this.value, this)"
+               onclick="event.stopPropagation()">
+           </td>`
+        : `<td style="text-align:right;font-weight:600;color:${udsColor}">${i.unidades}</td>`;
       const editBtn = isAdmin
         ? `<td style="text-align:center"><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px" onclick="InventarioPage.openEditProducto('${UI.esc(i.cod_producto||'')}')">✏️</button></td>`
         : '';
@@ -5340,10 +5368,23 @@ const InventarioPage = {
         <td>${UI.esc(i.tipo||'—')}</td>
         <td>${UI.esc(i.familia||'—')}</td>
         ${todosMode ? `<td>${desglose || '—'}</td>` : ''}
-        <td style="text-align:right;font-weight:600;color:${udsColor}">${i.unidades}</td>
+        ${udsCell}
         ${editBtn}
       </tr>`;
     }).join('');
+  },
+
+  async _saveInlineUds(id, val, inputEl) {
+    const n = parseInt(val);
+    if (isNaN(n) || n < 0) { toast('Valor inválido', 'error'); return; }
+    try {
+      const all = await db.inventario.toArray();
+      const rec = all.find(i => i.id === id);
+      if (!rec) { toast('Registro no encontrado', 'error'); return; }
+      await db.inventario.put({ ...rec, unidades: n });
+      if (inputEl) inputEl.style.color = n <= 0 ? 'var(--red)' : n <= 2 ? 'var(--orange)' : 'var(--gray-text)';
+      toast('Unidades actualizadas ✓', 'success');
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
   },
 
   async openNew() {
@@ -5771,10 +5812,12 @@ const InventarioPage = {
         unidad_medida: _s(r[7]),
       }));
       const existentes = await db.inventario.toArray();
-      const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${i.almacen}`, i]));
+      const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
       const changes = [];
       for (const imp of imported) {
-        const key = `${imp.cod_producto}_${imp.almacen}`;
+        const normAlm = normalizeAlmacen(imp.almacen);
+        imp.almacen = normAlm || imp.almacen;
+        const key = `${imp.cod_producto}_${normAlm}`;
         const ex = exMap.get(key);
         const id = ex?.id || key;
         if (!ex) {
