@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.6</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.7</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -5692,8 +5692,8 @@ const InventarioPage = {
       const allProds = await db.productos.toArray();
       if (!allProds.find(p => p.cod_producto === cod)) {
         const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
-        await db.productos.put({ id: maxId + 1, cod_producto: cod, producto: nombre,
-          tipo, familia, tamano, tamano2, tamano3, tamano4, precio: 0 });
+        await db.productos.put({ id: maxId + 1, cod_producto: cod, nombre: nombreBase,
+          producto: nombre, tipo, familia, tamano, tamano2, tamano3, tamano4, precio: 0 });
       }
     }
 
@@ -5725,7 +5725,7 @@ const InventarioPage = {
           </div>
           <div class="form-field">
             <label>Nombre base *</label>
-            <input class="form-input" id="ep-nombre" value="${UI.esc(prod.producto||'')}"
+            <input class="form-input" id="ep-nombre" value="${UI.esc(prod.nombre||prod.producto||'')}"
               oninput="InventarioPage._updateEditPreview()">
           </div>
           <div class="form-field">
@@ -5780,7 +5780,7 @@ const InventarioPage = {
     if (!nombreBase) { toast('El nombre base es obligatorio', 'error'); return; }
     const nombre = [nombreBase, tamano, tamano2, tamano3, tamano4].filter(Boolean).join(' ');
     const prod = InventarioPage._editProd;
-    await db.productos.put({ ...prod, producto: nombre, tamano, tamano2, tamano3, tamano4 });
+    await db.productos.put({ ...prod, nombre: nombreBase, producto: nombre, tamano, tamano2, tamano3, tamano4 });
     Modal.close();
     toast(`${cod} actualizado`, 'success');
     await InventarioPage.render();
@@ -5792,19 +5792,20 @@ const InventarioPage = {
     const prods = await db.productos.toArray();
     const prodMap = new Map(prods.map(p => [p.cod_producto, p]));
     inv.sort((a,b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.cod_producto||'').localeCompare(b.cod_producto||''));
-    const cab = ['ID','Cód. Producto','Producto','Tamaño','Tamaño 2','Tamaño 3','Tamaño 4',
+    const cab = ['ID','Cód. Producto','Nombre','Producto','Tamaño','Tamaño 2','Tamaño 3','Tamaño 4',
                  'Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida'];
     const filas = inv.map(i => {
       const p = prodMap.get(i.cod_producto) || {};
       return [
-        i.id||'', i.cod_producto, p.producto||i.producto||'',
+        i.id||'', i.cod_producto,
+        p.nombre||'', p.producto||i.producto||'',
         p.tamano||'', p.tamano2||'', p.tamano3||'', p.tamano4||'',
         p.tipo||i.tipo||'', p.familia||i.familia||'',
         i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||''
       ];
     });
     const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
-    ws['!cols'] = [20,14,30,12,12,12,12,15,15,12,10,12,12].map(w=>({wch:w}));
+    ws['!cols'] = [20,14,25,30,12,12,12,12,15,15,12,10,12,12].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
     XLSX.writeFile(wb, `Inventario_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -5813,7 +5814,7 @@ const InventarioPage = {
 
   async importExcel(file) {
     const LABELS = {
-      cod_producto:'Cód. Producto', producto:'Producto',
+      cod_producto:'Cód. Producto', nombre:'Nombre', producto:'Producto',
       tamano:'Tamaño', tamano2:'Tamaño 2', tamano3:'Tamaño 3', tamano4:'Tamaño 4',
       tipo:'Tipo', familia:'Familia',
       almacen:'Almacén', unidades:'Unidades', precio_unidad:'Precio unidad', unidad_medida:'Unidad medida'
@@ -5828,22 +5829,23 @@ const InventarioPage = {
       if (rows.length < 2) throw new Error('Excel sin datos');
       const _s = v => String(v ?? '').trim();
       const _n = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
-      // Columnas: ID(0), Cód(1), Producto(2), Tam(3), Tam2(4), Tam3(5), Tam4(6),
-      //           Tipo(7), Familia(8), Almacén(9), Uds(10), Precio(11), UdMedida(12)
+      // Columnas: ID(0), Cód(1), Nombre(2), Producto(3), Tam(4), Tam2(5), Tam3(6), Tam4(7),
+      //           Tipo(8), Familia(9), Almacén(10), Uds(11), Precio(12), UdMedida(13)
       const imported = rows.slice(1).filter(r => r[1]).map(r => ({
         id:            _s(r[0]),
         cod_producto:  _s(r[1]),
-        producto:      _s(r[2]),
-        tamano:        _s(r[3]),
-        tamano2:       _s(r[4]),
-        tamano3:       _s(r[5]),
-        tamano4:       _s(r[6]),
-        tipo:          _s(r[7]),
-        familia:       _s(r[8]),
-        almacen:       _s(r[9]),
-        unidades:      _n(r[10]),
-        precio_unidad: _n(r[11]),
-        unidad_medida: _s(r[12]),
+        nombre:        _s(r[2]),
+        producto:      _s(r[3]),
+        tamano:        _s(r[4]),
+        tamano2:       _s(r[5]),
+        tamano3:       _s(r[6]),
+        tamano4:       _s(r[7]),
+        tipo:          _s(r[8]),
+        familia:       _s(r[9]),
+        almacen:       _s(r[10]),
+        unidades:      _n(r[11]),
+        precio_unidad: _n(r[12]),
+        unidad_medida: _s(r[13]),
       }));
       const existentes = await db.inventario.toArray();
       const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
@@ -5876,7 +5878,7 @@ const InventarioPage = {
             await db.inventario.put(invRec);
             // Actualizar tamaños en productos si existen
             const prod = prodMap.get(rec.cod_producto);
-            if (prod) await db.productos.put({ ...prod, tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'', tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            if (prod) await db.productos.put({ ...prod, nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'', tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'', tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
           }
           toast(`${selected.length} línea${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
           await InventarioPage.render();
