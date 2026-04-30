@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.5</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -3337,6 +3337,7 @@ const AveriasPage = {
             <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="Ordenar">Fecha <span id="av-sort-fecha_inicio"></span></th>
             <th onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="Ordenar">Hora <span id="av-sort-hora_inicio"></span></th>
             <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="Ordenar">Almacén <span id="av-sort-almacen"></span></th>
+            <th onclick="AveriasPage._setSort('linea')"       style="cursor:pointer;user-select:none" title="Ordenar">Línea <span id="av-sort-linea"></span></th>
             <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="Ordenar">Equipo <span id="av-sort-equipo"></span></th>
             <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="Ordenar">Descripción <span id="av-sort-descripcion"></span></th>
             <th onclick="AveriasPage._setSort('tecnico')"     style="cursor:pointer;user-select:none" title="Ordenar">Técnico <span id="av-sort-tecnico"></span></th>
@@ -3408,7 +3409,7 @@ const AveriasPage = {
   _renderTable() {
     const tbody = document.getElementById('av-tbody');
     if (!tbody) return;
-    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="11">${UI.empty()}</td></tr>`; return; }
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="12">${UI.empty()}</td></tr>`; return; }
 
     // Ordenar
     const key = this._sortKey || 'fecha_inicio';
@@ -3429,7 +3430,7 @@ const AveriasPage = {
     });
 
     // Actualizar indicadores en cabecera
-    ['id','fecha_inicio','hora_inicio','almacen','equipo','descripcion','tecnico','criticidad','estado','duracion'].forEach(k => {
+    ['id','fecha_inicio','hora_inicio','almacen','linea','equipo','descripcion','tecnico','criticidad','estado','duracion'].forEach(k => {
       const el = document.getElementById(`av-sort-${k}`);
       if (el) el.textContent = k === key ? (dir === 'asc' ? ' ↑' : ' ↓') : '';
     });
@@ -3441,6 +3442,7 @@ const AveriasPage = {
         <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
         <td style="white-space:nowrap;color:var(--gray-muted);font-size:12px">${a.hora_inicio ? a.hora_inicio.slice(0,5) : '—'}</td>
         <td>${UI.esc(a.almacen||'—')}</td>
+        <td style="color:var(--gray-muted);font-size:12px">${UI.esc(a.linea||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
         <td>${UI.esc(a.tecnico||'—')}</td>
