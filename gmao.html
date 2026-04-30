@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.9</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.0</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -5873,16 +5873,27 @@ const InventarioPage = {
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
       _showImportDiff('Validar cambios — Inventario', changes, LABELS, async selected => {
         try {
+          toast('Guardando...', 'info');
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
+
+          // Separar registros de inventario y de productos
+          const invRecs = [];
+          const prodRecs = [];
           for (const rec of selected) {
-            // Guardar en inventario (sin campos exclusivos de productos)
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
-            await db.inventario.put(invRec);
-            // Actualizar tamaños en productos si existen
+            invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
-            if (prod) await db.productos.put({ ...prod, nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'', tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'', tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            if (prod) prodRecs.push({ ...prod,
+              nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
+              tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
+              tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
           }
+
+          // bulkPut en chunks de 500 → mucho más rápido que put individual
+          await db.inventario.bulkPut(invRecs);
+          if (prodRecs.length) await db.productos.bulkPut(prodRecs);
+
           toast(`${selected.length} línea${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
           await InventarioPage.render();
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
