@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.7</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v4.9</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1362,15 +1362,19 @@ const DataService = {
 
   // Guarda o actualiza una entrada de inventario.
   // mode: 'replace' | 'add'  (qué hacer si ya existe esa combinación cod+almacen)
-  async saveInventarioEntry({ cod_producto, producto, tipo, familia, unidad_medida = '', almacen, unidades, precio_unidad = 0, mode = 'replace' }) {
+  async saveInventarioEntry({ cod_producto, producto, nombre = '', tipo, familia, unidad_medida = '', almacen, unidades, precio_unidad = 0, mode = 'replace' }) {
     const normAlm = normalizeAlmacen(almacen);
 
     // Buscar si ya existe registro en inventario para esa combinación cod+sitio
     const allInv = await db.inventario.toArray();
     const match  = allInv.find(i => i.cod_producto === cod_producto && normalizeAlmacen(i.almacen) === normAlm);
+    // nombre base desde productos si no viene en el argumento
+    const allProds = await db.productos.toArray();
+    const prodRef = allProds.find(p => p.cod_producto === cod_producto);
+    const nombreBase = nombre || prodRef?.nombre || match?.nombre || '';
 
     // Para los datos del producto usamos el registro existente como fuente de verdad
-    const nombreProd = (match?.producto)      || producto;
+    const nombreProd = prodRef?.producto || (match?.producto) || producto;
     const tipoFinal  = (match?.tipo)          || tipo;
     const familiaFin = (match?.familia)       || familia;
     const udMedFinal = (match?.unidad_medida) || unidad_medida;
@@ -1381,11 +1385,10 @@ const DataService = {
 
     const precioFinal = precio_unidad || match?.precio_unidad || 0;
     if (match) {
-      await db.inventario.put({ ...match, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds, precio_unidad: precioFinal });
+      await db.inventario.put({ ...match, nombre: nombreBase, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds, precio_unidad: precioFinal });
     } else {
-      // Usar clave compuesta igual que en la importación para consistencia
       const newId = (cod_producto && normAlm) ? `${cod_producto}_${normAlm}` : `MAN-${Date.now()}`;
-      await db.inventario.put({ id: newId, cod_producto, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades, precio_unidad: precioFinal });
+      await db.inventario.put({ id: newId, cod_producto, nombre: nombreBase, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades, precio_unidad: precioFinal });
     }
 
     // Registrar movimiento de Entrada
@@ -5873,7 +5876,7 @@ const InventarioPage = {
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
           for (const rec of selected) {
-            // Guardar en inventario (sin campos de productos)
+            // Guardar en inventario (sin campos exclusivos de productos)
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
             await db.inventario.put(invRec);
             // Actualizar tamaños en productos si existen
