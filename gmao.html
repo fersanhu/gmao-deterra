@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.0</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.1</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1948,6 +1948,7 @@ const DashboardPage = {
     if (totEl) totEl.textContent = `${totalPeriodo} averías`;
 
     // Construir / actualizar gráfico
+    this._avChartBuckets = buckets;
     if (this._chartAverias) { this._chartAverias.destroy(); this._chartAverias = null; }
     const ctxA = document.getElementById('chart-averias');
     if (!ctxA) return;
@@ -1958,6 +1959,23 @@ const DashboardPage = {
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
+        onClick: (evt, els) => {
+          if (!els.length) return;
+          const bi = els[0].index;
+          const b = DashboardPage._avChartBuckets?.[bi];
+          if (!b) return;
+          const clickedAlm = multiAlm
+            ? (datasets[els[0].datasetIndex]?.label || almSel)
+            : almSel;
+          DashboardPage._goToAverias({
+            almacen: clickedAlm,
+            estado,
+            zona,
+            linea,
+            fechaDesde: b.start.toISOString().slice(0,10),
+            fechaHasta: b.end.toISOString().slice(0,10),
+          });
+        },
         plugins: {
           legend: {
             display: multiAlm,
@@ -2321,6 +2339,11 @@ const DashboardPage = {
     this._rebuildAll();
   },
 
+  _goToAverias(filters) {
+    AveriasPage._pendingFilter = filters || {};
+    Router.navigate('averias');
+  },
+
   _setCrossFilter(type, val) {
     if (!this._gf) this._gf = { periodo:'', almacen:'', estado:'', crossZona:'', crossTec:'' };
     if (type === 'zona') this._gf.crossZona = this._gf.crossZona === val ? '' : val;
@@ -2429,7 +2452,8 @@ const DashboardPage = {
         onClick: (evt, els) => {
           if (!els.length) return;
           const label = labels[els[0].index];
-          this._setCrossFilter('zona', label === '(sin zona)' ? '' : label);
+          const gf = this._gf || {};
+          this._goToAverias({ almacen: gf.almacen||'', estado: gf.estado||'', zona: label === '(sin zona)' ? '' : label });
         }
       }
     });
@@ -2538,7 +2562,8 @@ const DashboardPage = {
         onClick: (evt, els) => {
           if (!els.length) return;
           const label = entries[els[0].index][0];
-          this._setCrossFilter('tec', label === '(sin técnico)' ? '' : label);
+          const gf = this._gf || {};
+          this._goToAverias({ almacen: gf.almacen||'', estado: gf.estado||'', search: label === '(sin técnico)' ? '' : label });
         },
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} averías` } } },
         scales: {
@@ -3299,6 +3324,8 @@ const AveriasPage = {
   _data: [],
   _filtered: [],
   _prefillFromIncidencia: null,
+  _pendingFilter: null,
+  _extraFilter: null,
 
   async render() {
     document.getElementById('content').innerHTML = `
@@ -3331,6 +3358,11 @@ const AveriasPage = {
           <option>Alta</option><option>Moderada</option><option>Baja</option><option>Preventivo</option>
         </select>
       </div>
+    </div>
+    <div id="av-extra-filter-banner" style="display:none;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);padding:8px 14px;margin-bottom:12px;align-items:center;gap:8px;font-size:13px">
+      <span style="color:var(--blue)">🔍</span>
+      <span id="av-extra-filter-label" style="flex:1;color:var(--blue)"></span>
+      <button onclick="AveriasPage._clearExtraFilter()" style="color:var(--blue);font-weight:700;font-size:16px;line-height:1;border:none;background:none;cursor:pointer" title="Quitar filtro">×</button>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -3369,9 +3401,26 @@ const AveriasPage = {
     this._data = _averias;
     this._fotosSet = new Set(_fotos.map(f => f.averia_id));
 
-    // Pre-seleccionar "Abierta" por defecto para que todos los usuarios vean las averías abiertas al entrar
-    const estadoFilter = document.getElementById('av-f-estado');
-    if (estadoFilter && !estadoFilter.value) estadoFilter.value = 'Abierta';
+    // Aplicar filtro pendiente desde dashboard (drill-down)
+    if (this._pendingFilter) {
+      const pf = this._pendingFilter;
+      this._pendingFilter = null;
+      this._extraFilter = null;
+      const almEl = document.getElementById('av-f-almacen');
+      const estEl = document.getElementById('av-f-estado');
+      const srEl  = document.getElementById('av-search');
+      if (pf.almacen && almEl && !almEl.disabled) almEl.value = pf.almacen;
+      if (pf.estado  && estEl) estEl.value = pf.estado;
+      if (pf.search  && srEl)  srEl.value  = pf.search;
+      const hasExtra = pf.fechaDesde || pf.fechaHasta || pf.zona || pf.linea;
+      if (hasExtra) {
+        this._extraFilter = { fechaDesde: pf.fechaDesde||'', fechaHasta: pf.fechaHasta||'', zona: pf.zona||'', linea: pf.linea||'' };
+      }
+    } else {
+      // Pre-seleccionar "Abierta" por defecto (solo cuando no hay filtro de dashboard)
+      const estadoFilter = document.getElementById('av-f-estado');
+      if (estadoFilter && !estadoFilter.value) estadoFilter.value = 'Abierta';
+    }
 
     this._applyFilters();
     document.getElementById('averias-count').textContent = `${this._filtered.length} de ${this._data.length} — ${this._data.filter(a=>a.estado==='Abierta').length} abiertas`;
@@ -3387,16 +3436,47 @@ const AveriasPage = {
     const almacen = document.getElementById('av-f-almacen')?.value || '';
     const estado = document.getElementById('av-f-estado')?.value || '';
     const crit = document.getElementById('av-f-crit')?.value || '';
-    this._filtered = this._data.filter(a =>
-      (!almacen || normalizeAlmacen(a.almacen) === normalizeAlmacen(almacen)) &&
-      (!estado  || a.estado === estado) &&
-      (!crit    || a.criticidad === crit) &&
-      (!search  || (a.descripcion||'').toLowerCase().includes(search) ||
-                   (a.equipo||'').toLowerCase().includes(search) ||
-                   (a.tecnico||'').toLowerCase().includes(search))
-    );
+    const ef = this._extraFilter;
+    this._filtered = this._data.filter(a => {
+      if (almacen && normalizeAlmacen(a.almacen) !== normalizeAlmacen(almacen)) return false;
+      if (estado  && a.estado !== estado) return false;
+      if (crit    && a.criticidad !== crit) return false;
+      if (search  && !(a.descripcion||'').toLowerCase().includes(search) &&
+                     !(a.equipo||'').toLowerCase().includes(search) &&
+                     !(a.tecnico||'').toLowerCase().includes(search)) return false;
+      if (ef) {
+        const f = (a.fecha_inicio||'').slice(0,10);
+        if (ef.fechaDesde && f < ef.fechaDesde) return false;
+        if (ef.fechaHasta && f > ef.fechaHasta) return false;
+        if (ef.zona  && (a.zona ||'').trim() !== ef.zona)            return false;
+        if (ef.linea && String(a.linea||'')   !== ef.linea)          return false;
+      }
+      return true;
+    });
+    // Actualizar banner de filtro extra
+    const banner = document.getElementById('av-extra-filter-banner');
+    const label  = document.getElementById('av-extra-filter-label');
+    if (banner && label) {
+      if (ef && (ef.fechaDesde || ef.fechaHasta || ef.zona || ef.linea)) {
+        const parts = [];
+        if (ef.fechaDesde && ef.fechaHasta) parts.push(`${ef.fechaDesde} → ${ef.fechaHasta}`);
+        else if (ef.fechaDesde) parts.push(`desde ${ef.fechaDesde}`);
+        else if (ef.fechaHasta) parts.push(`hasta ${ef.fechaHasta}`);
+        if (ef.zona)  parts.push(`Zona: ${ef.zona}`);
+        if (ef.linea) parts.push(`Línea: ${ef.linea}`);
+        label.textContent = `Filtro desde gráfico: ${parts.join(' · ')}`;
+        banner.style.display = 'flex';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
     document.getElementById('averias-count').textContent = `${this._filtered.length} de ${this._data.length}`;
     this._renderTable();
+  },
+
+  _clearExtraFilter() {
+    this._extraFilter = null;
+    this._applyFilters();
   },
 
   _setSort(key) {
