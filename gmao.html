@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.2</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -2360,7 +2360,27 @@ const DashboardPage = {
   },
 
   _goToAverias(filters) {
-    AveriasPage._pendingFilter = filters || {};
+    const f = Object.assign({}, filters || {});
+    // Heredar el período temporal activo si el filtro no trae fechas propias
+    if (!f.fechaDesde && !f.fechaHasta) {
+      const gf = this._gf || {};
+      const ahora = new Date();
+      const hoy = ahora.toISOString().slice(0, 10);
+      if (gf.periodo === 'dia') {
+        f.fechaDesde = hoy; f.fechaHasta = hoy;
+      } else if (gf.periodo === 'ayer') {
+        const a = new Date(ahora); a.setDate(ahora.getDate() - 1);
+        f.fechaDesde = f.fechaHasta = a.toISOString().slice(0, 10);
+      } else if (gf.periodo === 'semana') {
+        const lun = new Date(ahora);
+        lun.setDate(ahora.getDate() - ahora.getDay() + (ahora.getDay() === 0 ? -6 : 1));
+        f.fechaDesde = lun.toISOString().slice(0, 10); f.fechaHasta = hoy;
+      } else if (gf.periodo === 'mes') {
+        f.fechaDesde = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-01`;
+        f.fechaHasta = hoy;
+      }
+    }
+    AveriasPage._pendingFilter = f;
     Router.navigate('averias');
   },
 
