@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.1</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.2</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -2249,6 +2249,26 @@ const DashboardPage = {
       <div style="position:relative;height:180px"><canvas id="chart-resolucion"></canvas></div>
     </div>
 
+    <!-- ═══ TIPO + DISTRIBUCIÓN DURACIÓN ═══ -->
+    <div class="charts-row" style="margin-bottom:16px">
+      <div class="chart-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <div>
+            <span class="chart-title" style="margin:0;font-size:15px">Por tipo de avería</span>
+            <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">Clic para ver detalle en averías</span>
+          </div>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="chart-tipo"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div style="margin-bottom:12px">
+          <span class="chart-title" style="margin:0;font-size:15px">Distribución por duración</span>
+          <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">Nº de averías por rango horario</span>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="chart-dist-dur"></canvas></div>
+      </div>
+    </div>
+
     `;
 
     // KPI técnicos — filtrado por almacén
@@ -2374,6 +2394,8 @@ const DashboardPage = {
     this._rebuildTecnicosChart();
     this._rebuildCosteChart();
     this._rebuildResolucionChart();
+    this._rebuildTipoChart();
+    this._rebuildDistDuracionChart();
   },
 
   _rebuildZonasChart() {
@@ -2626,6 +2648,77 @@ const DashboardPage = {
         scales: {
           x: { beginAtZero:true, max:100, ticks:{font:{size:11},callback:v=>`${v}%`}, grid:{color:'rgba(0,0,0,0.05)'} },
           y: { grid:{display:false}, ticks:{font:{size:11}} }
+        }
+      }
+    });
+  },
+
+  _rebuildTipoChart() {
+    const avs = this._applyGF(this._allAverias || []);
+    const conteo = {};
+    avs.forEach(a => {
+      const t = (a.tipo || '').trim() || '(sin tipo)';
+      conteo[t] = (conteo[t] || 0) + 1;
+    });
+    const entries = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+    const COLORES = [
+      'rgba(39,93,58,0.82)','rgba(21,101,192,0.82)','rgba(232,113,70,0.82)',
+      'rgba(194,0,25,0.82)','rgba(123,31,162,0.82)','rgba(184,134,11,0.80)',
+      'rgba(0,150,136,0.82)','rgba(244,67,54,0.80)','rgba(96,125,139,0.80)',
+      'rgba(121,85,72,0.80)',
+    ];
+    if (this._chartTipo) { this._chartTipo.destroy(); this._chartTipo = null; }
+    const ctx = document.getElementById('chart-tipo');
+    if (!ctx) return;
+    this._chartTipo = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: entries.map(([t]) => t), datasets: [{ label: 'Averías', data: entries.map(([,n]) => n), backgroundColor: entries.map((_,i) => COLORES[i % COLORES.length]), borderRadius: 5, borderSkipped: false }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        onClick: (evt, els) => {
+          if (!els.length) return;
+          const label = entries[els[0].index][0];
+          const gf = this._gf || {};
+          this._goToAverias({ almacen: gf.almacen||'', estado: gf.estado||'', search: label === '(sin tipo)' ? '' : label });
+        },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} averías` } } },
+        scales: {
+          x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+    const wrap = ctx.closest('div[style*="height"]');
+    if (wrap) wrap.style.height = Math.max(180, entries.length * 30 + 40) + 'px';
+  },
+
+  _rebuildDistDuracionChart() {
+    const avs = this._applyGF(this._allAverias || []);
+    const durToMin = d => { if (!d) return null; const p = String(d).split(':').map(Number); return isNaN(p[0]) ? null : p[0] * 60 + (p[1] || 0); };
+    const BUCKETS = [
+      { label: '<15 min',   min: 0,   max: 15 },
+      { label: '15-30 min', min: 15,  max: 30 },
+      { label: '30-60 min', min: 30,  max: 60 },
+      { label: '1-2 h',    min: 60,  max: 120 },
+      { label: '2-4 h',    min: 120, max: 240 },
+      { label: '4-8 h',    min: 240, max: 480 },
+      { label: '>8 h',     min: 480, max: Infinity },
+    ];
+    const counts = BUCKETS.map(b => avs.filter(a => { const m = durToMin(a.duracion); return m !== null && m >= b.min && m < b.max; }).length);
+    const maxC = Math.max(...counts, 1);
+    const colors = counts.map(c => { const r = c / maxC; return r > 0.75 ? 'rgba(194,0,25,0.82)' : r > 0.50 ? 'rgba(232,113,70,0.82)' : r > 0.25 ? 'rgba(184,134,11,0.80)' : 'rgba(39,93,58,0.75)'; });
+    if (this._chartDistDur) { this._chartDistDur.destroy(); this._chartDistDur = null; }
+    const ctx = document.getElementById('chart-dist-dur');
+    if (!ctx) return;
+    this._chartDistDur = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: BUCKETS.map(b => b.label), datasets: [{ label: 'Averías', data: counts, backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.y} averías` } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } }
         }
       }
     });
@@ -3443,7 +3536,8 @@ const AveriasPage = {
       if (crit    && a.criticidad !== crit) return false;
       if (search  && !(a.descripcion||'').toLowerCase().includes(search) &&
                      !(a.equipo||'').toLowerCase().includes(search) &&
-                     !(a.tecnico||'').toLowerCase().includes(search)) return false;
+                     !(a.tecnico||'').toLowerCase().includes(search) &&
+                     !(a.tipo||'').toLowerCase().includes(search)) return false;
       if (ef) {
         const f = (a.fecha_inicio||'').slice(0,10);
         if (ef.fechaDesde && f < ef.fechaDesde) return false;
