@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.3</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.4</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1690,7 +1690,7 @@ const Modal = {
     document.getElementById('modal-overlay').classList.remove('open');
   },
 };
-document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) Modal.close(); });
+// Modal no se cierra al clicar el fondo — evita pérdidas de formulario accidentales
 
 // ═══════════════════════════════════════════════════════════════════
 // ROUTER
@@ -5555,7 +5555,7 @@ const InventarioPage = {
         : '';
       const udsCell = (!todosMode && isAdmin)
         ? `<td style="text-align:right">
-             <input type="number" min="0" value="${i.unidades||0}"
+             <input type="number" value="${i.unidades||0}"
                style="width:64px;text-align:right;font-weight:600;color:${udsColor};padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:transparent;font-size:13px"
                onchange="InventarioPage._saveInlineUds('${UI.esc(i.id||'')}', this.value, this)"
                onclick="event.stopPropagation()">
@@ -5578,7 +5578,7 @@ const InventarioPage = {
 
   async _saveInlineUds(id, val, inputEl) {
     const n = parseInt(val);
-    if (isNaN(n) || n < 0) { toast('Valor inválido', 'error'); return; }
+    if (isNaN(n)) { toast('Valor inválido', 'error'); return; }
     try {
       const all = await db.inventario.toArray();
       const rec = all.find(i => i.id === id);
@@ -5688,8 +5688,8 @@ const InventarioPage = {
               </select>
             </div>
             <div class="form-field">
-              <label>Unidades *</label>
-              <input class="form-input" type="number" id="inv-uds" min="0" step="1" value="0" required>
+              <label>Unidades * <span style="font-weight:400;color:var(--gray-muted)">(negativo = restar)</span></label>
+              <input class="form-input" type="number" id="inv-uds" step="1" value="0" required>
             </div>
             <div class="form-field">
               <label>Precio unidad (€)</label>
@@ -5855,11 +5855,11 @@ const InventarioPage = {
     const modeEl  = document.querySelector('input[name="inv-mode"]:checked');
     const mode    = modeEl ? modeEl.value : 'replace';
 
-    let cod, nombre, tamano, tamano2, tamano3, tamano4, unidad_medida;
+    let cod, nombre, nombreBase = '', tamano, tamano2, tamano3, tamano4, unidad_medida;
 
     if (isNuevo) {
       cod               = (document.getElementById('inv-cod')?.value      || '').trim().toUpperCase();
-      const nombreBase  = (document.getElementById('inv-nombre')?.value   || '').trim();
+      nombreBase        = (document.getElementById('inv-nombre')?.value   || '').trim();
       tamano            = (document.getElementById('inv-tamano')?.value   || '').trim();
       tamano2           = (document.getElementById('inv-tamano2')?.value  || '').trim();
       tamano3           = (document.getElementById('inv-tamano3')?.value  || '').trim();
@@ -5882,30 +5882,34 @@ const InventarioPage = {
     }
 
     if (!almacen) { toast('Selecciona el sitio', 'error'); return; }
-    if (uds < 0)  { toast('Las unidades no pueden ser negativas', 'error'); return; }
 
-    // Si es nuevo, guardar en catálogo de productos
-    if (isNuevo) {
-      const allProds = await db.productos.toArray();
-      if (!allProds.find(p => p.cod_producto === cod)) {
-        const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
-        await db.productos.put({ id: maxId + 1, cod_producto: cod, nombre: nombreBase,
-          producto: nombre, tipo, familia, tamano, tamano2, tamano3, tamano4, precio: 0 });
+    try {
+      // Si es nuevo, guardar en catálogo de productos
+      if (isNuevo) {
+        const allProds = await db.productos.toArray();
+        if (!allProds.find(p => p.cod_producto === cod)) {
+          const maxId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
+          await db.productos.put({ id: maxId + 1, cod_producto: cod, nombre: nombreBase,
+            producto: nombre, tipo, familia, tamano, tamano2, tamano3, tamano4, precio: 0 });
+        }
       }
+
+      const result = await DataService.saveInventarioEntry({
+        cod_producto: cod, producto: nombre, tipo, familia, unidad_medida,
+        almacen, unidades: uds, precio_unidad, mode,
+      });
+
+      InventarioPage._invCache = null;
+      Modal.close();
+      const accion = result.updated
+        ? (mode === 'add' ? `sumado → ${result.newUds} uds` : `actualizado a ${result.newUds} uds`)
+        : `añadido (${uds} uds)`;
+      toast(`${cod} ${accion} en ${almacen}`, 'success');
+      await InventarioPage.render();
+    } catch(e) {
+      console.error('[_saveNew]', e);
+      toast('Error al guardar: ' + e.message, 'error');
     }
-
-    const result = await DataService.saveInventarioEntry({
-      cod_producto: cod, producto: nombre, tipo, familia, unidad_medida,
-      almacen, unidades: uds, precio_unidad, mode,
-    });
-
-    InventarioPage._invCache = null;
-    Modal.close();
-    const accion = result.updated
-      ? (mode === 'add' ? `sumado → ${result.newUds} uds` : `actualizado a ${result.newUds} uds`)
-      : `añadido (${uds} uds)`;
-    toast(`${cod} ${accion} en ${almacen}`, 'success');
-    await InventarioPage.render();
   },
 
   async openEditProducto(cod) {
@@ -6054,14 +6058,15 @@ const InventarioPage = {
         const ex = exMap.get(key);
         const id = ex?.id || key;
         if (!ex) {
-          changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { id, ...imp } });
+          changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { ...imp, id: key } });
         } else {
           const fields = Object.keys(LABELS).filter(k => k !== 'cod_producto').reduce((acc, k) => {
             const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
           }, []);
-          if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp } });
+          // Siempre usar ex.id (Supabase real) para evitar duplicados en el upsert
+          if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp, id: ex.id } });
         }
       }
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
