@@ -583,7 +583,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.5</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.6</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1385,7 +1385,13 @@ const DataService = {
 
     const precioFinal = precio_unidad || match?.precio_unidad || 0;
     if (match) {
-      await db.inventario.put({ ...match, nombre: nombreBase, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades: newUds, precio_unidad: precioFinal });
+      // UPDATE directo por cod_producto+almacen para no depender del tipo de la columna id
+      const { error } = await sb.from('inventario').update({
+        nombre: nombreBase, producto: nombreProd, tipo: tipoFinal,
+        familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm,
+        unidades: newUds, precio_unidad: precioFinal,
+      }).eq('cod_producto', cod_producto).eq('almacen', normAlm);
+      if (error) throw new Error(`[saveInventarioEntry.update] ${error.message}`);
     } else {
       const newId = (cod_producto && normAlm) ? `${cod_producto}_${normAlm}` : `MAN-${Date.now()}`;
       await db.inventario.put({ id: newId, cod_producto, nombre: nombreBase, producto: nombreProd, tipo: tipoFinal, familia: familiaFin, unidad_medida: udMedFinal, almacen: normAlm, unidades, precio_unidad: precioFinal });
@@ -5580,10 +5586,16 @@ const InventarioPage = {
     const n = parseInt(val);
     if (isNaN(n)) { toast('Valor inválido', 'error'); return; }
     try {
-      const all = await db.inventario.toArray();
-      const rec = all.find(i => i.id === id);
-      if (!rec) { toast('Registro no encontrado', 'error'); return; }
-      await db.inventario.put({ ...rec, unidades: n });
+      // Buscar el registro en _allData (comparación por string para evitar mismatch de tipos)
+      const item = this._allData.find(i => String(i.id) === String(id));
+      if (!item) { toast('Registro no encontrado', 'error'); return; }
+      // UPDATE directo por cod_producto+almacen — no depende del tipo de id en Supabase
+      const { error } = await sb.from('inventario').update({ unidades: n })
+        .eq('cod_producto', item.cod_producto)
+        .eq('almacen', item.almacen);
+      if (error) throw new Error(error.message);
+      // Actualizar caché local para que no revierta al re-renderizar sin recarga completa
+      item.unidades = n;
       if (inputEl) inputEl.style.color = n <= 0 ? 'var(--red)' : n <= 2 ? 'var(--orange)' : 'var(--gray-text)';
       toast('Unidades actualizadas ✓', 'success');
     } catch(e) { toast('Error: ' + e.message, 'error'); }
