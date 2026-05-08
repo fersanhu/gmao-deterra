@@ -587,7 +587,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.1</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -5931,8 +5931,54 @@ const InventarioPage = {
 
   async openEditProducto(cod) {
     const allProds = await db.productos.toArray();
-    const prod = allProds.find(p => p.cod_producto === cod);
-    if (!prod) { toast('Producto no encontrado', 'error'); return; }
+    const allInv   = await db.inventario.toArray();
+    let prod = allProds.find(p => p.cod_producto === cod);
+    if (!prod) {
+      const invItem = allInv.find(i => i.cod_producto === cod);
+      if (!invItem) { toast('Producto no encontrado', 'error'); return; }
+      prod = {
+        // sin id → _saveEditProducto asignará el siguiente disponible
+        cod_producto: cod,
+        nombre:   invItem.nombre   || invItem.producto || '',
+        producto: invItem.producto || invItem.nombre   || '',
+        tipo:     invItem.tipo     || '',
+        familia:  invItem.familia  || '',
+        tamano: '', tamano2: '', tamano3: '', tamano4: '',
+      };
+    }
+    // Filas de inventario para este producto (stock y precio por almacén)
+    const invRows = allInv.filter(i => i.cod_producto === cod)
+      .sort((a, b) => (a.almacen || '').localeCompare(b.almacen || ''));
+    const stockHtml = invRows.length
+      ? `<div class="form-field full" style="margin-top:8px">
+          <label>Stock y precio por almacén</label>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="color:var(--gray-text);text-align:left">
+                <th style="padding:4px 8px;border-bottom:1px solid var(--border)">Almacén</th>
+                <th style="padding:4px 8px;border-bottom:1px solid var(--border)">Unidades</th>
+                <th style="padding:4px 8px;border-bottom:1px solid var(--border)">Precio/ud (€)</th>
+                <th style="padding:4px 8px;border-bottom:1px solid var(--border)">Ud. medida</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invRows.map((r, i) => `
+              <tr>
+                <td style="padding:4px 8px;font-weight:600">${UI.esc(r.almacen||'—')}</td>
+                <td style="padding:4px 8px"><input class="form-input ep-inv-uds" data-idx="${i}"
+                  type="number" min="0" step="1" value="${r.unidades ?? 0}"
+                  style="width:80px;padding:4px 8px;font-size:13px"></td>
+                <td style="padding:4px 8px"><input class="form-input ep-inv-precio" data-idx="${i}"
+                  type="number" min="0" step="0.01" value="${r.precio_unidad ?? 0}"
+                  style="width:90px;padding:4px 8px;font-size:13px"></td>
+                <td style="padding:4px 8px"><input class="form-input ep-inv-udmed" data-idx="${i}"
+                  value="${UI.esc(r.unidad_medida||'')}"
+                  style="width:80px;padding:4px 8px;font-size:13px"></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`
+      : '';
     Modal.open('Editar producto', `
       <form onsubmit="return false">
         <div class="form-grid">
@@ -5970,11 +6016,13 @@ const InventarioPage = {
             <label>Nombre resultante</label>
             <div id="ep-preview" style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-weight:600;font-size:13px;min-height:36px;color:var(--gray-text)">${UI.esc(prod.producto||'—')}</div>
           </div>
+          ${stockHtml}
         </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
        <button class="btn btn-primary" onclick="InventarioPage._saveEditProducto('${UI.esc(cod)}')">Guardar</button>`);
-    InventarioPage._editProd = prod;
+    InventarioPage._editProd    = prod;
+    InventarioPage._editInvRows = invRows;
   },
 
   _updateEditPreview() {
@@ -5998,7 +6046,27 @@ const InventarioPage = {
     if (!nombreBase) { toast('El nombre base es obligatorio', 'error'); return; }
     const nombre = [nombreBase, tamano, tamano2, tamano3, tamano4].filter(Boolean).join(' ');
     const prod = InventarioPage._editProd;
-    await db.productos.put({ ...prod, nombre: nombreBase, producto: nombre, tamano, tamano2, tamano3, tamano4 });
+    // Si el producto no tiene id numérico (vino del fallback inventario), asignar el siguiente
+    let prodId = prod.id;
+    if (!prodId) {
+      const allProds = await db.productos.toArray();
+      prodId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0) + 1;
+    }
+    await db.productos.put({ ...prod, id: prodId, nombre: nombreBase, producto: nombre, tamano, tamano2, tamano3, tamano4 });
+    // Guardar cambios de stock y precio en inventario
+    const invRows = InventarioPage._editInvRows || [];
+    const udsEls    = document.querySelectorAll('.ep-inv-uds');
+    const precioEls = document.querySelectorAll('.ep-inv-precio');
+    const udmedEls  = document.querySelectorAll('.ep-inv-udmed');
+    const invUpdates = invRows.map((r, i) => ({
+      ...r,
+      producto:      nombre,
+      unidades:      parseFloat(udsEls[i]?.value    ?? r.unidades)    || 0,
+      precio_unidad: parseFloat(precioEls[i]?.value ?? r.precio_unidad) || 0,
+      unidad_medida: ((udmedEls[i]?.value ?? r.unidad_medida) || '').trim(),
+    }));
+    if (invUpdates.length) await db.inventario.bulkPut(invUpdates);
+    InventarioPage._invCache = null;
     Modal.close();
     toast(`${cod} actualizado`, 'success');
     await InventarioPage.render();
@@ -6102,10 +6170,25 @@ const InventarioPage = {
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
             invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
-            if (prod) prodRecs.push({ ...prod,
-              nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
-              tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
-              tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            if (prod) {
+              prodRecs.push({ ...prod,
+                nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
+                tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
+                tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            } else {
+              // Producto nuevo importado desde Excel: crear también en tabla productos
+              prodRecs.push({
+                cod_producto: rec.cod_producto,
+                nombre:   rec.nombre   || rec.producto || rec.cod_producto,
+                producto: rec.producto || rec.nombre   || rec.cod_producto,
+                tipo:     rec.tipo     || '',
+                familia:  rec.familia  || '',
+                tamano:   tamano  || '',
+                tamano2:  tamano2 || '',
+                tamano3:  tamano3 || '',
+                tamano4:  tamano4 || '',
+              });
+            }
           }
 
           // bulkPut en chunks de 500 → mucho más rápido que put individual
