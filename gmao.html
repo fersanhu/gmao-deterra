@@ -546,6 +546,10 @@ select.form-input{cursor:pointer}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span class="nav-label">Dashboard</span>
       </div>
+      <div class="nav-item" data-route="partes-analisis">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="nav-label">Análisis Partes</span>
+      </div>
       <div class="nav-item" data-route="activos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
         <span class="nav-label">Activos</span>
@@ -583,7 +587,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v5.6</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.1</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1711,8 +1715,9 @@ const Router = {
     const hash = (window.location.hash || '#averias').slice(1) || 'averias';
     const [base] = hash.split('/');
 
-    // Mecánicos solo pueden ver Averías — redirigir si llegan a otra ruta
-    if (UserService.isMecanico() && base !== 'averias') {
+    // Roles sin privilegios solo pueden ver Averías y Partes
+    const _priv = UserService.isAdmin() || UserService.isResponsable();
+    if (!_priv && base !== 'averias' && base !== 'partes') {
       window.location.hash = 'averias';
       return;
     }
@@ -1722,7 +1727,7 @@ const Router = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
-    const titles = { dashboard:'Dashboard', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', config:'Configuración' };
+    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', partes:'Partes de trabajo', config:'Configuración' };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -7360,24 +7365,25 @@ const App = {
       sel.disabled = false;
     }
 
-    // Ocultar Config a no-Admin
+    // Visibilidad del menú según rol
+    const isPriv = UserService.isAdmin() || UserService.isResponsable();
+
+    // Config: solo Admin
     document.querySelectorAll('.nav-item[data-route="config"]').forEach(el => {
       el.style.display = UserService.canManageConfig() ? '' : 'none';
     });
-
-    // Mecánico solo ve el menú de Averías — ocultar el resto
-    const isMec = UserService.isMecanico();
-    ['dashboard','activos','incidencias','inventario','movimientos','partes'].forEach(route => {
+    // Rutas restringidas a Admin/Responsable
+    ['dashboard','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones'].forEach(route => {
       document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
-        el.style.display = isMec ? 'none' : '';
+        el.style.display = isPriv ? '' : 'none';
       });
     });
-    // Partes: solo Admin y Responsable (ya cubierto por isMec=false, pero también ocultar si no tiene rol)
+    // Partes: visible para todos los roles (incluso Técnico/Externo)
     document.querySelectorAll('.nav-item[data-route="partes"]').forEach(el => {
-      el.style.display = (UserService.isAdmin() || UserService.isResponsable()) ? '' : 'none';
+      el.style.display = '';
     });
 
-    // Ocultar botones de gestión de activos a Mecánicos
+    // Ocultar botones de gestión de activos a no-Admin
     document.querySelectorAll('[data-admin-only]').forEach(el => {
       el.style.display = UserService.canManageActivos() ? '' : 'none';
     });
@@ -7416,20 +7422,23 @@ const App = {
 const PartesPage = {
   _partes: [],
   _averias: [],
+  _activos: [],
+  _pendingFilter: null,
 
   async render() {
     const main = document.getElementById('content');
     if (!main) return;
-    // Solo Admin y Responsable
-    if (!UserService.isAdmin() && !UserService.isResponsable()) {
+    // Acceso: cualquier usuario logueado puede ver sus partes
+    if (!UserService.isLoggedIn()) {
       main.innerHTML = `<div class="page-header"><h1>Partes de trabajo</h1></div>
-        <p style="color:var(--gray-muted);padding:20px">Acceso restringido a Responsables y Administradores.</p>`;
+        <p style="color:var(--gray-muted);padding:20px">Acceso restringido. Identifícate primero.</p>`;
       return;
     }
 
     main.innerHTML = `<div class="page-header">
       <h1>Partes de trabajo</h1>
       <div class="page-actions">
+        <button class="btn btn-primary btn-sm" onclick="PartesPage._openNew()">➕ Nuevo Parte</button>
         <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()" title="Ver SQL de configuración de tablas">⚙️ Setup SQL</button>
       </div>
     </div>
@@ -7454,17 +7463,17 @@ const PartesPage = {
         <input type="date" class="pbi-select" id="pt-hasta">
       </div>
       <div class="pbi-ctrl-group" style="justify-content:flex-end">
-        <button class="btn btn-secondary btn-sm" onclick="PartesPage._applyFilters()">Filtrar</button>
+        <button class="btn btn-secondary btn-sm" onclick="PartesPage._chartFilter=null;PartesPage._applyFilters()">Filtrar</button>
       </div>
     </div>
     <div id="pt-resumen" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
     <div class="table-container">
       <table class="data-table" id="pt-table">
         <thead><tr>
-          <th>Fecha</th><th>Avería</th><th>Almacén</th><th>Equipo</th>
-          <th>Técnico</th><th>Horas</th><th>Notas</th>
+          <th>Fecha</th><th>Técnico</th><th>Almacén</th><th>Activo / Equipo</th>
+          <th>Horas</th><th>Materiales</th><th>Avería</th><th>Notas</th>
         </tr></thead>
-        <tbody id="pt-tbody"><tr><td colspan="7" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
+        <tbody id="pt-tbody"><tr><td colspan="8" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
       </table>
     </div>`;
 
@@ -7479,20 +7488,22 @@ const PartesPage = {
   },
 
   async _loadData() {
-    let partes = [], averias = [], tecnicos = [];
+    let partes = [], averias = [], tecnicos = [], activos = [];
     try {
-      [partes, averias, tecnicos] = await Promise.all([
+      [partes, averias, tecnicos, activos] = await Promise.all([
         db.partes_trabajo.toArray(),
         db.averias.toArray(),
         DataService.getTecnicos(true),
+        db.activos.toArray(),
       ]);
     } catch(e) {
       console.warn('[PartesPage._loadData]', e.message);
       // Si partes_trabajo no existe, intentar cargar sólo averias y técnicos
       try { averias = await db.averias.toArray(); } catch(_) {}
       try { tecnicos = await DataService.getTecnicos(true); } catch(_) {}
+      try { activos = await db.activos.toArray(); } catch(_) {}
       const tbody = document.getElementById('pt-tbody');
-      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px">
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">
         <div style="color:var(--red);font-weight:600;margin-bottom:8px">⚠️ Tabla <code>partes_trabajo</code> no encontrada en Supabase</div>
         <div style="font-size:12px;color:var(--gray-muted)">Ejecuta el SQL de configuración para crear las tablas necesarias.</div>
         <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="PartesPage._showSetupSQL()">Ver SQL de configuración</button>
@@ -7503,6 +7514,7 @@ const PartesPage = {
     }
     this._partes  = partes;
     this._averias = averias;
+    this._activos = activos;
 
     // Populate técnico select
     const tecSel = document.getElementById('pt-tec');
@@ -7511,6 +7523,20 @@ const PartesPage = {
       const list   = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
       tecSel.innerHTML = '<option value="">Todos</option>' +
         list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
+    }
+
+    // Aplicar filtro pendiente desde drill-down de Análisis Partes
+    if (this._pendingFilter) {
+      const pf = this._pendingFilter;
+      this._pendingFilter = null;
+      const almEl = document.getElementById('pt-alm');
+      const tecEl = document.getElementById('pt-tec');
+      const desEl = document.getElementById('pt-desde');
+      const hasEl = document.getElementById('pt-hasta');
+      if (pf.almacen && almEl) almEl.value = pf.almacen;
+      if (pf.tecnico && tecEl) tecEl.value = pf.tecnico;
+      if (pf.desde   && desEl) desEl.value = pf.desde;
+      if (pf.hasta   && hasEl) hasEl.value = pf.hasta;
     }
 
     this._applyFilters();
@@ -7579,14 +7605,22 @@ $$;
 -- Tabla partes_trabajo
 CREATE TABLE IF NOT EXISTS partes_trabajo (
   id           TEXT PRIMARY KEY,
-  averia_id    TEXT NOT NULL,
+  averia_id    TEXT DEFAULT '',
   tecnico      TEXT NOT NULL,
   fecha        DATE NOT NULL,
   horas        NUMERIC(5,2) DEFAULT 0,
-  notas        TEXT DEFAULT ''
+  notas        TEXT DEFAULT '',
+  activo_id    TEXT DEFAULT '',
+  almacen      TEXT DEFAULT '',
+  materiales   TEXT DEFAULT ''
 );
 ALTER TABLE partes_trabajo ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "partes_all" ON partes_trabajo FOR ALL USING (true) WITH CHECK (true);
+-- Si ya tienes la tabla, ejecuta estas líneas para añadir las nuevas columnas:
+-- ALTER TABLE partes_trabajo ALTER COLUMN averia_id DROP NOT NULL;
+-- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS activo_id TEXT DEFAULT '';
+-- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS almacen TEXT DEFAULT '';
+-- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS materiales TEXT DEFAULT '';
 
 -- Tabla fotos_averias
 CREATE TABLE IF NOT EXISTS fotos_averias (
@@ -7617,8 +7651,9 @@ CREATE POLICY "fotos_storage_all" ON storage.objects
 ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`;
     Modal.open('SQL de configuración — tablas, RLS y Stock atómico', `
       <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
-        ⚠️ <strong>Versión 2 del SQL de setup.</strong><br>
+        ⚠️ <strong>Versión 3 del SQL de setup.</strong><br>
         Incluye RLS en tablas principales (seguridad) y función atómica de stock.<br>
+        Si ya tienes la tabla partes_trabajo, ejecuta los ALTER TABLE comentados al final del Bloque C.<br>
         Si ya ejecutaste la versión anterior, ejecuta solo el Bloque E (nueva columna zona_limpia).
       </div>
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
@@ -7635,10 +7670,15 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 
     const averiaMap = {};
     this._averias.forEach(a => { averiaMap[a.id] = a; });
+    const activoMap = {};
+    (this._activos || []).forEach(a => { activoMap[a.id_activo] = a; });
 
     let rows = this._partes.map(p => ({ ...p, _av: averiaMap[p.averia_id] || {} }));
 
-    if (alm)   rows = rows.filter(r => normalizeAlmacen(r._av.almacen || '') === normalizeAlmacen(alm));
+    if (alm)   rows = rows.filter(r => {
+      const rowAlm = r.almacen || r._av.almacen || '';
+      return normalizeAlmacen(rowAlm) === normalizeAlmacen(alm);
+    });
     if (tec)   rows = rows.filter(r => r.tecnico === tec);
     if (desde) rows = rows.filter(r => (r.fecha || '') >= desde);
     if (hasta) rows = rows.filter(r => (r.fecha || '') <= hasta);
@@ -7665,19 +7705,294 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
     const tbody = document.getElementById('pt-tbody');
     if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-muted);padding:24px">Sin partes para los filtros seleccionados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-muted);padding:24px">Sin partes para los filtros seleccionados</td></tr>`;
       return;
     }
-    tbody.innerHTML = rows.map(r => `
-      <tr style="cursor:pointer" onclick="AveriasPage.openDetail('${UI.esc(r.averia_id)}')">
+    tbody.innerHTML = rows.map(r => {
+      // Activo: del parte directo, fallback a avería
+      const activoId = r.activo_id || r._av.id_activo || '';
+      const activoObj = activoId ? activoMap[activoId] : null;
+      const activoLabel = activoObj
+        ? UI.esc(activoObj.equipo || activoId)
+        : (r.equipo || r._av.equipo ? UI.esc(r.equipo || r._av.equipo) : (activoId ? UI.esc(activoId) : '—'));
+      // Almacén
+      const almLabel = r.almacen || r._av.almacen || '—';
+      // Materiales
+      let matsHtml = '—';
+      if (r.materiales) {
+        try {
+          const mats = JSON.parse(r.materiales);
+          if (mats.length) matsHtml = mats.map(m => `<span style="display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;margin:1px">${UI.esc(m.nombre)} ×${m.cantidad}</span>`).join('');
+        } catch(_) { matsHtml = UI.esc(r.materiales); }
+      }
+      // Avería link
+      const avLink = r.averia_id
+        ? `<span style="font-family:monospace;font-size:11px;color:var(--blue);cursor:pointer" onclick="event.stopPropagation();AveriasPage.openDetail('${UI.esc(r.averia_id)}')">${UI.esc(r.averia_id)}</span>`
+        : '<span style="color:var(--gray-muted);font-size:11px">Directo</span>';
+      return `<tr>
         <td style="white-space:nowrap">${UI.esc(r.fecha || '—')}</td>
-        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted)">${UI.esc(r.averia_id)}</td>
-        <td>${UI.esc(r._av.almacen || '—')}</td>
-        <td>${UI.esc(r._av.equipo  || r._av.id_activo || '—')}</td>
         <td style="font-weight:500">👤 ${UI.esc(r.tecnico || '—')}</td>
+        <td>${UI.esc(almLabel)}</td>
+        <td>${activoLabel}</td>
         <td style="text-align:center"><span style="background:var(--green);color:#fff;border-radius:4px;padding:1px 10px;font-weight:600">${parseFloat(r.horas||0).toFixed(1)}h</span></td>
+        <td style="max-width:220px">${matsHtml}</td>
+        <td>${avLink}</td>
         <td style="color:var(--gray-muted);font-style:italic">${UI.esc(r.notas || '')}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
+  },
+
+  _ptMaterials: [],
+  _ptProdCache: [],
+
+  async _openNew() {
+    let tecnicos = [], todosProds = [];
+    try {
+      [tecnicos, todosProds] = await Promise.all([
+        DataService.getTecnicos(true),
+        db.productos.toArray(),
+      ]);
+    } catch(e) { toast('Error cargando datos: ' + e.message, 'error'); return; }
+
+    const today    = new Date().toISOString().slice(0, 10);
+    const user     = UserService.getUser();
+    const effAlm   = UserService.getEffectiveAlmacen() || user?.almacen || '';
+    const almLocked = !!UserService.getEffectiveAlmacen();
+    const almList  = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const matTipos = [...new Set(todosProds.map(p => p.tipo).filter(Boolean))].sort();
+
+    // Técnico pre-seleccionado: el usuario actual si está en el catálogo
+    const tecOpts = '<option value="">— Seleccionar —</option>' +
+      tecnicos.map(t => `<option value="${UI.esc(t.nombre)}" ${t.nombre === user?.nombre ? 'selected' : ''}>${UI.esc(t.nombre)}</option>`).join('');
+
+    Modal.open('Nuevo Parte de Trabajo', `
+      <p style="font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px;margin-bottom:12px">
+        Localiza el equipo intervenido: Almacén → Zona → Línea → Equipo
+      </p>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Técnico *</label>
+          <select class="form-input" id="pf-tecnico">${tecOpts}</select>
+        </div>
+        <div class="form-field">
+          <label>Fecha *</label>
+          <input class="form-input" type="date" id="pf-fecha" value="${today}">
+        </div>
+        <div class="form-field">
+          <label>Horas trabajadas</label>
+          <input class="form-input" type="number" id="pf-horas" min="0" max="24" step="0.5" value="1">
+        </div>
+        <div class="form-field">
+          <label>Almacén *</label>
+          <select class="form-input" id="pf-almacen" ${almLocked ? 'disabled' : ''}>
+            <option value="">Seleccionar...</option>
+            ${almList.map(a => `<option ${normalizeAlmacen(a)===normalizeAlmacen(effAlm) ? 'selected' : ''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Zona</label>
+          <select class="form-input" id="pf-zona" disabled>
+            <option value="">Selecciona almacén</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Línea</label>
+          <select class="form-input" id="pf-linea" disabled>
+            <option value="">Selecciona zona</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Equipo</label>
+          <select class="form-input" id="pf-equipo" disabled>
+            <option value="">Selecciona línea</option>
+          </select>
+          <input type="hidden" id="pf-activo-id">
+        </div>
+        <div class="form-field full">
+          <label>Avería relacionada <small style="color:var(--gray-muted)">(opcional)</small></label>
+          <input class="form-input" id="pf-averia" placeholder="ID de avería o dejar vacío">
+        </div>
+        <div class="form-field full">
+          <label>Descripción del trabajo / Notas</label>
+          <textarea class="form-input" id="pf-notas" rows="3" placeholder="Describe el trabajo realizado…" style="resize:vertical"></textarea>
+        </div>
+        <div class="form-field full">
+          <div class="form-section-label">📦 Materiales utilizados</div>
+          <div class="materiales-row" style="margin-bottom:8px">
+            <div>
+              <small style="color:var(--gray-muted)">Tipo</small>
+              <select class="form-input" id="pf-mat-tipo" style="margin-top:2px">
+                <option value="">— Tipo —</option>
+                ${matTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Familia</small>
+              <select class="form-input" id="pf-mat-familia" disabled style="margin-top:2px">
+                <option value="">— Familia —</option>
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Producto</small>
+              <select class="form-input" id="pf-mat-producto" style="margin-top:2px">
+                <option value="">— Producto —</option>
+                ${todosProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <small style="color:var(--gray-muted)">Cant.</small>
+              <input class="form-input" type="number" id="pf-mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
+            </div>
+            <div style="padding-top:18px">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="PartesPage._addMaterial()">+ Añadir</button>
+            </div>
+          </div>
+          <div id="pf-mat-list" style="display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="PartesPage._saveParte()">Guardar Parte</button>`);
+
+    PartesPage._ptMaterials = [];
+    PartesPage._ptProdCache = todosProds;
+
+    // ── Cascada Almacén → Zona → Línea → Equipo ──
+    const almEl   = document.getElementById('pf-almacen');
+    const zonaEl  = document.getElementById('pf-zona');
+    const lineaEl = document.getElementById('pf-linea');
+    const equipEl = document.getElementById('pf-equipo');
+    const hidEl   = document.getElementById('pf-activo-id');
+
+    almEl.addEventListener('change', async () => {
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
+      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      hidEl.value = '';
+      if (!almEl.value) { zonaEl.disabled = true; return; }
+      const zs = await DataService.getZonasByAlmacen(almEl.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
+      zonaEl.disabled = false;
+    });
+    zonaEl.addEventListener('change', async () => {
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      hidEl.value = '';
+      if (!zonaEl.value) { lineaEl.disabled = true; return; }
+      const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
+      lineaEl.disabled = false;
+    });
+    lineaEl.addEventListener('change', async () => {
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>';
+      hidEl.value = '';
+      if (!lineaEl.value) { equipEl.disabled = true; return; }
+      const eq = await DataService.getEquiposByAlmacenZonaLinea(almEl.value, zonaEl.value, lineaEl.value);
+      equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+      equipEl.disabled = false;
+    });
+    equipEl.addEventListener('change', () => { hidEl.value = equipEl.value; });
+
+    // Si hay almacén pre-cargado, disparar la carga de zonas
+    if (almEl.value) almEl.dispatchEvent(new Event('change'));
+
+    // ── Cascada Tipo → Familia → Producto ──
+    const _tipoEq = (p, t) => !t || (p.tipo||'').toLowerCase() === t.toLowerCase();
+    const _famEq  = (p, f) => !f || (p.familia||'').toLowerCase() === f.toLowerCase();
+    document.getElementById('pf-mat-tipo')?.addEventListener('change', function() {
+      const tipo = this.value;
+      const filtered = todosProds.filter(p => _tipoEq(p, tipo));
+      const fams = [...new Map(filtered.map(p=>p.familia).filter(Boolean).map(f=>[f.toLowerCase(),f])).values()].sort();
+      const famEl  = document.getElementById('pf-mat-familia');
+      const prodEl = document.getElementById('pf-mat-producto');
+      if (fams.length) {
+        famEl.innerHTML = '<option value="">— Familia —</option>' + fams.map(f=>`<option>${UI.esc(f)}</option>`).join('');
+        famEl.disabled = false;
+        prodEl.innerHTML = '<option value="">— Producto —</option>';
+        prodEl.disabled = true;
+      } else {
+        famEl.innerHTML = '<option value="">— —</option>'; famEl.disabled = true;
+        prodEl.innerHTML = '<option value="">— Producto —</option>' + filtered.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+        prodEl.disabled = filtered.length === 0;
+      }
+    });
+    document.getElementById('pf-mat-familia')?.addEventListener('change', function() {
+      const tipo = document.getElementById('pf-mat-tipo').value;
+      const fam  = this.value;
+      const prods = todosProds.filter(p => _tipoEq(p, tipo) && _famEq(p, fam));
+      const prodEl = document.getElementById('pf-mat-producto');
+      prodEl.innerHTML = '<option value="">— Producto —</option>' + prods.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+      prodEl.disabled = prods.length === 0;
+    });
+
+    // Si no hay tipos, cargar todos los productos directamente
+    if (!matTipos.length) {
+      const prodEl = document.getElementById('pf-mat-producto');
+      if (prodEl) prodEl.innerHTML = '<option value="">— Producto —</option>' + todosProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('');
+      const famEl = document.getElementById('pf-mat-familia');
+      if (famEl) { famEl.innerHTML = '<option value="">— —</option>'; famEl.disabled = true; }
+    }
+  },
+
+  _addMaterial() {
+    const prodEl = document.getElementById('pf-mat-producto');
+    const qtyEl  = document.getElementById('pf-mat-qty');
+    const cod    = prodEl?.value;
+    const nombre = prodEl?.options[prodEl.selectedIndex]?.text || '';
+    const qty    = parseInt(qtyEl?.value) || 1;
+    if (!cod || nombre.startsWith('—')) { toast('Selecciona un producto', 'error'); return; }
+    this._ptMaterials.push({ cod_producto: cod, nombre, cantidad: qty });
+    this._renderPtMaterials();
+    if (qtyEl) qtyEl.value = 1;
+    if (prodEl) prodEl.value = '';
+  },
+
+  _renderPtMaterials() {
+    const list = document.getElementById('pf-mat-list');
+    if (!list) return;
+    if (!this._ptMaterials.length) { list.innerHTML = ''; return; }
+    list.innerHTML = this._ptMaterials.map((m, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:6px 10px;font-size:13px">
+        <span style="flex:1">${UI.esc(m.nombre)} <strong>×${m.cantidad}</strong></span>
+        <button type="button" class="btn btn-sm" style="background:var(--red);color:#fff;padding:2px 8px;min-height:unset"
+          onclick="PartesPage._ptMaterials.splice(${i},1);PartesPage._renderPtMaterials()">×</button>
+      </div>`).join('');
+  },
+
+  async _saveParte() {
+    const tecnico  = document.getElementById('pf-tecnico')?.value?.trim();
+    const fecha    = document.getElementById('pf-fecha')?.value;
+    const horas    = parseFloat(document.getElementById('pf-horas')?.value) || 0;
+    const almacen  = document.getElementById('pf-almacen')?.value || '';
+    const activoId = document.getElementById('pf-activo-id')?.value || '';
+    const equipo   = document.getElementById('pf-equipo')?.options[document.getElementById('pf-equipo')?.selectedIndex]?.text || '';
+    const averiaId = document.getElementById('pf-averia')?.value?.trim() || '';
+    const notas    = document.getElementById('pf-notas')?.value?.trim() || '';
+
+    if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
+    if (!fecha)   { toast('Indica la fecha', 'error'); return; }
+
+    const id = `pt_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+    const materialesJson = this._ptMaterials.length ? JSON.stringify(this._ptMaterials) : '';
+
+    try {
+      await db.partes_trabajo.put({
+        id,
+        averia_id:  averiaId,
+        tecnico,
+        fecha,
+        horas,
+        notas,
+        activo_id:  activoId,
+        equipo:     equipo && !equipo.startsWith('Selecciona') ? equipo : '',
+        almacen,
+        materiales: materialesJson,
+      });
+      Modal.close();
+      toast('Parte guardado ✓', 'success');
+      await this._loadData();
+    } catch(e) {
+      toast('Error al guardar: ' + e.message, 'error');
+    }
   },
 };
 
@@ -8070,17 +8385,286 @@ const InspeccionesPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PARTES ANALISIS PAGE — Dashboard de Partes de Trabajo
+// ═══════════════════════════════════════════════════════════════════
+const PartesAnalisisPage = {
+  _allPartes: [],
+  _allAverias: [],
+  _chartTec: null,
+  _chartAlm: null,
+  _chartEvol: null,
+  _gf: { almacen: '', tecnico: '', desde: '', hasta: '' },
+
+  async render() {
+    const main = document.getElementById('content');
+    if (!main) return;
+    if (!UserService.isAdmin() && !UserService.isResponsable()) {
+      main.innerHTML = `<div class="page-header"><h1>Análisis Partes</h1></div>
+        <p style="color:var(--gray-muted);padding:20px">Acceso restringido a Responsables y Administradores.</p>`;
+      return;
+    }
+
+    const effAlm = UserService.getEffectiveAlmacen();
+    const almList = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+
+    main.innerHTML = `
+    <div class="page-header">
+      <h1>Análisis Partes de Trabajo</h1>
+      <div class="page-actions">
+        <button class="btn btn-primary btn-sm" onclick="Router.navigate('partes')">📋 Ver Partes</button>
+      </div>
+    </div>
+    <div class="pbi-controls">
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Almacén</span>
+        <select class="pbi-select" id="pa-alm" ${effAlm ? 'disabled' : ''}>
+          <option value="">Todos</option>
+          ${almList.map(a=>`<option ${effAlm && normalizeAlmacen(a)===normalizeAlmacen(effAlm)?'selected':''}>${a}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Técnico</span>
+        <select class="pbi-select" id="pa-tec"><option value="">Todos</option></select>
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Desde</span>
+        <input type="date" class="pbi-select" id="pa-desde">
+      </div>
+      <div class="pbi-ctrl-group">
+        <span class="pbi-ctrl-label">Hasta</span>
+        <input type="date" class="pbi-select" id="pa-hasta">
+      </div>
+      <div class="pbi-ctrl-group" style="justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="PartesAnalisisPage._rebuild()">Filtrar</button>
+      </div>
+    </div>
+    <div id="pa-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="chart-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <div>
+            <span class="chart-title" style="margin:0;font-size:15px">Horas por técnico</span>
+            <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">Click → ver sus partes</span>
+          </div>
+          <select id="pa-tec-orden" class="pbi-select" onchange="PartesAnalisisPage._rebuildTec()">
+            <option value="desc">Mayor → menor</option>
+            <option value="asc">Menor → mayor</option>
+            <option value="alfa">Alfabético</option>
+          </select>
+        </div>
+        <div style="position:relative;height:220px" id="pa-chart-tec-wrap"><canvas id="pa-chart-tec"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div style="margin-bottom:12px">
+          <span class="chart-title" style="margin:0;font-size:15px">Horas por almacén</span>
+          <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">Click → ver partes de ese almacén</span>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="pa-chart-alm"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="margin-bottom:16px">
+      <div style="margin-bottom:12px">
+        <span class="chart-title" style="margin:0;font-size:15px">Evolución mensual de horas</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="pa-chart-evol"></canvas></div>
+    </div>`;
+
+    let partes = [], averias = [], tecnicos = [];
+    try {
+      [partes, averias, tecnicos] = await Promise.all([
+        db.partes_trabajo.toArray(),
+        db.averias.toArray(),
+        DataService.getTecnicos(true),
+      ]);
+    } catch(e) {
+      main.querySelector('#pa-kpis').innerHTML = `<p style="color:var(--red)">Error cargando datos: ${UI.esc(e.message)}</p>`;
+      return;
+    }
+
+    this._allPartes  = partes;
+    this._allAverias = averias;
+
+    const tecSel = document.getElementById('pa-tec');
+    if (tecSel) {
+      const list = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
+      tecSel.innerHTML = '<option value="">Todos</option>' + list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
+    }
+    if (effAlm) this._gf.almacen = effAlm;
+
+    this._rebuild();
+  },
+
+  _getFiltered() {
+    const alm   = document.getElementById('pa-alm')?.value    || '';
+    const tec   = document.getElementById('pa-tec')?.value    || '';
+    const desde = document.getElementById('pa-desde')?.value  || '';
+    const hasta = document.getElementById('pa-hasta')?.value  || '';
+
+    const averiaMap = {};
+    this._allAverias.forEach(a => { averiaMap[a.id] = a; });
+
+    return this._allPartes
+      .map(p => ({ ...p, _av: averiaMap[p.averia_id] || {} }))
+      .filter(r => {
+        const rowAlm = r.almacen || r._av.almacen || '';
+        if (alm   && normalizeAlmacen(rowAlm) !== normalizeAlmacen(alm)) return false;
+        if (tec   && r.tecnico !== tec) return false;
+        if (desde && (r.fecha || '') < desde) return false;
+        if (hasta && (r.fecha || '') > hasta) return false;
+        return true;
+      });
+  },
+
+  _rebuild() {
+    const rows = this._getFiltered();
+
+    // KPIs
+    const totalHoras = rows.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
+    const tecActivos = new Set(rows.map(r => r.tecnico).filter(Boolean)).size;
+    const kpis = document.getElementById('pa-kpis');
+    if (kpis) kpis.innerHTML = `
+      <div class="kpi-card kpi-blue" style="min-width:130px;flex:0 0 auto">
+        <div class="kpi-body"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Partes</div></div>
+      </div>
+      <div class="kpi-card kpi-green" style="min-width:130px;flex:0 0 auto">
+        <div class="kpi-body"><div class="kpi-value">${totalHoras.toFixed(1)}h</div><div class="kpi-label">Total horas</div></div>
+      </div>
+      <div class="kpi-card" style="min-width:130px;flex:0 0 auto;background:var(--surface)">
+        <div class="kpi-body"><div class="kpi-value">${tecActivos}</div><div class="kpi-label">Técnicos activos</div></div>
+      </div>
+      <div class="kpi-card" style="min-width:130px;flex:0 0 auto;background:var(--surface)">
+        <div class="kpi-body"><div class="kpi-value">${rows.length ? (totalHoras / tecActivos || 0).toFixed(1) : '0.0'}h</div><div class="kpi-label">Media por técnico</div></div>
+      </div>`;
+
+    this._rebuildTec(rows);
+    this._rebuildAlm(rows);
+    this._rebuildEvol(rows);
+  },
+
+  _rebuildTec(rows) {
+    if (!rows) rows = this._getFiltered();
+    const orden = document.getElementById('pa-tec-orden')?.value || 'desc';
+    const tecMap = {};
+    rows.forEach(r => { const t = r.tecnico || '(sin técnico)'; tecMap[t] = (tecMap[t]||0) + (parseFloat(r.horas)||0); });
+    let entries = Object.entries(tecMap);
+    if (orden === 'desc')  entries.sort((a,b) => b[1]-a[1]);
+    else if (orden === 'asc') entries.sort((a,b) => a[1]-b[1]);
+    else entries.sort((a,b) => a[0].localeCompare(b[0]));
+    const maxH = Math.max(...entries.map(([,h])=>h), 1);
+    const colors = entries.map(([,h]) => { const r=h/maxH; return r>0.75?'rgba(39,93,58,0.85)':r>0.5?'rgba(22,100,140,0.82)':r>0.25?'rgba(184,134,11,0.78)':'rgba(22,100,140,0.45)'; });
+
+    if (this._chartTec) { this._chartTec.destroy(); this._chartTec = null; }
+    const ctx = document.getElementById('pa-chart-tec');
+    if (!ctx) return;
+    this._chartTec = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: entries.map(([t])=>t), datasets: [{ data: entries.map(([,h])=>+h.toFixed(2)), backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        onClick: (evt, els) => {
+          if (!els.length) return;
+          const tecnico = entries[els[0].index][0];
+          const desde = document.getElementById('pa-desde')?.value || '';
+          const hasta = document.getElementById('pa-hasta')?.value || '';
+          const alm   = document.getElementById('pa-alm')?.value   || '';
+          PartesPage._pendingFilter = { tecnico, almacen: alm, desde, hasta };
+          Router.navigate('partes');
+        },
+        plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: i => ` ${i.parsed.x.toFixed(1)}h` } } },
+        scales: {
+          x: { beginAtZero:true, ticks:{font:{size:11},callback:v=>`${v}h`}, grid:{color:'rgba(0,0,0,0.05)'} },
+          y: { grid:{display:false}, ticks:{font:{size:11}} }
+        }
+      }
+    });
+    const wrap = document.getElementById('pa-chart-tec-wrap');
+    if (wrap) wrap.style.height = Math.max(200, entries.length * 34 + 40) + 'px';
+  },
+
+  _rebuildAlm(rows) {
+    if (!rows) rows = this._getFiltered();
+    const almList = ['Algemesi','Miramar','Xeresa','Alcacer','Murcia'];
+    const horas   = almList.map(alm => rows.filter(r => normalizeAlmacen(r.almacen || r._av?.almacen || '') === normalizeAlmacen(alm)).reduce((s,r) => s+(parseFloat(r.horas)||0), 0));
+    const maxH = Math.max(...horas, 1);
+    const colors = horas.map(h => { const r=h/maxH; return r>0.75?'rgba(39,93,58,0.85)':r>0.5?'rgba(22,100,140,0.82)':r>0.25?'rgba(184,134,11,0.78)':'rgba(22,100,140,0.45)'; });
+
+    if (this._chartAlm) { this._chartAlm.destroy(); this._chartAlm = null; }
+    const ctx = document.getElementById('pa-chart-alm');
+    if (!ctx) return;
+    this._chartAlm = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: almList, datasets: [{ data: horas.map(h=>+h.toFixed(2)), backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        onClick: (evt, els) => {
+          if (!els.length) return;
+          const almacen = almList[els[0].index];
+          const desde = document.getElementById('pa-desde')?.value || '';
+          const hasta = document.getElementById('pa-hasta')?.value || '';
+          PartesPage._pendingFilter = { almacen, desde, hasta };
+          Router.navigate('partes');
+        },
+        plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: i => ` ${i.parsed.y.toFixed(1)}h` } } },
+        scales: {
+          y: { beginAtZero:true, ticks:{font:{size:11},callback:v=>`${v}h`}, grid:{color:'rgba(0,0,0,0.05)'} },
+          x: { grid:{display:false}, ticks:{font:{size:11}} }
+        }
+      }
+    });
+  },
+
+  _rebuildEvol(rows) {
+    if (!rows) rows = this._getFiltered();
+    const monthMap = {};
+    rows.forEach(r => {
+      if (!r.fecha) return;
+      const m = String(r.fecha).slice(0, 7);
+      monthMap[m] = (monthMap[m]||0) + (parseFloat(r.horas)||0);
+    });
+    const months = Object.keys(monthMap).sort();
+    const labels = months.map(m => {
+      const [y, mo] = m.split('-');
+      return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1] + ' ' + y;
+    });
+
+    if (this._chartEvol) { this._chartEvol.destroy(); this._chartEvol = null; }
+    const ctx = document.getElementById('pa-chart-evol');
+    if (!ctx || !months.length) return;
+    this._chartEvol = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: months.map(m => +(monthMap[m]||0).toFixed(2)),
+          borderColor: 'rgba(22,100,140,0.85)', backgroundColor: 'rgba(22,100,140,0.10)',
+          fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: 'rgba(22,100,140,0.85)',
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: i => ` ${i.parsed.y.toFixed(1)}h` } } },
+        scales: {
+          y: { beginAtZero:true, ticks:{font:{size:11},callback:v=>`${v}h`}, grid:{color:'rgba(0,0,0,0.05)'} },
+          x: { grid:{display:false}, ticks:{font:{size:11}} }
+        }
+      }
+    });
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
-Router.register('dashboard',  async () => DashboardPage.render());
-Router.register('activos',    async () => ActivosPage.render());
-Router.register('averias',    async () => AveriasPage.render());
-Router.register('incidencias',async () => IncidenciasPage.render());
-Router.register('inventario',  async () => InventarioPage.render());
-Router.register('movimientos', async () => MovimientosPage.render());
-Router.register('partes',      async () => PartesPage.render());
-Router.register('inspecciones',async () => InspeccionesPage.render());
-Router.register('config',      async () => ConfigPage.render());
+Router.register('dashboard',       async () => DashboardPage.render());
+Router.register('partes-analisis', async () => PartesAnalisisPage.render());
+Router.register('activos',         async () => ActivosPage.render());
+Router.register('averias',         async () => AveriasPage.render());
+Router.register('incidencias',     async () => IncidenciasPage.render());
+Router.register('inventario',      async () => InventarioPage.render());
+Router.register('movimientos',     async () => MovimientosPage.render());
+Router.register('partes',          async () => PartesPage.render());
+Router.register('inspecciones',    async () => InspeccionesPage.render());
+Router.register('config',          async () => ConfigPage.render());
 
 // ═══════════════════════════════════════════════════════════════════
 // SIDEBAR MÓVIL
