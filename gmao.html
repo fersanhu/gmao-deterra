@@ -587,7 +587,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.3</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.6</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -7554,9 +7554,9 @@ const PartesPage = {
       <table class="data-table" id="pt-table">
         <thead><tr>
           <th>Fecha</th><th>Técnico</th><th>Almacén</th><th>Activo / Equipo</th>
-          <th>Horas</th><th>Materiales</th><th>Avería</th><th>Notas</th>
+          <th>Horas</th><th>Materiales</th><th>Avería</th><th>Notas</th><th></th>
         </tr></thead>
-        <tbody id="pt-tbody"><tr><td colspan="8" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
+        <tbody id="pt-tbody"><tr><td colspan="9" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
       </table>
     </div>`;
 
@@ -7694,16 +7694,18 @@ CREATE TABLE IF NOT EXISTS partes_trabajo (
   horas        NUMERIC(5,2) DEFAULT 0,
   notas        TEXT DEFAULT '',
   activo_id    TEXT DEFAULT '',
+  equipo       TEXT DEFAULT '',
   almacen      TEXT DEFAULT '',
   materiales   TEXT DEFAULT ''
 );
 ALTER TABLE partes_trabajo ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "partes_all" ON partes_trabajo FOR ALL USING (true) WITH CHECK (true);
--- Si ya tienes la tabla, ejecuta estas líneas para añadir las nuevas columnas:
--- ALTER TABLE partes_trabajo ALTER COLUMN averia_id DROP NOT NULL;
--- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS activo_id TEXT DEFAULT '';
--- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS almacen TEXT DEFAULT '';
--- ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS materiales TEXT DEFAULT '';
+-- Si ya tienes la tabla (versión anterior), ejecuta estas líneas para añadir las columnas que faltan:
+ALTER TABLE partes_trabajo ALTER COLUMN averia_id DROP NOT NULL;
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS activo_id  TEXT DEFAULT '';
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS equipo     TEXT DEFAULT '';
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS almacen    TEXT DEFAULT '';
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS materiales TEXT DEFAULT '';
 
 -- Tabla fotos_averias
 CREATE TABLE IF NOT EXISTS fotos_averias (
@@ -7736,7 +7738,7 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
       <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
         ⚠️ <strong>Versión 3 del SQL de setup.</strong><br>
         Incluye RLS en tablas principales (seguridad) y función atómica de stock.<br>
-        Si ya tienes la tabla partes_trabajo, ejecuta los ALTER TABLE comentados al final del Bloque C.<br>
+        Si ya tienes la tabla partes_trabajo, ejecuta los ALTER TABLE del final del Bloque C para añadir las columnas opcionales.<br>
         Si ya ejecutaste la versión anterior, ejecuta solo el Bloque E (nueva columna zona_limpia).
       </div>
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
@@ -7788,7 +7790,7 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
     const tbody = document.getElementById('pt-tbody');
     if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-muted);padding:24px">Sin partes para los filtros seleccionados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-muted);padding:24px">Sin partes para los filtros seleccionados</td></tr>`;
       return;
     }
     tbody.innerHTML = rows.map(r => {
@@ -7821,14 +7823,82 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
         <td style="max-width:220px">${matsHtml}</td>
         <td>${avLink}</td>
         <td style="color:var(--gray-muted);font-style:italic">${UI.esc(r.notas || '')}</td>
+        <td style="white-space:nowrap"><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px" onclick="PartesPage._openEdit('${UI.esc(r.id)}')">✏️ Editar</button></td>
       </tr>`;
     }).join('');
   },
 
   _ptMaterials: [],
   _ptProdCache: [],
+  _ptEditingId: null,   // null = nuevo parte; string = id del parte a editar
+
+  async _openEdit(id) {
+    const parte = this._partes.find(p => p.id === id);
+    if (!parte) { toast('Parte no encontrado', 'error'); return; }
+    // Abrir el formulario como "nuevo" y luego rellenar los campos
+    // IMPORTANTE: _ptEditingId se asigna DESPUÉS de _openNew() porque
+    // _openNew() lo resetea a null al inicio.
+    await this._openNew();
+    this._ptEditingId = id;
+    // Pre-rellenar campos simples
+    const fld = (el) => document.getElementById(el);
+    if (fld('pf-tecnico')) fld('pf-tecnico').value = parte.tecnico || '';
+    if (fld('pf-fecha'))   fld('pf-fecha').value   = parte.fecha   || '';
+    if (fld('pf-horas'))   fld('pf-horas').value   = parte.horas   ?? '';
+    if (fld('pf-averia'))  fld('pf-averia').value  = parte.averia_id || '';
+    if (fld('pf-notas'))   fld('pf-notas').value   = parte.notas   || '';
+    // Materiales pre-cargados
+    try {
+      this._ptMaterials = parte.materiales ? JSON.parse(parte.materiales) : [];
+    } catch(_) { this._ptMaterials = []; }
+    this._renderPtMaterials();
+    // Cascada equipo: almacén ya se dispara en _openNew si hay effAlm,
+    // pero aquí forzamos el almacén del parte y re-cascadamos
+    const almEl   = fld('pf-almacen');
+    const zonaEl  = fld('pf-zona');
+    const lineaEl = fld('pf-linea');
+    const equipEl = fld('pf-equipo');
+    const hidEl   = fld('pf-activo-id');
+    if (!almEl) return;
+    almEl.value = parte.almacen || '';
+    // Guardar el equipo del parte para seleccionarlo tras cargar la cascada
+    const targetActivo = parte.activo_id || '';
+    const targetEquipo = parte.equipo    || '';
+    if (almEl.value) {
+      // Sobreescribir el listener anterior relanzando el evento
+      almEl.dispatchEvent(new Event('change'));
+      // Esperar a que carguen las zonas (asíncrono), luego continuar la cascada
+      const waitSelect = (el, targetText, delay = 400) => new Promise(res => setTimeout(() => {
+        const opt = [...el.options].find(o => o.text === targetText || o.value === targetText);
+        if (opt) { el.value = opt.value || opt.text; el.dispatchEvent(new Event('change')); }
+        res();
+      }, delay));
+      // Zona → Línea → Equipo con pequeños delays para que cada select cargue
+      const [zonaTarget, lineaTarget] = await (async () => {
+        // Buscar el activo en _activos para obtener zona y linea
+        const activo = (this._activos || []).find(a => a.id_activo === targetActivo);
+        return [activo?.zona || '', activo?.linea || ''];
+      })();
+      if (zonaTarget) {
+        await waitSelect(zonaEl, zonaTarget, 500);
+        if (lineaTarget) {
+          await waitSelect(lineaEl, lineaTarget, 500);
+          // Seleccionar equipo por activo_id o nombre
+          await new Promise(res => setTimeout(() => {
+            const opt = [...equipEl.options].find(o => o.value === targetActivo || o.text === targetEquipo);
+            if (opt) { equipEl.value = opt.value; hidEl.value = opt.value; }
+            res();
+          }, 500));
+        }
+      }
+    }
+    // Cambiar título del modal para indicar que es edición
+    const modalTitle = document.querySelector('.modal-title, #modal-title, .modal-header h3, .modal-header .modal-heading');
+    if (modalTitle) modalTitle.textContent = 'Editar Parte de Trabajo';
+  },
 
   async _openNew() {
+    this._ptEditingId = null;  // Siempre nuevo cuando se llama directamente
     let tecnicos = [], todosProds = [];
     try {
       [tecnicos, todosProds] = await Promise.all([
@@ -8054,28 +8124,58 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
     if (!fecha)   { toast('Indica la fecha', 'error'); return; }
 
-    const id = `pt_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+    // Edición: reutilizar el ID existente; nuevo: generar uno nuevo
+    const id = this._ptEditingId || `pt_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+    const isEdit = !!this._ptEditingId;
     const materialesJson = this._ptMaterials.length ? JSON.stringify(this._ptMaterials) : '';
 
+    const record = {
+      id,
+      averia_id:  averiaId,
+      tecnico,
+      fecha,
+      horas,
+      notas,
+      activo_id:  activoId,
+      equipo:     equipo && !equipo.startsWith('Selecciona') ? equipo : '',
+      almacen,
+      materiales: materialesJson,
+    };
+
+    const _isSchemaErr = (e) => e.message && (
+      e.message.includes('schema cache') || e.message.includes('Could not find') ||
+      e.message.includes('column') || e.message.includes('schema')
+    );
+
+    let savedOk = false;
+    let schemaFallback = false;
     try {
-      await db.partes_trabajo.put({
-        id,
-        averia_id:  averiaId,
-        tecnico,
-        fecha,
-        horas,
-        notas,
-        activo_id:  activoId,
-        equipo:     equipo && !equipo.startsWith('Selecciona') ? equipo : '',
-        almacen,
-        materiales: materialesJson,
-      });
-      Modal.close();
-      toast('Parte guardado ✓', 'success');
-      await this._loadData();
+      await db.partes_trabajo.put(record);
+      savedOk = true;
     } catch(e) {
-      toast('Error al guardar: ' + e.message, 'error');
+      if (_isSchemaErr(e)) {
+        // Columnas opcionales no existen → guardar solo las base y avisar
+        try {
+          await db.partes_trabajo.put({ id, averia_id: averiaId, tecnico, fecha, horas, notas });
+          savedOk = true;
+          schemaFallback = true;
+        } catch(e2) {
+          toast('Error al guardar: ' + e2.message, 'error');
+        }
+      } else {
+        toast('Error al guardar: ' + e.message, 'error');
+      }
     }
+
+    if (!savedOk) return;
+    this._ptEditingId = null;
+    Modal.close();
+    if (schemaFallback) {
+      toast('⚠️ Guardado parcial (sin equipo/almacén) — ejecuta los ALTER TABLE del Bloque C en ⚙️ Setup SQL.', 'warning');
+    } else {
+      toast(isEdit ? 'Parte actualizado ✓' : 'Parte guardado ✓', 'success');
+    }
+    await this._loadData();
   },
 };
 
