@@ -587,7 +587,7 @@ select.form-input{cursor:pointer}
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.6</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.7</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1165,10 +1165,24 @@ const DataService = {
     }
   },
   async savePartes(partes) {
+    const _isSchemaErr = (e) => e.message && (
+      e.message.includes('schema cache') || e.message.includes('Could not find') ||
+      e.message.includes('column') || e.message.includes('schema')
+    );
     for (const p of partes) {
       // Asegurar que fecha es string ISO (Supabase DATE espera 'YYYY-MM-DD')
       const clean = { ...p, fecha: p.fecha ? String(p.fecha).slice(0,10) : new Date().toISOString().slice(0,10), horas: parseFloat(p.horas) || 0 };
-      await db.partes_trabajo.put(clean);
+      try {
+        await db.partes_trabajo.put(clean);
+      } catch(e) {
+        if (_isSchemaErr(e)) {
+          // Columnas opcionales no existen aún → guardar solo base
+          const { activo_id, equipo, almacen, materiales, ...base } = clean;
+          await db.partes_trabajo.put(base);
+        } else {
+          throw e;  // relanzar para que el catch exterior lo muestre
+        }
+      }
     }
   },
   async deletePartesByAveria(averia_id) {
