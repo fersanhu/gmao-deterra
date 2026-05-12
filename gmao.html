@@ -463,6 +463,38 @@ select.form-input{cursor:pointer}
 .almacen-bar-track{flex:1;height:8px;background:var(--gray-light);border-radius:99px;overflow:hidden}
 .almacen-bar-fill{height:100%;background:var(--green);border-radius:99px;transition:width .6s}
 .almacen-bar-count{width:30px;text-align:right;font-size:12px;font-weight:600;color:var(--gray-text)}
+
+/* ── SELECTOR DE IDIOMA / LANGUAGE PICKER ── */
+.lang-picker{display:flex;justify-content:center;gap:6px;margin-bottom:14px}
+.lang-btn{background:none;border:1.5px solid transparent;border-radius:8px;padding:4px 8px;font-size:18px;cursor:pointer;transition:border-color .15s,background .15s;line-height:1}
+.lang-btn:hover,.lang-btn.active{border-color:var(--green);background:rgba(39,93,58,0.08)}
+.lang-switcher-sidebar{display:flex;justify-content:center;gap:4px;margin-bottom:10px}
+.lang-switcher-sidebar .lang-btn{font-size:15px;padding:3px 6px}
+
+/* ── RTL — ARABIC LAYOUT ── */
+html[dir="rtl"] #sidebar{left:auto;right:0}
+html[dir="rtl"] #main-panel{margin-left:0;margin-right:var(--sidebar-w)}
+html[dir="rtl"] .sidebar-user{flex-direction:row-reverse}
+html[dir="rtl"] .nav-item{flex-direction:row-reverse;text-align:right}
+html[dir="rtl"] .sidebar-logo{align-items:flex-end}
+html[dir="rtl"] .sidebar-section-label{text-align:right}
+html[dir="rtl"] body,html[dir="rtl"] input,html[dir="rtl"] select,html[dir="rtl"] textarea{font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+html[dir="rtl"] .users-filters{flex-direction:row-reverse}
+html[dir="rtl"] .almacen-cards-grid{direction:rtl}
+html[dir="rtl"] .users-grid{direction:rtl}
+html[dir="rtl"] .users-header{direction:rtl;text-align:right}
+html[dir="rtl"] .users-header h2,html[dir="rtl"] .users-header p{text-align:center}
+html[dir="rtl"] .topbar-title{text-align:right}
+html[dir="rtl"] table{direction:rtl}
+html[dir="rtl"] th,html[dir="rtl"] td{text-align:right}
+html[dir="rtl"] .card{text-align:right}
+html[dir="rtl"] .form-field label{text-align:right;display:block}
+html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
+@media(max-width:768px){
+  html[dir="rtl"] #sidebar{transform:translateX(100%)}
+  html[dir="rtl"] #sidebar.open{transform:translateX(0)}
+  html[dir="rtl"] #main-panel{margin-right:0}
+}
 </style>
 </head>
 <body>
@@ -475,15 +507,15 @@ select.form-input{cursor:pointer}
     <div class="setup-logo">
       <img src="https://deterraglobal.com/wp-content/uploads/2024/09/Logo-Deterra-RGB180.png"
            alt="Deterra" style="height:64px;object-fit:contain;max-width:260px">
-      <span class="setup-logo-sub">GMAO · Gestión de Mantenimiento</span>
+      <span class="setup-logo-sub" data-i18n="sidebar_sub">GMAO · Gestión de Mantenimiento</span>
     </div>
     <div id="setup-step-1">
-      <p class="setup-title">Bienvenido al sistema GMAO</p>
-      <p class="setup-desc">Para comenzar, selecciona el fichero Excel con los datos de activos, averías e inventario.</p>
+      <p class="setup-title" data-i18n="setup_welcome">Bienvenido al sistema GMAO</p>
+      <p class="setup-desc" data-i18n="setup_desc">Para comenzar, selecciona el fichero Excel con los datos de activos, averías e inventario.</p>
       <div class="drop-zone" id="drop-zone">
         <svg viewBox="0 0 24 24" fill="none" stroke="#275D3A" stroke-width="1.5" width="40" height="40"><path d="M9 12h6m-3-3v6M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-        <strong>Arrastra el Excel aquí</strong>
-        <span>o haz clic para seleccionarlo</span>
+        <strong data-i18n="drag_excel">Arrastra el Excel aquí</strong>
+        <span data-i18n="drag_or">o haz clic para seleccionarlo</span>
         <span style="font-size:11px;color:#bbb">Activos Appsheet.xlsx</span>
       </div>
       <input type="file" id="file-input" accept=".xlsx,.xls">
@@ -491,14 +523,14 @@ select.form-input{cursor:pointer}
     <div id="setup-step-2" style="width:100%;display:none;flex-direction:column;gap:16px">
       <div class="progress-wrap">
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-        <p class="progress-msg" id="progress-msg">Preparando importación...</p>
+        <p class="progress-msg" id="progress-msg" data-i18n="preparing">Preparando importación...</p>
       </div>
     </div>
     <div id="setup-step-3" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
       <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" width="48" height="48"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <p class="setup-title" style="color:#2e7d32">¡Datos importados!</p>
+      <p class="setup-title" style="color:#2e7d32" data-i18n="imported">¡Datos importados!</p>
       <div class="import-results" id="import-results"></div>
-      <button class="btn btn-primary" id="btn-continue" onclick="UserSelectScreen.show()" style="width:100%;justify-content:center">Continuar →</button>
+      <button class="btn btn-primary" id="btn-continue" onclick="UserSelectScreen.show()" style="width:100%;justify-content:center" data-i18n="btn_continue">Continuar →</button>
     </div>
   </div>
 </div>
@@ -510,8 +542,13 @@ select.form-input{cursor:pointer}
   <div class="users-card">
     <div class="users-header">
       <img src="https://deterraglobal.com/wp-content/uploads/2024/09/Logo-Deterra-RGB180.png" alt="Deterra" style="height:36px;object-fit:contain;margin-bottom:10px">
-      <h2 id="users-step-title">¿En qué centro trabajas?</h2>
-      <p id="users-step-sub">Selecciona tu centro de trabajo para continuar</p>
+      <div class="lang-picker">
+        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">🇪🇸</button>
+        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
+        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
+      </div>
+      <h2 id="users-step-title" data-i18n="step1_title">¿En qué centro trabajas?</h2>
+      <p id="users-step-sub" data-i18n="step1_sub">Selecciona tu centro de trabajo para continuar</p>
     </div>
     <!-- PASO 1: elegir almacén -->
     <div id="users-step1">
@@ -520,11 +557,11 @@ select.form-input{cursor:pointer}
     <!-- PASO 2: elegir usuario -->
     <div id="users-step2" style="display:none">
       <div class="users-filters">
-        <button class="users-back" onclick="UserSelectScreen._backToAlmacen()">
+        <button class="users-back" id="users-back-btn" onclick="UserSelectScreen._backToAlmacen()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg>
-          Cambiar centro
+          <span data-i18n="back_btn">Cambiar centro</span>
         </button>
-        <input type="search" class="users-search" id="user-search" placeholder="Buscar usuario...">
+        <input type="search" class="users-search" id="user-search" data-i18n-attr="placeholder" data-i18n="search_ph" placeholder="Buscar usuario...">
       </div>
       <div class="users-grid" id="users-grid"></div>
     </div>
@@ -539,55 +576,60 @@ select.form-input{cursor:pointer}
   <aside id="sidebar">
     <div class="sidebar-logo">
       <img src="https://deterraglobal.com/wp-content/uploads/2024/09/Logo-Deterra-RGB180.png" alt="Deterra">
-      <div class="sidebar-logo-sub">GMAO · Mantenimiento</div>
+      <div class="sidebar-logo-sub" data-i18n="sidebar_sub">GMAO · Mantenimiento</div>
     </div>
     <nav class="nav-items">
       <div class="nav-item active" data-route="dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span class="nav-label">Dashboard</span>
+        <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
       </div>
       <div class="nav-item" data-route="partes-analisis">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span class="nav-label">Análisis Partes</span>
+        <span class="nav-label" data-i18n="nav_analisis">Análisis Partes</span>
       </div>
       <div class="nav-item" data-route="activos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-        <span class="nav-label">Activos</span>
+        <span class="nav-label" data-i18n="nav_activos">Activos</span>
       </div>
       <div class="nav-item" data-route="averias">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span class="nav-label">Averías</span>
+        <span class="nav-label" data-i18n="nav_averias">Averías</span>
         <span class="nav-badge" id="badge-averias" style="display:none">0</span>
       </div>
       <div class="nav-item" data-route="incidencias">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span class="nav-label">Incidencias</span>
+        <span class="nav-label" data-i18n="nav_incidencias">Incidencias</span>
         <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
       </div>
       <div class="nav-item" data-route="partes" id="nav-partes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span class="nav-label">Partes</span>
+        <span class="nav-label" data-i18n="nav_partes">Partes</span>
       </div>
       <div class="nav-item" data-route="inventario">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        <span class="nav-label">Inventario</span>
+        <span class="nav-label" data-i18n="nav_inventario">Inventario</span>
       </div>
       <div class="nav-item" data-route="movimientos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-        <span class="nav-label">Movimientos</span>
+        <span class="nav-label" data-i18n="nav_movimientos">Movimientos</span>
       </div>
       <div class="nav-item" data-route="inspecciones">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
-        <span class="nav-label">Inspecciones</span>
+        <span class="nav-label" data-i18n="nav_inspecciones">Inspecciones</span>
         <span class="nav-badge" id="badge-inspecciones" style="display:none">0</span>
       </div>
       <div class="nav-item" data-route="config">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-        <span class="nav-label">Configuración</span>
+        <span class="nav-label" data-i18n="nav_config">Configuración</span>
       </div>
     </nav>
     <div class="sidebar-bottom">
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.7</div>
+      <div class="lang-switcher-sidebar">
+        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">🇪🇸</button>
+        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
+        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
+      </div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.9</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -608,7 +650,7 @@ select.form-input{cursor:pointer}
       </button>
       <span id="topbar-title">Dashboard</span>
       <select class="almacen-select" id="global-almacen-filter">
-        <option value="">Todos los almacenes</option>
+        <option value="">${t('todos_alm')}</option>
         <option>Miramar</option>
         <option>Xeresa</option>
         <option>Murcia</option>
@@ -645,6 +687,441 @@ select.form-input{cursor:pointer}
 
 <script>
 'use strict';
+// ═══════════════════════════════════════════════════════════════════
+// I18N — Internacionalización / Internationalization / التدويل
+// ═══════════════════════════════════════════════════════════════════
+const I18N = {
+  _lang: localStorage.getItem('gmao_lang') || 'es',
+
+  setLang(lang) {
+    this._lang = lang;
+    localStorage.setItem('gmao_lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    this.apply();
+    // Actualizar botones activos
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      const title = btn.getAttribute('title') || '';
+      const map = { es:'Español', en:'English', ar:'العربية' };
+      btn.classList.toggle('active', map[lang] === title);
+    });
+  },
+
+  t(key) {
+    return (this._msgs[this._lang] || this._msgs['es'])[key] ?? (this._msgs['es'][key] ?? key);
+  },
+
+  apply() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key  = el.getAttribute('data-i18n');
+      const attr = el.getAttribute('data-i18n-attr');
+      if (attr) el.setAttribute(attr, this.t(key));
+      else      el.textContent = this.t(key);
+    });
+  },
+
+  _msgs: {
+    es: {
+      // Nav
+      nav_dashboard:'Dashboard', nav_analisis:'Análisis Partes', nav_activos:'Activos',
+      nav_averias:'Averías', nav_incidencias:'Incidencias', nav_partes:'Partes',
+      nav_inventario:'Inventario', nav_movimientos:'Movimientos',
+      nav_inspecciones:'Inspecciones', nav_config:'Configuración',
+      // Sidebar / setup
+      sidebar_sub:'GMAO · Mantenimiento',
+      setup_welcome:'Bienvenido al sistema GMAO',
+      setup_desc:'Para comenzar, selecciona el fichero Excel con los datos de activos, averías e inventario.',
+      drag_excel:'Arrastra el Excel aquí', drag_or:'o haz clic para seleccionarlo',
+      preparing:'Preparando importación...', imported:'¡Datos importados!', btn_continue:'Continuar →',
+      // Login
+      step1_title:'¿En qué centro trabajas?',
+      step1_sub:'Selecciona tu centro de trabajo para continuar',
+      step2_sub:'Selecciona tu usuario',
+      back_btn:'Cambiar centro', search_ph:'Buscar usuario...',
+      no_users:'No hay usuarios en este centro',
+      sin_password:'Sin contraseña', user_s:'usuario', user_pl:'usuarios',
+      // Contraseña
+      welcome:'Bienvenido', first_time:'Es tu primera vez en el sistema. Crea una contraseña personal para acceder.',
+      new_pw:'Nueva contraseña', new_pw_ph:'Mínimo 4 caracteres',
+      repeat_pw:'Repetir contraseña', repeat_pw_ph:'Repite la contraseña',
+      create_enter:'Crear y entrar', pw_label:'Contraseña',
+      pw_ph:'Introduce tu contraseña', pw_wrong:'❌ Contraseña incorrecta',
+      enter:'Entrar', cancel:'Cancelar',
+      pw_short:'La contraseña debe tener al menos 4 caracteres',
+      pw_nomatch:'Las contraseñas no coinciden',
+      // Comunes
+      save:'Guardar', close:'Cerrar', edit:'Editar', delete:'Eliminar',
+      new_:'Nueva', filter:'Filtrar', export_:'Exportar', search:'Buscar',
+      logout_user:'Cambiar usuario',
+      // Estados / badges
+      opt_abierta:'Abierta', opt_en_curso:'En curso', opt_cerrada:'Cerrada',
+      opt_abiertas:'Abiertas', opt_cerradas:'Cerradas',
+      est_operativo:'Operativo', est_parado:'Parado', est_baja:'Baja', est_en_rep:'En reparación',
+      cr_alta:'Alta', cr_moderada:'Moderada', cr_baja:'Baja', cr_preventivo:'Preventivo',
+      vencida:'VENCIDA',
+      // Filtros y selectores
+      todos:'Todos', todas:'Todas', todo:'Todo',
+      todos_alm:'Todos los almacenes', todos_estados:'Todos los estados',
+      todas_zonas:'Todas las zonas', todas_familias:'Todas las familias',
+      todos_tipos:'Todos los tipos', todos_resultados:'Todos los resultados',
+      toda_crit:'Toda criticidad',
+      hoy:'Hoy', ayer:'Ayer', desde:'Desde', hasta:'Hasta',
+      filtros:'Filtros', agrupacion:'Agrupación', periodo:'Período',
+      sem:'Sem.', trim_:'Trim.', anio:'Año',
+      ent_sal:'Entradas y salidas', solo_ent:'Solo entradas', solo_sal:'Solo salidas',
+      n_3m:'3 meses', n_6m:'6 meses', n_12m:'12 meses', n_2a:'2 años',
+      seleccionar:'Seleccionar...', sel_almacen:'Selecciona almacén',
+      sel_zona:'Selecciona zona', sel_linea:'Selecciona línea',
+      opcional:'opcional', de:'de', centro_label:'Centro', todos_los_centros:'Todos los centros',
+      // Botones de acción
+      btn_nueva_averia:'+ Nueva avería', btn_nueva_inc:'+ Nueva incidencia',
+      btn_nueva_insp:'Nueva inspección', btn_añadir_inv:'+ Añadir al inventario',
+      btn_nuevo_activo:'+ Nuevo activo', btn_alta_masiva:'Alta masiva',
+      btn_importar:'Importar', btn_excel:'Excel',
+      btn_nuevo_parte:'+ Nuevo parte',
+      btn_registrar_av:'Registrar avería', btn_registrar_inc:'Registrar incidencia',
+      btn_cerrar_av:'Cerrar avería', btn_confirmar_cierre:'✓ Confirmar cierre',
+      btn_convertir_av:'⚡ Convertir en avería',
+      btn_resolver:'Resolver', btn_añadir:'+ Añadir',
+      btn_añadir_foto:'Añadir foto(s)',
+      btn_guardar_cambios:'Guardar cambios', btn_crear_activo:'Crear activo',
+      btn_crear_insp:'Crear inspección',
+      cerrar_en_form:'✓ Registrar ya resuelta (cerrar en este mismo formulario)',
+      zona_limpia:'🧹 Zona limpia y revisada',
+      // Placeholders de búsqueda
+      ph_buscar_equipo:'Buscar equipo...', ph_buscar_av:'Buscar avería...',
+      ph_buscar_inc:'Buscar incidencia...', ph_buscar_inv:'Buscar producto...',
+      ph_buscar_mov:'Buscar movimiento...', ph_buscar_insp:'Buscar inspección...',
+      ph_desc_inc:'Describe la incidencia...',
+      // KPIs Dashboard
+      kpi_parados:'Parados', kpi_inc_activas:'Inc. activas', kpi_inc_sub:'Inc. subidas',
+      kpi_act_op:'Act. operativos', kpi_parados_none:'ninguno', kpi_tecnicos:'Técnicos activos',
+      // Gráficas
+      chart_evolucion:'Evolución de averías', chart_por_tipo:'Por tipo de avería',
+      // Mensajes de estado
+      cargando:'Cargando...', sin_activos:'Sin activos', sin_incidencias:'Sin incidencias',
+      prueba_filtros:'Prueba a ajustar los filtros', solo_tu_centro:'Solo tu centro',
+      // Resumen / contadores
+      activos_reg:'activos registrados', abiertas:'abiertas', activas:'activas',
+      referencias_en:'referencias en', uds_stock:'uds. en stock',
+      movimientos:'movimientos', uds_entradas:'uds. entradas', uds_salidas:'uds. salidas',
+      entrada:'Entrada', salida:'Salida',
+      // Columnas de tabla
+      col_fecha:'Fecha', col_almacen:'Almacén', col_estado:'Estado',
+      col_hora:'Hora', col_linea:'Línea', col_equipo:'Equipo',
+      col_desc:'Descripción', col_tecnico:'Técnico', col_tipo:'Tipo',
+      col_zona:'Zona', col_familia:'Familia', col_crit:'Criticidad',
+      col_duracion:'Duración', col_id_activo:'ID Activo', col_por_centro:'Por centro',
+      col_uds:'Uds.', col_cantidad:'Cantidad', col_cant_short:'Cant.',
+      col_usuario:'Usuario', col_notas:'Notas', col_cod_prod:'Cód. producto',
+      col_producto:'Producto', col_activo_equipo:'Equipo / Activo',
+      col_horas:'Horas', col_materiales:'Materiales', col_averia:'Avería',
+      col_doc:'Documento', col_empresa:'Empresa', col_resultado:'Resultado',
+      col_proxima:'Próxima', col_prioridad:'Prioridad',
+      // Labels de formulario
+      lbl_almacen:'Almacén', lbl_zona:'Zona', lbl_linea:'Línea', lbl_equipo:'Equipo',
+      lbl_tecnico:'Técnico', lbl_prioridad:'Prioridad', lbl_desc:'Descripción',
+      lbl_tipo_inc:'Tipo de incidencia', lbl_reportado:'Reportado por',
+      lbl_responsable:'Responsable', lbl_observaciones:'Observaciones',
+      lbl_fecha_ini:'Fecha inicio', lbl_hora_ini:'Hora inicio',
+      lbl_fecha_fin:'Fecha fin', lbl_hora_fin:'Hora fin',
+      lbl_fecha_cie:'Fecha de cierre', lbl_hora_cie:'Hora de cierre',
+      lbl_duracion:'Duración', lbl_solucion:'Solución aplicada',
+      lbl_repuestos:'Repuestos utilizados', lbl_dur_hm:'Duración (horas y minutos)',
+      lbl_tipo_av:'Tipo avería', lbl_desc_av:'Descripción de la avería',
+      lbl_horas:'Horas trabajadas', lbl_materiales:'Materiales',
+      lbl_empresa:'Empresa inspectora', lbl_resultado:'Resultado',
+      lbl_proxima_insp:'Próxima inspección', lbl_tipo_insp:'Tipo de inspección',
+      lbl_fecha_insp:'Fecha de inspección', lbl_num_registro:'Nº Registro instalación',
+      lbl_obs_def:'Observaciones / Deficiencias', lbl_cert_pdf:'Certificado PDF',
+      lbl_id_activo:'ID Activo', lbl_tipo_maq:'Tipo de maquinaria',
+      lbl_proveedor:'Proveedor', lbl_anio_adq:'Año adquisición',
+      lbl_matricula:'Matrícula / Nº serie', lbl_potencia:'Potencia (kW)',
+      lbl_zona_linea:'Zona / Línea', lbl_fecha_reg:'Fecha registro',
+      lbl_averia_rel:'Avería relacionada', lbl_trabajo_notas:'Descripción del trabajo / Notas',
+      lbl_causa:'Causa raíz', lbl_doc_url:'Documento (URL)',
+      lbl_resolucion:'Resolución / Cierre', lbl_notas:'Notas',
+      lbl_criticidad:'Criticidad',
+      // Títulos de modal
+      modal_nueva_av:'Nueva avería', modal_nueva_inc:'Nueva incidencia',
+      modal_activo:'Activo', modal_editar_insp:'Editar inspección',
+      // Textos dinámicos
+      localiza_activo:'Localiza el activo averiado: Almacén → Zona → Línea → Equipo',
+      fotos_problema:'Fotos del problema',
+      mecanicos_intervienen:'Mecánicos que intervienen',
+      ningun_mecanico:'Ningún mecánico añadido todavía.',
+      acceso_restringido:'Acceso restringido. Identifícate primero.',
+      acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
+    },
+    en: {
+      // Nav
+      nav_dashboard:'Dashboard', nav_analisis:'Work Order Analysis', nav_activos:'Assets',
+      nav_averias:'Breakdowns', nav_incidencias:'Incidents', nav_partes:'Work Orders',
+      nav_inventario:'Inventory', nav_movimientos:'Movements',
+      nav_inspecciones:'Inspections', nav_config:'Settings',
+      // Sidebar / setup
+      sidebar_sub:'GMAO · Maintenance',
+      setup_welcome:'Welcome to GMAO System',
+      setup_desc:'To start, select the Excel file with assets, breakdowns and inventory data.',
+      drag_excel:'Drag Excel here', drag_or:'or click to select it',
+      preparing:'Preparing import...', imported:'Data imported!', btn_continue:'Continue →',
+      // Login
+      step1_title:'Which center do you work at?',
+      step1_sub:'Select your work center to continue',
+      step2_sub:'Select your user',
+      back_btn:'Change center', search_ph:'Search user...',
+      no_users:'No users in this center',
+      sin_password:'No password', user_s:'user', user_pl:'users',
+      // Password
+      welcome:'Welcome', first_time:'First time in the system. Create a personal password to access.',
+      new_pw:'New password', new_pw_ph:'Minimum 4 characters',
+      repeat_pw:'Repeat password', repeat_pw_ph:'Repeat your password',
+      create_enter:'Create & enter', pw_label:'Password',
+      pw_ph:'Enter your password', pw_wrong:'❌ Wrong password',
+      enter:'Login', cancel:'Cancel',
+      pw_short:'Password must be at least 4 characters',
+      pw_nomatch:"Passwords don't match",
+      // Common
+      save:'Save', close:'Close', edit:'Edit', delete:'Delete',
+      new_:'New', filter:'Filter', export_:'Export', search:'Search',
+      logout_user:'Switch user',
+      // Status / badges
+      opt_abierta:'Open', opt_en_curso:'In progress', opt_cerrada:'Closed',
+      opt_abiertas:'Open', opt_cerradas:'Closed',
+      est_operativo:'Operational', est_parado:'Stopped', est_baja:'Decommissioned', est_en_rep:'In repair',
+      cr_alta:'High', cr_moderada:'Medium', cr_baja:'Low', cr_preventivo:'Preventive',
+      vencida:'OVERDUE',
+      // Filters & selectors
+      todos:'All', todas:'All', todo:'All',
+      todos_alm:'All warehouses', todos_estados:'All statuses',
+      todas_zonas:'All zones', todas_familias:'All families',
+      todos_tipos:'All types', todos_resultados:'All results',
+      toda_crit:'All criticality',
+      hoy:'Today', ayer:'Yesterday', desde:'From', hasta:'To',
+      filtros:'Filters', agrupacion:'Group by', periodo:'Period',
+      sem:'Week', trim_:'Quarter', anio:'Year',
+      ent_sal:'In & out', solo_ent:'Entries only', solo_sal:'Exits only',
+      n_3m:'3 months', n_6m:'6 months', n_12m:'12 months', n_2a:'2 years',
+      seleccionar:'Select...', sel_almacen:'Select warehouse',
+      sel_zona:'Select zone', sel_linea:'Select line',
+      opcional:'optional', de:'of', centro_label:'Center', todos_los_centros:'All centers',
+      // Action buttons
+      btn_nueva_averia:'+ New breakdown', btn_nueva_inc:'+ New incident',
+      btn_nueva_insp:'New inspection', btn_añadir_inv:'+ Add to inventory',
+      btn_nuevo_activo:'+ New asset', btn_alta_masiva:'Bulk add',
+      btn_importar:'Import', btn_excel:'Excel',
+      btn_nuevo_parte:'+ New work order',
+      btn_registrar_av:'Register breakdown', btn_registrar_inc:'Register incident',
+      btn_cerrar_av:'Close breakdown', btn_confirmar_cierre:'✓ Confirm close',
+      btn_convertir_av:'⚡ Convert to breakdown',
+      btn_resolver:'Resolve', btn_añadir:'+ Add',
+      btn_añadir_foto:'Add photo(s)',
+      btn_guardar_cambios:'Save changes', btn_crear_activo:'Create asset',
+      btn_crear_insp:'Create inspection',
+      cerrar_en_form:'✓ Register as resolved (close in this form)',
+      zona_limpia:'🧹 Zone clean and checked',
+      // Search placeholders
+      ph_buscar_equipo:'Search equipment...', ph_buscar_av:'Search breakdown...',
+      ph_buscar_inc:'Search incident...', ph_buscar_inv:'Search product...',
+      ph_buscar_mov:'Search movement...', ph_buscar_insp:'Search inspection...',
+      ph_desc_inc:'Describe the incident...',
+      // Dashboard KPIs
+      kpi_parados:'Stopped', kpi_inc_activas:'Active inc.', kpi_inc_sub:'Submitted inc.',
+      kpi_act_op:'Oper. assets', kpi_parados_none:'none', kpi_tecnicos:'Active technicians',
+      // Charts
+      chart_evolucion:'Breakdown evolution', chart_por_tipo:'By breakdown type',
+      // Status messages
+      cargando:'Loading...', sin_activos:'No assets', sin_incidencias:'No incidents',
+      prueba_filtros:'Try adjusting the filters', solo_tu_centro:'Your center only',
+      // Counters
+      activos_reg:'registered assets', abiertas:'open', activas:'active',
+      referencias_en:'references in', uds_stock:'units in stock',
+      movimientos:'movements', uds_entradas:'units in', uds_salidas:'units out',
+      entrada:'Entry', salida:'Exit',
+      // Table columns
+      col_fecha:'Date', col_almacen:'Warehouse', col_estado:'Status',
+      col_hora:'Time', col_linea:'Line', col_equipo:'Equipment',
+      col_desc:'Description', col_tecnico:'Technician', col_tipo:'Type',
+      col_zona:'Zone', col_familia:'Family', col_crit:'Criticality',
+      col_duracion:'Duration', col_id_activo:'Asset ID', col_por_centro:'By center',
+      col_uds:'Units', col_cantidad:'Quantity', col_cant_short:'Qty.',
+      col_usuario:'User', col_notas:'Notes', col_cod_prod:'Product code',
+      col_producto:'Product', col_activo_equipo:'Equipment / Asset',
+      col_horas:'Hours', col_materiales:'Materials', col_averia:'Breakdown',
+      col_doc:'Document', col_empresa:'Company', col_resultado:'Result',
+      col_proxima:'Next', col_prioridad:'Priority',
+      // Form labels
+      lbl_almacen:'Warehouse', lbl_zona:'Zone', lbl_linea:'Line', lbl_equipo:'Equipment',
+      lbl_tecnico:'Technician', lbl_prioridad:'Priority', lbl_desc:'Description',
+      lbl_tipo_inc:'Incident type', lbl_reportado:'Reported by',
+      lbl_responsable:'Responsible', lbl_observaciones:'Observations',
+      lbl_fecha_ini:'Start date', lbl_hora_ini:'Start time',
+      lbl_fecha_fin:'End date', lbl_hora_fin:'End time',
+      lbl_fecha_cie:'Close date', lbl_hora_cie:'Close time',
+      lbl_duracion:'Duration', lbl_solucion:'Solution applied',
+      lbl_repuestos:'Parts used', lbl_dur_hm:'Duration (hours and minutes)',
+      lbl_tipo_av:'Breakdown type', lbl_desc_av:'Breakdown description',
+      lbl_horas:'Hours worked', lbl_materiales:'Materials',
+      lbl_empresa:'Inspection company', lbl_resultado:'Result',
+      lbl_proxima_insp:'Next inspection', lbl_tipo_insp:'Inspection type',
+      lbl_fecha_insp:'Inspection date', lbl_num_registro:'Installation register no.',
+      lbl_obs_def:'Observations / Deficiencies', lbl_cert_pdf:'PDF Certificate',
+      lbl_id_activo:'Asset ID', lbl_tipo_maq:'Machinery type',
+      lbl_proveedor:'Supplier', lbl_anio_adq:'Acquisition year',
+      lbl_matricula:'License plate / Serial no.', lbl_potencia:'Power (kW)',
+      lbl_zona_linea:'Zone / Line', lbl_fecha_reg:'Registration date',
+      lbl_averia_rel:'Related breakdown', lbl_trabajo_notas:'Work description / Notes',
+      lbl_causa:'Root cause', lbl_doc_url:'Document (URL)',
+      lbl_resolucion:'Resolution / Close', lbl_notas:'Notes',
+      lbl_criticidad:'Criticality',
+      // Modal titles
+      modal_nueva_av:'New breakdown', modal_nueva_inc:'New incident',
+      modal_activo:'Asset', modal_editar_insp:'Edit inspection',
+      // Dynamic texts
+      localiza_activo:'Locate the faulty asset: Warehouse → Zone → Line → Equipment',
+      fotos_problema:'Problem photos',
+      mecanicos_intervienen:'Mechanics involved',
+      ningun_mecanico:'No mechanics added yet.',
+      acceso_restringido:'Restricted access. Please identify yourself first.',
+      acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
+    },
+    ar: {
+      // التنقل
+      nav_dashboard:'لوحة القيادة', nav_analisis:'تحليل أوامر العمل', nav_activos:'الأصول',
+      nav_averias:'الأعطال', nav_incidencias:'الحوادث', nav_partes:'أوامر العمل',
+      nav_inventario:'المخزون', nav_movimientos:'الحركات',
+      nav_inspecciones:'التفتيشات', nav_config:'الإعدادات',
+      // الشريط الجانبي / الإعداد
+      sidebar_sub:'نظام GMAO للصيانة',
+      setup_welcome:'مرحباً بك في نظام GMAO',
+      setup_desc:'للبدء، اختر ملف Excel الذي يحتوي على بيانات الأصول والأعطال والمخزون.',
+      drag_excel:'اسحب ملف Excel هنا', drag_or:'أو انقر لاختياره',
+      preparing:'جارٍ التحضير للاستيراد...', imported:'تم استيراد البيانات!', btn_continue:'← متابعة',
+      // تسجيل الدخول
+      step1_title:'في أي مركز تعمل؟',
+      step1_sub:'اختر مركز عملك للمتابعة',
+      step2_sub:'اختر المستخدم',
+      back_btn:'تغيير المركز', search_ph:'بحث عن مستخدم...',
+      no_users:'لا يوجد مستخدمون في هذا المركز',
+      sin_password:'بدون كلمة مرور', user_s:'مستخدم', user_pl:'مستخدمون',
+      // كلمة المرور
+      welcome:'مرحباً', first_time:'أول مرة في النظام. أنشئ كلمة مرور شخصية للوصول.',
+      new_pw:'كلمة مرور جديدة', new_pw_ph:'4 أحرف على الأقل',
+      repeat_pw:'تكرار كلمة المرور', repeat_pw_ph:'أعد كلمة المرور',
+      create_enter:'إنشاء والدخول', pw_label:'كلمة المرور',
+      pw_ph:'أدخل كلمة المرور', pw_wrong:'❌ كلمة المرور غير صحيحة',
+      enter:'دخول', cancel:'إلغاء',
+      pw_short:'يجب أن تحتوي كلمة المرور على 4 أحرف على الأقل',
+      pw_nomatch:'كلمتا المرور غير متطابقتين',
+      // عام
+      save:'حفظ', close:'إغلاق', edit:'تعديل', delete:'حذف',
+      new_:'جديد', filter:'تصفية', export_:'تصدير', search:'بحث',
+      logout_user:'تغيير المستخدم',
+      // الحالات / الشارات
+      opt_abierta:'مفتوح', opt_en_curso:'جارٍ', opt_cerrada:'مغلق',
+      opt_abiertas:'مفتوحة', opt_cerradas:'مغلقة',
+      est_operativo:'تشغيلي', est_parado:'متوقف', est_baja:'خارج الخدمة', est_en_rep:'في الإصلاح',
+      cr_alta:'عالية', cr_moderada:'متوسطة', cr_baja:'منخفضة', cr_preventivo:'وقائي',
+      vencida:'منتهية الصلاحية',
+      // المرشحات والمحددات
+      todos:'الكل', todas:'الكل', todo:'الكل',
+      todos_alm:'كل المستودعات', todos_estados:'كل الحالات',
+      todas_zonas:'كل المناطق', todas_familias:'كل العائلات',
+      todos_tipos:'كل الأنواع', todos_resultados:'كل النتائج',
+      toda_crit:'كل الأهمية',
+      hoy:'اليوم', ayer:'أمس', desde:'من', hasta:'إلى',
+      filtros:'المرشحات', agrupacion:'التجميع', periodo:'الفترة',
+      sem:'أسبوع', trim_:'ربع سنة', anio:'سنة',
+      ent_sal:'دخول وخروج', solo_ent:'الدخول فقط', solo_sal:'الخروج فقط',
+      n_3m:'3 أشهر', n_6m:'6 أشهر', n_12m:'12 شهراً', n_2a:'سنتان',
+      seleccionar:'اختر...', sel_almacen:'اختر المستودع',
+      sel_zona:'اختر المنطقة', sel_linea:'اختر الخط',
+      opcional:'اختياري', de:'من', centro_label:'المركز', todos_los_centros:'كل المراكز',
+      // أزرار الإجراءات
+      btn_nueva_averia:'+ عطل جديد', btn_nueva_inc:'+ حادث جديد',
+      btn_nueva_insp:'تفتيش جديد', btn_añadir_inv:'+ إضافة للمخزون',
+      btn_nuevo_activo:'+ أصل جديد', btn_alta_masiva:'إضافة جماعية',
+      btn_importar:'استيراد', btn_excel:'Excel',
+      btn_nuevo_parte:'+ أمر عمل جديد',
+      btn_registrar_av:'تسجيل العطل', btn_registrar_inc:'تسجيل الحادث',
+      btn_cerrar_av:'إغلاق العطل', btn_confirmar_cierre:'✓ تأكيد الإغلاق',
+      btn_convertir_av:'⚡ تحويل إلى عطل',
+      btn_resolver:'حل', btn_añadir:'+ إضافة',
+      btn_añadir_foto:'إضافة صور',
+      btn_guardar_cambios:'حفظ التغييرات', btn_crear_activo:'إنشاء أصل',
+      btn_crear_insp:'إنشاء تفتيش',
+      cerrar_en_form:'✓ تسجيل كمحلول (إغلاق في هذا النموذج)',
+      zona_limpia:'🧹 المنطقة نظيفة ومراجعة',
+      // عناصر نائبة للبحث
+      ph_buscar_equipo:'بحث عن معدة...', ph_buscar_av:'بحث عن عطل...',
+      ph_buscar_inc:'بحث عن حادث...', ph_buscar_inv:'بحث عن منتج...',
+      ph_buscar_mov:'بحث عن حركة...', ph_buscar_insp:'بحث عن تفتيش...',
+      ph_desc_inc:'وصف الحادث...',
+      // مؤشرات الأداء
+      kpi_parados:'متوقف', kpi_inc_activas:'حوادث نشطة', kpi_inc_sub:'حوادث مرفوعة',
+      kpi_act_op:'أصول تشغيلية', kpi_parados_none:'لا شيء', kpi_tecnicos:'تقنيون نشطون',
+      // الرسوم البيانية
+      chart_evolucion:'تطور الأعطال', chart_por_tipo:'حسب نوع العطل',
+      // رسائل الحالة
+      cargando:'جارٍ التحميل...', sin_activos:'لا توجد أصول', sin_incidencias:'لا توجد حوادث',
+      prueba_filtros:'جرب تعديل المرشحات', solo_tu_centro:'مركزك فقط',
+      // العدادات
+      activos_reg:'أصول مسجلة', abiertas:'مفتوح', activas:'نشط',
+      referencias_en:'مراجع في', uds_stock:'وحدات في المخزون',
+      movimientos:'حركات', uds_entradas:'وحدات واردة', uds_salidas:'وحدات صادرة',
+      entrada:'وارد', salida:'صادر',
+      // أعمدة الجدول
+      col_fecha:'التاريخ', col_almacen:'المستودع', col_estado:'الحالة',
+      col_hora:'الوقت', col_linea:'الخط', col_equipo:'المعدة',
+      col_desc:'الوصف', col_tecnico:'الفني', col_tipo:'النوع',
+      col_zona:'المنطقة', col_familia:'العائلة', col_crit:'الأهمية',
+      col_duracion:'المدة', col_id_activo:'معرّف الأصل', col_por_centro:'حسب المركز',
+      col_uds:'وح.', col_cantidad:'الكمية', col_cant_short:'كمية',
+      col_usuario:'المستخدم', col_notas:'ملاحظات', col_cod_prod:'كود المنتج',
+      col_producto:'المنتج', col_activo_equipo:'المعدة / الأصل',
+      col_horas:'ساعات', col_materiales:'مواد', col_averia:'العطل',
+      col_doc:'وثيقة', col_empresa:'الشركة', col_resultado:'النتيجة',
+      col_proxima:'التالي', col_prioridad:'الأولوية',
+      // تسميات النماذج
+      lbl_almacen:'المستودع', lbl_zona:'المنطقة', lbl_linea:'الخط', lbl_equipo:'المعدة',
+      lbl_tecnico:'الفني', lbl_prioridad:'الأولوية', lbl_desc:'الوصف',
+      lbl_tipo_inc:'نوع الحادث', lbl_reportado:'أبلغ عنه',
+      lbl_responsable:'المسؤول', lbl_observaciones:'ملاحظات',
+      lbl_fecha_ini:'تاريخ البدء', lbl_hora_ini:'وقت البدء',
+      lbl_fecha_fin:'تاريخ الانتهاء', lbl_hora_fin:'وقت الانتهاء',
+      lbl_fecha_cie:'تاريخ الإغلاق', lbl_hora_cie:'وقت الإغلاق',
+      lbl_duracion:'المدة', lbl_solucion:'الحل المطبق',
+      lbl_repuestos:'قطع الغيار المستخدمة', lbl_dur_hm:'المدة (ساعات ودقائق)',
+      lbl_tipo_av:'نوع العطل', lbl_desc_av:'وصف العطل',
+      lbl_horas:'ساعات العمل', lbl_materiales:'المواد',
+      lbl_empresa:'شركة التفتيش', lbl_resultado:'النتيجة',
+      lbl_proxima_insp:'التفتيش القادم', lbl_tipo_insp:'نوع التفتيش',
+      lbl_fecha_insp:'تاريخ التفتيش', lbl_num_registro:'رقم تسجيل التركيب',
+      lbl_obs_def:'ملاحظات / عيوب', lbl_cert_pdf:'شهادة PDF',
+      lbl_id_activo:'معرّف الأصل', lbl_tipo_maq:'نوع الآلة',
+      lbl_proveedor:'المورد', lbl_anio_adq:'سنة الاقتناء',
+      lbl_matricula:'لوحة / رقم تسلسلي', lbl_potencia:'الطاقة (كيلوواط)',
+      lbl_zona_linea:'المنطقة / الخط', lbl_fecha_reg:'تاريخ التسجيل',
+      lbl_averia_rel:'العطل المرتبط', lbl_trabajo_notas:'وصف العمل / ملاحظات',
+      lbl_causa:'السبب الجذري', lbl_doc_url:'وثيقة (رابط)',
+      lbl_resolucion:'القرار / الإغلاق', lbl_notas:'ملاحظات',
+      lbl_criticidad:'الأهمية',
+      // عناوين النوافذ
+      modal_nueva_av:'عطل جديد', modal_nueva_inc:'حادث جديد',
+      modal_activo:'الأصل', modal_editar_insp:'تعديل التفتيش',
+      // نصوص ديناميكية
+      localiza_activo:'حدد الأصل المعطل: المستودع → المنطقة → الخط → المعدة',
+      fotos_problema:'صور المشكلة',
+      mecanicos_intervienen:'الميكانيكيون المشاركون',
+      ningun_mecanico:'لم يُضف أي ميكانيكي بعد.',
+      acceso_restringido:'وصول مقيّد. يرجى التعرف على نفسك أولاً.',
+      acceso_restringido_admin:'وصول مقيّد: للمشرفين والمسؤولين فقط.',
+    },
+  },
+};
+// Atajo global
+const t = (key) => I18N.t(key);
+
 // ═══════════════════════════════════════════════════════════════════
 // DATABASE — Supabase (cloud)
 // ═══════════════════════════════════════════════════════════════════
@@ -1627,17 +2104,20 @@ const UI = {
   },
   criticidadBadge(c) {
     if (!c) return '<span class="badge badge-gray">—</span>';
-    const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green' };
-    return `<span class="badge badge-${map[c]||'gray'}">${this.esc(c)}</span>`;
+    const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green', Preventivo:'blue' };
+    const lbl = { Alta:t('cr_alta'), Altisima:t('cr_alta'), Moderada:t('cr_moderada'), Baja:t('cr_baja'), Preventivo:t('cr_preventivo') };
+    return `<span class="badge badge-${map[c]||'gray'}">${lbl[c]||this.esc(c)}</span>`;
   },
   estadoBadge(e) {
     if (!e) return '<span class="badge badge-gray">—</span>';
     const map = { Abierta:'red', 'En curso':'orange', Cerrada:'gray' };
-    return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e)}</span>`;
+    const lbl = { Abierta:t('opt_abierta'), 'En curso':t('opt_en_curso'), Cerrada:t('opt_cerrada') };
+    return `<span class="badge badge-${map[e]||'gray'}">${lbl[e]||this.esc(e)}</span>`;
   },
   activoEstadoBadge(e) {
     const map = { Operativo:'green', Parado:'red', Baja:'gray', 'En reparacion':'orange' };
-    return `<span class="badge badge-${map[e]||'gray'}">${this.esc(e||'Operativo')}</span>`;
+    const lbl = { Operativo:t('est_operativo'), Parado:t('est_parado'), Baja:t('est_baja'), 'En reparacion':t('est_en_rep') };
+    return `<span class="badge badge-${map[e]||'gray'}">${lbl[e]||this.esc(e||'Operativo')}</span>`;
   },
   formatDate(d, fallbackId) {
     // Si la fecha está vacía, intentar extraerla del ID
@@ -2043,15 +2523,15 @@ const DashboardPage = {
     <div class="kpi-grid">
 <div class="kpi-card kpi-orange" style="cursor:pointer" onclick="Router.navigate('incidencias')" title="Ver incidencias activas">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-        <div class="kpi-body"><div class="kpi-value">${s.incActivas}</div><div class="kpi-label">Incidencias activas</div><div class="kpi-sub">Abiertas o en curso</div></div>
+        <div class="kpi-body"><div class="kpi-value">${s.incActivas}</div><div class="kpi-label">${t('kpi_inc_activas')}</div><div class="kpi-sub">${t('kpi_inc_sub')}</div></div>
       </div>
       <div class="kpi-card kpi-green" style="cursor:pointer" onclick="Router.navigate('activos')" title="Ver activos">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
-        <div class="kpi-body"><div class="kpi-value">${s.activosOp}</div><div class="kpi-label">Activos operativos</div><div class="kpi-sub">${s.activosParados > 0 ? `<span style="color:var(--red)">${s.activosParados} parados</span>` : 'Sin activos parados'}</div></div>
+        <div class="kpi-body"><div class="kpi-value">${s.activosOp}</div><div class="kpi-label">${t('kpi_act_op')}</div><div class="kpi-sub">${s.activosParados > 0 ? `<span style="color:var(--red)">${s.activosParados} ${t('kpi_parados')}</span>` : t('kpi_parados_none')}</div></div>
       </div>
       <div class="kpi-card kpi-blue" style="cursor:pointer" onclick="Router.navigate('config')" title="Ver técnicos">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
-        <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">Técnicos activos</div><div class="kpi-sub">${almacen||'Todos los almacenes'}</div></div>
+        <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">${t('kpi_tecnicos')}</div><div class="kpi-sub">${almacen||t('todos_alm')}</div></div>
       </div>
     </div>
 
@@ -2060,7 +2540,7 @@ const DashboardPage = {
       <!-- Cabecera -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px">
-          <span class="chart-title" style="margin:0;font-size:15px">Evolución de averías</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('chart_evolucion')}</span>
           <span id="chart-total-badge" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--gray-muted);font-weight:500"></span>
         </div>
         <!-- Tipo de gráfico -->
@@ -2078,53 +2558,53 @@ const DashboardPage = {
       <div class="pbi-controls">
         <!-- Agrupación -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Agrupación</span>
+          <span class="pbi-ctrl-label">${t('agrupacion')}</span>
           <div style="display:flex;gap:3px">
-            <button class="chart-pill" id="cm-semana"    onclick="DashboardPage._setMode('semana')">Semana</button>
-            <button class="chart-pill active" id="cm-mes" onclick="DashboardPage._setMode('mes')">Mes</button>
-            <button class="chart-pill" id="cm-trimestre" onclick="DashboardPage._setMode('trimestre')">Trim.</button>
-            <button class="chart-pill" id="cm-año"       onclick="DashboardPage._setMode('año')">Año</button>
+            <button class="chart-pill" id="cm-semana"    onclick="DashboardPage._setMode('semana')">${t('sem')}</button>
+            <button class="chart-pill active" id="cm-mes" onclick="DashboardPage._setMode('mes')">${t('mes')}</button>
+            <button class="chart-pill" id="cm-trimestre" onclick="DashboardPage._setMode('trimestre')">${t('trim_')}</button>
+            <button class="chart-pill" id="cm-año"       onclick="DashboardPage._setMode('año')">${t('anio')}</button>
           </div>
         </div>
         <!-- Período -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Período</span>
+          <span class="pbi-ctrl-label">${t('periodo')}</span>
           <select id="chart-period" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
-            <option value="3">3 meses</option>
-            <option value="6">6 meses</option>
-            <option value="12" selected>12 meses</option>
-            <option value="24">2 años</option>
-            <option value="0">Todo</option>
+            <option value="3">${t('n_3m')}</option>
+            <option value="6">${t('n_6m')}</option>
+            <option value="12" selected>${t('n_12m')}</option>
+            <option value="24">${t('n_2a')}</option>
+            <option value="0">${t('todo')}</option>
           </select>
         </div>
         <!-- Almacén -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Almacén</span>
+          <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
           <select id="chart-almacen" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
-            <option value="">Todos</option>
+            <option value="">${t('todos')}</option>
             <option>Miramar</option><option>Xeresa</option><option>Alcacer</option>
             <option>Murcia</option><option>Algemesi</option>
           </select>
         </div>
         <!-- Estado -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Estado</span>
+          <span class="pbi-ctrl-label">${t('lbl_estado')}</span>
           <select id="chart-estado" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
-            <option value="">Todas</option>
-            <option value="Abierta">Abiertas</option>
-            <option value="Cerrada">Cerradas</option>
+            <option value="">${t('todas')}</option>
+            <option value="Abierta">${t('opt_abiertas')}</option>
+            <option value="Cerrada">${t('opt_cerradas')}</option>
           </select>
         </div>
         <!-- Zona -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Zona</span>
+          <span class="pbi-ctrl-label">${t('lbl_zona')}</span>
           <select id="chart-zona" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
             <option value="">Todas</option>
           </select>
         </div>
         <!-- Línea -->
         <div class="pbi-ctrl-group">
-          <span class="pbi-ctrl-label">Línea</span>
+          <span class="pbi-ctrl-label">${t('lbl_linea')}</span>
           <select id="chart-linea" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
             <option value="">Todas</option>
           </select>
@@ -2142,21 +2622,21 @@ const DashboardPage = {
 
     <!-- ═══ SLICER GLOBAL ═══ -->
     <div class="pbi-slicer-bar">
-      <span class="pbi-slicer-label">Filtros</span>
-      <button class="chart-pill active" id="gf-todo"   onclick="DashboardPage._setGF('periodo','')">Todo</button>
-      <button class="chart-pill"        id="gf-dia"    onclick="DashboardPage._setGF('periodo','dia')">Hoy</button>
-      <button class="chart-pill"        id="gf-ayer"   onclick="DashboardPage._setGF('periodo','ayer')">Ayer</button>
-      <button class="chart-pill"        id="gf-semana" onclick="DashboardPage._setGF('periodo','semana')">Semana</button>
-      <button class="chart-pill"        id="gf-mes"    onclick="DashboardPage._setGF('periodo','mes')">Mes</button>
+      <span class="pbi-slicer-label">${t('filtros')}</span>
+      <button class="chart-pill active" id="gf-todo"   onclick="DashboardPage._setGF('periodo','')">${t('todo')}</button>
+      <button class="chart-pill"        id="gf-dia"    onclick="DashboardPage._setGF('periodo','dia')">${t('hoy')}</button>
+      <button class="chart-pill"        id="gf-ayer"   onclick="DashboardPage._setGF('periodo','ayer')">${t('ayer')}</button>
+      <button class="chart-pill"        id="gf-semana" onclick="DashboardPage._setGF('periodo','semana')">${t('sem')}</button>
+      <button class="chart-pill"        id="gf-mes"    onclick="DashboardPage._setGF('periodo','mes')">${t('mes')}</button>
       <div class="pbi-sep"></div>
       <select id="gf-almacen" class="pbi-select" onchange="DashboardPage._setGF('almacen',this.value)">
-        <option value="">Todos los almacenes</option>
+        <option value="">${t('todos_alm')}</option>
         <option>Miramar</option><option>Xeresa</option><option>Alcacer</option><option>Murcia</option><option>Algemesi</option>
       </select>
       <select id="gf-estado" class="pbi-select" onchange="DashboardPage._setGF('estado',this.value)">
-        <option value="">Todos los estados</option>
-        <option value="Abierta">Abiertas</option>
-        <option value="Cerrada">Cerradas</option>
+        <option value="">${t('todos_estados')}</option>
+        <option value="Abierta">${t('opt_abiertas')}</option>
+        <option value="Cerrada">${t('opt_cerradas')}</option>
       </select>
       <div class="pbi-sep"></div>
       <span id="gf-cross-badge" class="pbi-cross-badge" style="display:none" onclick="DashboardPage._clearCross()">× Filtro cruzado activo</span>
@@ -2279,7 +2759,7 @@ const DashboardPage = {
       <div class="chart-wrap">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <div>
-            <span class="chart-title" style="margin:0;font-size:15px">Por tipo de avería</span>
+            <span class="chart-title" style="margin:0;font-size:15px">${t('chart_por_tipo')}</span>
             <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">Clic para ver detalle en averías</span>
           </div>
         </div>
@@ -2826,7 +3306,7 @@ function _showImportDiff(title, changes, labels, onApply) {
       </label>
       <div style="max-height:420px;overflow-y:auto;padding-right:4px">${items}</div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn btn-secondary" onclick="document.getElementById('import-diff-modal').remove()">Cancelar</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-diff-modal').remove()">${t('cancel')}</button>
         <button class="btn btn-primary" id="diff-apply-btn">Aplicar seleccionados</button>
       </div>
     </div>`;
@@ -2854,29 +3334,29 @@ const ActivosPage = {
     const canAdmin = UserService.canManageActivos();
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Activos</h1><p class="page-subtitle" id="activos-count">Cargando...</p></div>
+      <div><h1>${t('nav_activos')}</h1><p class="page-subtitle" id="activos-count">${t('cargando')}</p></div>
       ${canAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="ActivosPage.exportExcel()">⬇ Excel</button>
-        <button class="btn btn-secondary" onclick="ActivosPage.openImportExcel()">⬆ Importar</button>
+        <button class="btn btn-secondary" onclick="ActivosPage.exportExcel()">${t('btn_excel')}</button>
+        <button class="btn btn-secondary" onclick="ActivosPage.openImportExcel()">${t('btn_importar')}</button>
         <input type="file" id="activos-import-input" accept=".xlsx,.xls" style="display:none">
-        <button class="btn btn-secondary" onclick="ActivosPage.openBulk()">📋 Alta masiva</button>
+        <button class="btn btn-secondary" onclick="ActivosPage.openBulk()">${t('btn_alta_masiva')}</button>
         <button class="btn btn-primary" onclick="ActivosPage.openNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nuevo activo
+          ${t('btn_nuevo_activo')}
         </button>
       </div>` : ''}
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0">
-        <input type="search" class="search-box" id="activos-search" placeholder="Buscar equipo, zona, tipo...">
+        <input type="search" class="search-box" id="activos-search" placeholder="${t('ph_buscar_equipo')}">
         <select class="filter-select" id="filter-almacen-act">
-          <option value="">Todos los almacenes</option>
+          <option value="">${t('todos_alm')}</option>
           <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
         </select>
-        <select class="filter-select" id="filter-zona-act"><option value="">Todas las zonas</option></select>
+        <select class="filter-select" id="filter-zona-act"><option value="">${t('todas_zonas')}</option></select>
         <select class="filter-select" id="filter-estado-act">
-          <option value="">Todos los estados</option>
-          <option>Operativo</option><option>Parado</option><option>Baja</option><option>En reparacion</option>
+          <option value="">${t('todos_estados')}</option>
+          <option value="Operativo">${t('est_operativo')}</option><option value="Parado">${t('est_parado')}</option><option value="Baja">${t('est_baja')}</option><option value="En reparacion">${t('est_en_rep')}</option>
         </select>
       </div>
     </div>
@@ -2884,14 +3364,14 @@ const ActivosPage = {
       <div class="table-wrap">
         <table class="table-clickable">
           <thead><tr>
-            <th onclick="ActivosPage._setSort('id_activo')"    style="cursor:pointer;user-select:none">ID Activo <span id="act-sort-id_activo"></span></th>
-            <th onclick="ActivosPage._setSort('almacen')"      style="cursor:pointer;user-select:none">Almacén <span id="act-sort-almacen"></span></th>
-            <th onclick="ActivosPage._setSort('zona')"         style="cursor:pointer;user-select:none">Zona <span id="act-sort-zona"></span></th>
-            <th onclick="ActivosPage._setSort('linea')"        style="cursor:pointer;user-select:none">Línea <span id="act-sort-linea"></span></th>
-            <th onclick="ActivosPage._setSort('tipo_maquina')" style="cursor:pointer;user-select:none">Tipo máquina <span id="act-sort-tipo_maquina"></span></th>
-            <th onclick="ActivosPage._setSort('equipo')"       style="cursor:pointer;user-select:none">Equipo <span id="act-sort-equipo"></span></th>
-            <th onclick="ActivosPage._setSort('estado')"       style="cursor:pointer;user-select:none">Estado <span id="act-sort-estado"></span></th>
-            <th onclick="ActivosPage._setSort('anio')"         style="cursor:pointer;user-select:none">Año <span id="act-sort-anio"></span></th>
+            <th onclick="ActivosPage._setSort('id_activo')"    style="cursor:pointer;user-select:none">${t('col_id_activo')} <span id="act-sort-id_activo"></span></th>
+            <th onclick="ActivosPage._setSort('almacen')"      style="cursor:pointer;user-select:none">${t('col_almacen')} <span id="act-sort-almacen"></span></th>
+            <th onclick="ActivosPage._setSort('zona')"         style="cursor:pointer;user-select:none">${t('col_zona')} <span id="act-sort-zona"></span></th>
+            <th onclick="ActivosPage._setSort('linea')"        style="cursor:pointer;user-select:none">${t('col_linea')} <span id="act-sort-linea"></span></th>
+            <th onclick="ActivosPage._setSort('tipo_maquina')" style="cursor:pointer;user-select:none">${t('col_tipo_maq')} <span id="act-sort-tipo_maquina"></span></th>
+            <th onclick="ActivosPage._setSort('equipo')"       style="cursor:pointer;user-select:none">${t('col_equipo')} <span id="act-sort-equipo"></span></th>
+            <th onclick="ActivosPage._setSort('estado')"       style="cursor:pointer;user-select:none">${t('col_estado')} <span id="act-sort-estado"></span></th>
+            <th onclick="ActivosPage._setSort('anio')"         style="cursor:pointer;user-select:none">${t('col_anio')} <span id="act-sort-anio"></span></th>
           </tr></thead>
           <tbody id="activos-tbody"></tbody>
         </table>
@@ -2903,7 +3383,7 @@ const ActivosPage = {
     if (almacenGlobal) {
       almacenFilter.value = almacenGlobal;
       almacenFilter.disabled = true;
-      almacenFilter.title = 'Solo puedes ver tu centro';
+      almacenFilter.title = t('solo_tu_centro');
     }
 
     this._data = await DataService.getActivos(almacenGlobal ? { almacen: almacenGlobal } : {});
@@ -2915,7 +3395,7 @@ const ActivosPage = {
 
     this._filtered = [...this._data];
     this._renderTable();
-    document.getElementById('activos-count').textContent = `${this._data.length} activos registrados`;
+    document.getElementById('activos-count').textContent = `${this._data.length} ${t('activos_reg')}`;
 
     ['activos-search','filter-almacen-act','filter-zona-act','filter-estado-act'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
@@ -2940,7 +3420,7 @@ const ActivosPage = {
       (!search  || a.equipo.toLowerCase().includes(search) || a.zona.toLowerCase().includes(search) ||
                    a.tipo_maquina.toLowerCase().includes(search) || a.almacen.toLowerCase().includes(search))
     );
-    document.getElementById('activos-count').textContent = `${this._filtered.length} de ${this._data.length} activos`;
+    document.getElementById('activos-count').textContent = `${this._filtered.length} ${t('de')} ${this._data.length}`;
     this._renderTable();
   },
 
@@ -2970,7 +3450,7 @@ const ActivosPage = {
       if (el) el.textContent = k === key ? (dir === 'asc' ? ' ↑' : ' ↓') : '';
     });
 
-    if (sorted.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin activos','Prueba a cambiar los filtros')}</td></tr>`; return; }
+    if (sorted.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty(t('sin_activos'), t('prueba_filtros'))}</td></tr>`; return; }
     tbody.innerHTML = sorted.map(a => `
       <tr onclick="ActivosPage.openDetail('${UI.esc(a.id_activo)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted)">${UI.esc(a.id_activo)}</td>
@@ -2990,18 +3470,18 @@ const ActivosPage = {
     const averias = await db.averias.where('id_activo').equals(id).toArray();
     averias.sort((x,y) => (y.fecha_inicio||'').localeCompare(x.fecha_inicio||''));
     const avAbiertas = averias.filter(av => av.estado === 'Abierta').length;
-    Modal.open(`Activo — ${a.equipo}`, `
+    Modal.open(`${t('modal_activo')} — ${a.equipo}`, `
       <div class="detail-grid">
-        <div class="detail-field"><label>ID Activo</label><p style="font-family:monospace;font-size:12px">${UI.esc(a.id_activo)}</p></div>
-        <div class="detail-field"><label>Estado</label><p>${UI.activoEstadoBadge(a.estado)}</p></div>
-        <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen)}</p></div>
-        <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
-        <div class="detail-field"><label>Línea</label><p>${UI.esc(a.linea||'—')}</p></div>
-        <div class="detail-field"><label>Tipo máquina</label><p>${UI.esc(a.tipo_maquina||'—')}</p></div>
-        <div class="detail-field"><label>Proveedor</label><p>${UI.esc(a.proveedor||'—')}</p></div>
-        <div class="detail-field"><label>Año adquisición</label><p>${a.anio||'—'}</p></div>
-        <div class="detail-field"><label>Matrícula</label><p>${UI.esc(a.matricula||'—')}</p></div>
-        <div class="detail-field"><label>Potencia motor</label><p>${UI.esc(a.potencia_motor||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_id_activo')}</label><p style="font-family:monospace;font-size:12px">${UI.esc(a.id_activo)}</p></div>
+        <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.activoEstadoBadge(a.estado)}</p></div>
+        <div class="detail-field"><label>${t('lbl_almacen')}</label><p>${UI.esc(a.almacen)}</p></div>
+        <div class="detail-field"><label>${t('lbl_zona')}</label><p>${UI.esc(a.zona||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_linea')}</label><p>${UI.esc(a.linea||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_tipo_maq')}</label><p>${UI.esc(a.tipo_maquina||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_proveedor')}</label><p>${UI.esc(a.proveedor||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_anio_adq')}</label><p>${a.anio||'—'}</p></div>
+        <div class="detail-field"><label>${t('lbl_matricula')}</label><p>${UI.esc(a.matricula||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_potencia')}</label><p>${UI.esc(a.potencia_motor||'—')}</p></div>
       </div>
       <div style="margin-top:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -3021,7 +3501,7 @@ const ActivosPage = {
           </table></div>`}
       </div>`,
       `${UserService.canManageActivos() ? `<button class="btn btn-danger btn-sm" onclick="ActivosPage._deleteActivo('${UI.esc(id)}')">Eliminar</button>` : ''}
-       <button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       <button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
        ${UserService.canManageActivos() ? `<button class="btn btn-primary" onclick="ActivosPage.openEdit('${UI.esc(id)}')">✏️ Editar</button>` : ''}`);
   },
 
@@ -3161,7 +3641,7 @@ const ActivosPage = {
       </div>
       <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="document.getElementById('bulk-body').insertAdjacentHTML('beforeend', ActivosPage._bulkMkRow())">+ Añadir fila</button>
       <span id="bulk-status" style="font-size:12px;color:var(--gray-muted);margin-left:12px"></span>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ActivosPage._saveBulk()">💾 Guardar activos</button>`);
 
     // Exponer mkRow para el botón inline
@@ -3288,14 +3768,14 @@ const ActivosPage = {
       <form id="activo-form" class="form-grid">
         <input type="hidden" id="f-num" value="${activo?.num||0}">
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="f-almacen" required>
             <option value="">Seleccionar...</option>
             ${almacenes.map(a=>`<option${activo?.almacen===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Zona *</label>
+          <label>${t('lbl_zona')} *</label>
           <select class="form-input" id="f-zona" required ${!activo?.almacen?'disabled':''}>
             ${zonaOpts(activo?.zona||'')}
           </select>
@@ -3305,11 +3785,11 @@ const ActivosPage = {
           <input class="form-input" id="f-zona-nueva" placeholder="Ej: Volcadores">
         </div>
         <div class="form-field">
-          <label>Línea</label>
+          <label>${t('lbl_linea')}</label>
           <input class="form-input" id="f-linea" value="${UI.esc(activo?.linea||'')}">
         </div>
         <div class="form-field">
-          <label>Tipo máquina</label>
+          <label>${t('lbl_tipo_maq')}</label>
           <select class="form-input" id="f-tipo">
             <option value="">Seleccionar...</option>
             ${tiposMaquina.map(t=>`<option${activo?.tipo_maquina===t?' selected':''}>${UI.esc(t)}</option>`).join('')}
@@ -3325,25 +3805,25 @@ const ActivosPage = {
           <input class="form-input" id="f-equipo" value="${UI.esc(activo?.equipo||'')}" required placeholder="Nombre del equipo">
         </div>
         <div class="form-field">
-          <label>Estado</label>
+          <label>${t('lbl_estado')}</label>
           <select class="form-input" id="f-estado">
             ${estados.map(e=>`<option${activo?.estado===e?' selected':''}>${e}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Año adquisición</label>
+          <label>${t('lbl_anio_adq')}</label>
           <input class="form-input" type="number" id="f-anio" value="${activo?.anio||''}" min="1970" max="2035">
         </div>
         <div class="form-field">
-          <label>Proveedor</label>
+          <label>${t('lbl_proveedor')}</label>
           <input class="form-input" id="f-proveedor" value="${UI.esc(activo?.proveedor||'')}">
         </div>
         <div class="form-field">
-          <label>Matrícula</label>
+          <label>${t('lbl_matricula')}</label>
           <input class="form-input" id="f-matricula" value="${UI.esc(activo?.matricula||'')}">
         </div>
         <div class="form-field">
-          <label>Potencia motor</label>
+          <label>${t('lbl_potencia')}</label>
           <input class="form-input" id="f-potencia" value="${UI.esc(activo?.potencia_motor||'')}">
         </div>
         <div class="form-field">
@@ -3363,13 +3843,13 @@ const ActivosPage = {
           <input class="form-input" id="f-proteccion" value="${UI.esc(activo?.proteccion||'')}">
         </div>
         <div class="form-field full">
-          <label>Observaciones</label>
+          <label>${t('lbl_observaciones')}</label>
           <textarea class="form-input" id="f-observaciones" rows="2" placeholder="Origen de la máquina, notas de traslado...">${UI.esc(activo?.observaciones||'')}</textarea>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ActivosPage._saveActivo('${UI.esc(activo?.id_activo||'')}')">
-         ${isEdit ? 'Guardar cambios' : 'Crear activo'}
+         ${isEdit ? t('btn_guardar_cambios') : t('btn_crear_activo')}
        </button>`);
 
     // Cascade: almacén → zona
@@ -3468,32 +3948,32 @@ const AveriasPage = {
   async render() {
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Averías</h1><p class="page-subtitle" id="averias-count">Cargando...</p></div>
+      <div><h1>${t('nav_averias')}</h1><p class="page-subtitle" id="averias-count">${t('cargando')}</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="ConfigPage.exportAverias()">⬇ Excel</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('av-import-input').click()">⬆ Importar</button>
+        <button class="btn btn-secondary" onclick="ConfigPage.exportAverias()">${t('btn_excel')}</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('av-import-input').click()">${t('btn_importar')}</button>
         <input type="file" id="av-import-input" accept=".xlsx,.xls" style="display:none"
           onchange="ConfigPage._doImportAverias(this.files[0]).then(()=>this.value='')">
         <button class="btn btn-primary" onclick="AveriasPage.openNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nueva avería
+          ${t('btn_nueva_averia')}
         </button>
       </div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
-        <input type="search" class="search-box" id="av-search" placeholder="Buscar descripción, equipo, técnico...">
+        <input type="search" class="search-box" id="av-search" placeholder="${t('ph_buscar_av')}">
         <select class="filter-select" id="av-f-almacen">
-          <option value="">Todos los almacenes</option>
+          <option value="">${t('todos_alm')}</option>
           <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
         </select>
         <select class="filter-select" id="av-f-estado">
-          <option value="">Todos los estados</option>
-          <option>Abierta</option><option>En curso</option><option>Cerrada</option>
+          <option value="">${t('todos_estados')}</option>
+          <option value="Abierta">${t('opt_abierta')}</option><option value="En curso">${t('opt_en_curso')}</option><option value="Cerrada">${t('opt_cerrada')}</option>
         </select>
         <select class="filter-select" id="av-f-crit">
-          <option value="">Toda criticidad</option>
-          <option>Alta</option><option>Moderada</option><option>Baja</option><option>Preventivo</option>
+          <option value="">${t('toda_crit')}</option>
+          <option value="Alta">${t('cr_alta')}</option><option value="Moderada">${t('cr_moderada')}</option><option value="Baja">${t('cr_baja')}</option><option value="Preventivo">${t('cr_preventivo')}</option>
         </select>
       </div>
     </div>
@@ -3507,16 +3987,16 @@ const AveriasPage = {
         <table class="table-clickable">
           <thead><tr id="av-thead">
             <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="Ordenar">ID <span id="av-sort-id"></span></th>
-            <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="Ordenar">Fecha <span id="av-sort-fecha_inicio"></span></th>
-            <th onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="Ordenar">Hora <span id="av-sort-hora_inicio"></span></th>
-            <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="Ordenar">Almacén <span id="av-sort-almacen"></span></th>
-            <th onclick="AveriasPage._setSort('linea')"       style="cursor:pointer;user-select:none" title="Ordenar">Línea <span id="av-sort-linea"></span></th>
-            <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="Ordenar">Equipo <span id="av-sort-equipo"></span></th>
-            <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="Ordenar">Descripción <span id="av-sort-descripcion"></span></th>
-            <th onclick="AveriasPage._setSort('tecnico')"     style="cursor:pointer;user-select:none" title="Ordenar">Técnico <span id="av-sort-tecnico"></span></th>
-            <th onclick="AveriasPage._setSort('criticidad')"  style="cursor:pointer;user-select:none" title="Ordenar">Criticidad <span id="av-sort-criticidad"></span></th>
-            <th onclick="AveriasPage._setSort('estado')"      style="cursor:pointer;user-select:none" title="Ordenar">Estado <span id="av-sort-estado"></span></th>
-            <th onclick="AveriasPage._setSort('duracion')"    style="cursor:pointer;user-select:none" title="Ordenar">Duración <span id="av-sort-duracion"></span></th>
+            <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="Ordenar">${t('col_fecha')} <span id="av-sort-fecha_inicio"></span></th>
+            <th onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="Ordenar">${t('col_hora')} <span id="av-sort-hora_inicio"></span></th>
+            <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="Ordenar">${t('col_almacen')} <span id="av-sort-almacen"></span></th>
+            <th onclick="AveriasPage._setSort('linea')"       style="cursor:pointer;user-select:none" title="Ordenar">${t('col_linea')} <span id="av-sort-linea"></span></th>
+            <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="Ordenar">${t('col_equipo')} <span id="av-sort-equipo"></span></th>
+            <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="Ordenar">${t('col_desc')} <span id="av-sort-descripcion"></span></th>
+            <th onclick="AveriasPage._setSort('tecnico')"     style="cursor:pointer;user-select:none" title="Ordenar">${t('col_tecnico')} <span id="av-sort-tecnico"></span></th>
+            <th onclick="AveriasPage._setSort('criticidad')"  style="cursor:pointer;user-select:none" title="Ordenar">${t('col_crit')} <span id="av-sort-criticidad"></span></th>
+            <th onclick="AveriasPage._setSort('estado')"      style="cursor:pointer;user-select:none" title="Ordenar">${t('col_estado')} <span id="av-sort-estado"></span></th>
+            <th onclick="AveriasPage._setSort('duracion')"    style="cursor:pointer;user-select:none" title="Ordenar">${t('col_duracion')} <span id="av-sort-duracion"></span></th>
             <th title="Tiene fotos">📷</th>
           </tr></thead>
           <tbody id="av-tbody"></tbody>
@@ -3529,7 +4009,7 @@ const AveriasPage = {
     if (almacenGlobal) {
       avAlmacenFilter.value = almacenGlobal;
       avAlmacenFilter.disabled = true;
-      avAlmacenFilter.title = 'Solo puedes ver tu centro';
+      avAlmacenFilter.title = t('solo_tu_centro');
     }
 
     const [_averias, _fotos] = await Promise.all([
@@ -3561,7 +4041,7 @@ const AveriasPage = {
     }
 
     this._applyFilters();
-    document.getElementById('averias-count').textContent = `${this._filtered.length} de ${this._data.length} — ${this._data.filter(a=>a.estado==='Abierta').length} abiertas`;
+    document.getElementById('averias-count').textContent = `${this._filtered.length} ${t('de')} ${this._data.length} — ${this._data.filter(a=>a.estado==='Abierta').length} ${t('abiertas')}`;
 
     ['av-search','av-f-almacen','av-f-estado','av-f-crit'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
@@ -3726,27 +4206,27 @@ const AveriasPage = {
 
     Modal.open(`Avería — ${a.id}`, `
       <div class="detail-grid">
-        <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(a.estado)}</p></div>
-        <div class="detail-field"><label>Criticidad</label><p>${UI.criticidadBadge(a.criticidad)}</p></div>
-        <div class="detail-field"><label>Fecha inicio</label><p>${UI.formatDate(a.fecha_inicio, a.id)} ${a.hora_inicio||''}</p></div>
+        <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.estadoBadge(a.estado)}</p></div>
+        <div class="detail-field"><label>${t('lbl_criticidad')}</label><p>${UI.criticidadBadge(a.criticidad)}</p></div>
+        <div class="detail-field"><label>${t('lbl_fecha_ini')}</label><p>${UI.formatDate(a.fecha_inicio, a.id)} ${a.hora_inicio||''}</p></div>
         <div class="detail-field"><label>Fecha fin</label><p>${a.fecha_fin ? UI.formatDate(a.fecha_fin)+' '+a.hora_fin : '—'}</p></div>
-        <div class="detail-field"><label>Almacén</label><p>${UI.esc(a.almacen||'—')}</p></div>
-        <div class="detail-field"><label>Zona</label><p>${UI.esc(a.zona||'—')}</p></div>
-        <div class="detail-field"><label>Equipo</label><p>${UI.esc(a.equipo||'—')}</p></div>
-        <div class="detail-field"><label>Tipo avería</label><p>${UI.esc(a.tipo||'—')}</p></div>
-        <div class="detail-field"><label>Duración</label><p>${UI.formatDuration(a.duracion)}</p></div>
-        <div class="detail-field full"><label>Descripción</label><p>${UI.esc(a.descripcion||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_almacen')}</label><p>${UI.esc(a.almacen||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_zona')}</label><p>${UI.esc(a.zona||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_equipo')}</label><p>${UI.esc(a.equipo||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_tipo_av')}</label><p>${UI.esc(a.tipo||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_duracion')}</label><p>${UI.formatDuration(a.duracion)}</p></div>
+        <div class="detail-field full"><label>${t('lbl_desc')}</label><p>${UI.esc(a.descripcion||'—')}</p></div>
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>Solución aplicada</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>Materiales utilizados</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
         ${a.estado === 'Cerrada' ? `<div class="detail-field"><label>Zona limpia y revisada</label><p style="font-weight:600;color:${a.zona_limpia !== false ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia !== false ? '✓ Sí' : '✗ No'}</p></div>` : ''}
         ${fotosHtml}
       </div>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
        ${UserService.canDeleteAveria() ? `<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="AveriasPage._deleteAveria('${UI.esc(id)}')">🗑 Eliminar</button>` : ''}
        ${UserService.canEditAveria() ? `<button class="btn btn-secondary" onclick="AveriasPage.openEdit('${UI.esc(id)}')">✏️ Editar</button>` : ''}
        ${canCurso ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="AveriasPage._marcarEnCurso('${UI.esc(id)}')">▶ En curso</button>` : ''}
-       ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">✓ Cerrar avería</button>` : ''}`);
+       ${canClose ? `<button class="btn btn-primary" style="background:var(--red)" onclick="AveriasPage.openClose('${UI.esc(id)}')">${t('btn_cerrar_av')}</button>` : ''}`);
   },
 
   async _deleteAveria(id) {
@@ -3847,54 +4327,54 @@ const AveriasPage = {
     Modal.open('Editar avería', `
       <form id="edit-averia-form" class="form-grid">
         <div class="form-field">
-          <label>Almacén</label>
+          <label>${t('lbl_almacen')}</label>
           <select class="form-input" id="ea-almacen">
             ${almacenes.map(alm => `<option${a.almacen===alm?' selected':''}>${alm}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Zona</label>
+          <label>${t('lbl_zona')}</label>
           <input class="form-input" id="ea-zona" value="${UI.esc(a.zona||'')}">
         </div>
         <div class="form-field">
-          <label>Línea</label>
+          <label>${t('lbl_linea')}</label>
           <input class="form-input" id="ea-linea" value="${UI.esc(a.linea||'')}">
         </div>
         <div class="form-field">
-          <label>Equipo</label>
+          <label>${t('lbl_equipo')}</label>
           <input class="form-input" id="ea-equipo" value="${UI.esc(a.equipo||'')}">
         </div>
         <div class="form-field">
-          <label>Fecha inicio</label>
+          <label>${t('lbl_fecha_ini')}</label>
           <input class="form-input" type="date" id="ea-fecha-inicio" value="${a.fecha_inicio||''}">
         </div>
         <div class="form-field">
-          <label>Hora inicio</label>
+          <label>${t('lbl_hora_ini')}</label>
           <input class="form-input" type="time" id="ea-hora-inicio" value="${a.hora_inicio||''}">
         </div>
         <div class="form-field full">
-          <label>Descripción</label>
+          <label>${t('lbl_desc')}</label>
           <textarea class="form-input" id="ea-desc" rows="3">${UI.esc(a.descripcion||'')}</textarea>
         </div>
         <div class="form-field">
-          <label>Técnico</label>
+          <label>${t('lbl_tecnico')}</label>
           <select class="form-input" id="ea-tecnico">${tecOpts}</select>
         </div>
         <div class="form-field">
-          <label>Tipo</label>
+          <label>${t('lbl_tipo')}</label>
           <select class="form-input" id="ea-tipo">
             <option value="">—</option>
             ${tipos.map(t=>`<option${a.tipo===t?' selected':''}>${UI.esc(t)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Criticidad</label>
+          <label>${t('lbl_criticidad')}</label>
           <select class="form-input" id="ea-criticidad">
             ${['Alta','Moderada','Baja','Preventivo'].map(c=>`<option${a.criticidad===c?' selected':''}>${c}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Estado</label>
+          <label>${t('lbl_estado')}</label>
           <select class="form-input" id="ea-estado">
             ${['Abierta','En curso','Cerrada'].map(e=>`<option${a.estado===e?' selected':''}>${e}</option>`).join('')}
           </select>
@@ -3916,7 +4396,7 @@ const AveriasPage = {
           <textarea class="form-input" id="ea-solucion" rows="2">${UI.esc(a.solucion||'')}</textarea>
         </div>
         <div class="form-field">
-          <label>Materiales</label>
+          <label>${t('lbl_materiales')}</label>
           <input class="form-input" id="ea-materiales" value="${UI.esc(a.materiales||'')}">
         </div>
         <div class="form-field">
@@ -3931,8 +4411,8 @@ const AveriasPage = {
           </select>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="AveriasPage._saveEdit('${UI.esc(id)}')">Guardar cambios</button>`
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="AveriasPage._saveEdit('${UI.esc(id)}')">${t('btn_guardar_cambios')}</button>`
     );
   },
 
@@ -3997,62 +4477,62 @@ const AveriasPage = {
         list.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('');
     };
 
-    Modal.open('Nueva avería', `
+    Modal.open(t('modal_nueva_av'), `
       <form id="averia-form" class="form-grid">
         <p class="full" style="font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px;grid-column:1/-1">
-          Localiza el activo averiado: Almacén → Zona → Línea → Equipo
+          ${t('localiza_activo')}
         </p>
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="av-almacen" required ${almacenLocked ? 'disabled' : ''}>
             <option value="">Seleccionar...</option>
             ${almacenes.map(a=>`<option${userAlmacen===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Zona *</label>
+          <label>${t('lbl_zona')} *</label>
           <select class="form-input" id="av-zona" disabled required>
-            <option value="">Selecciona almacén</option>
+            <option value="">${t('sel_almacen')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Línea</label>
+          <label>${t('lbl_linea')}</label>
           <select class="form-input" id="av-linea" disabled>
-            <option value="">Selecciona zona</option>
+            <option value="">${t('sel_zona')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Equipo *</label>
+          <label>${t('lbl_equipo')} *</label>
           <select class="form-input" id="av-equipo" disabled required>
-            <option value="">Selecciona línea</option>
+            <option value="">${t('sel_linea')}</option>
           </select>
         </div>
         <input type="hidden" id="av-id-activo">
         <div class="form-field full">
-          <label>Descripción de la avería *</label>
+          <label>${t('lbl_desc_av')} *</label>
           <textarea class="form-input" id="av-desc" rows="3" required placeholder="Describe el problema detectado..."></textarea>
         </div>
         <!-- MECÁNICOS QUE INTERVIENEN -->
         <div class="form-section">
-          <div class="form-section-label">👷 Mecánicos que intervienen</div>
+          <div class="form-section-label">👷 ${t('mecanicos_intervienen')}</div>
           <div class="partes-row" style="margin-top:6px">
             <div>
-              <small style="color:var(--gray-muted)">Técnico</small>
+              <small style="color:var(--gray-muted)">${t('lbl_tecnico')}</small>
               <select class="form-input" id="av-parte-tec" style="margin-top:2px">
                 <option value="">— Seleccionar —</option>
                 ${tecOptsHtml(userAlmacen).replace('<option value="">Sin asignar</option>','<option value="">— Seleccionar —</option>')}
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Fecha</small>
+              <small style="color:var(--gray-muted)">${t('col_fecha')}</small>
               <input class="form-input" type="date" id="av-parte-fecha" value="${today}" style="margin-top:2px">
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Notas (opcional)</small>
+              <small style="color:var(--gray-muted)">${t('lbl_notas')} (${t('opcional')})</small>
               <input class="form-input" id="av-parte-notas" style="margin-top:2px" placeholder="Qué hizo este técnico...">
             </div>
             <div class="partes-btn-wrap" style="padding-top:18px">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParteNew()">+ Añadir</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParteNew()">${t('btn_añadir')}</button>
             </div>
           </div>
           <div id="av-partes-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
@@ -4060,36 +4540,36 @@ const AveriasPage = {
           </div>
         </div>
         <div class="form-field">
-          <label>Tipo avería</label>
+          <label>${t('lbl_tipo_av')}</label>
           <select class="form-input" id="av-tipo">
             <option value="">Seleccionar...</option>
             ${tipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Criticidad *</label>
+          <label>${t('lbl_criticidad')} *</label>
           <select class="form-input" id="av-criticidad" required>
             <option value="">Seleccionar...</option>
             <option>Alta</option><option selected>Moderada</option><option>Baja</option><option>Preventivo</option>
           </select>
         </div>
         <div class="form-field">
-          <label id="av-fecha-label">Fecha inicio</label>
+          <label id="av-fecha-label">${t('lbl_fecha_ini')}</label>
           <input class="form-input" type="date" id="av-fecha" value="${today}">
         </div>
         <div class="form-field">
-          <label id="av-hora-label">Hora inicio</label>
+          <label id="av-hora-label">${t('lbl_hora_ini')}</label>
           <input class="form-input" type="time" id="av-hora" value="${hh}:${mm}">
         </div>
 
         <!-- FOTOS DE LA AVERÍA -->
         <div class="form-section">
-          <div class="form-section-label">📷 Fotos del problema</div>
+          <div class="form-section-label">📷 ${t('fotos_problema')}</div>
           <div id="av-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
           <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <input type="file" id="av-foto-input" accept="image/*" multiple style="display:none"
               onchange="AveriasPage._onFotoSelectedNew(this)">
-            <span class="btn btn-secondary btn-sm" style="pointer-events:none">Añadir foto(s)</span>
+            <span class="btn btn-secondary btn-sm" style="pointer-events:none">${t('btn_añadir_foto')}</span>
           </label>
           <span id="av-fotos-count" style="font-size:11px;color:var(--gray-muted);margin-left:8px"></span>
         </div>
@@ -4098,7 +4578,7 @@ const AveriasPage = {
         <div class="full" style="grid-column:1/-1;margin-top:4px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)" id="toggle-close-label">
             <input type="checkbox" id="av-cerrar-ahora" style="width:16px;height:16px;accent-color:var(--green)">
-            <span style="font-weight:600;font-size:13px">✓ Registrar ya resuelta (cerrar en este mismo formulario)</span>
+            <span style="font-weight:600;font-size:13px">${t('cerrar_en_form')}</span>
           </label>
         </div>
 
@@ -4107,44 +4587,44 @@ const AveriasPage = {
           <div style="height:1px;background:var(--border);margin:8px 0 16px"></div>
           <div class="form-grid" style="margin:0">
             <div class="form-field full">
-              <label>Solución aplicada *</label>
+              <label>${t('lbl_solucion')} *</label>
               <textarea class="form-input" id="av-solucion" rows="2" placeholder="Qué se hizo para resolverla..."></textarea>
             </div>
             <div class="form-field full">
-              <label>Repuestos utilizados</label>
+              <label>${t('lbl_repuestos')}</label>
               <div class="repuestos-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:end;margin-bottom:6px">
                 <div>
-                  <small style="color:var(--gray-muted)">Tipo</small>
+                  <small style="color:var(--gray-muted)">${t('col_tipo')}</small>
                   <select class="form-input" id="mat-tipo" style="margin-top:2px">
                     <option value="">— Tipo —</option>
                     ${matTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
                   </select>
                 </div>
                 <div>
-                  <small style="color:var(--gray-muted)">Familia</small>
+                  <small style="color:var(--gray-muted)">${t('col_familia')}</small>
                   <select class="form-input" id="mat-familia" disabled style="margin-top:2px">
                     <option value="">— Familia —</option>
                   </select>
                 </div>
                 <div>
-                  <small style="color:var(--gray-muted)">Producto</small>
+                  <small style="color:var(--gray-muted)">${t('col_producto')}</small>
                   <select class="form-input" id="mat-producto" disabled style="margin-top:2px">
                     <option value="">— Producto —</option>
                   </select>
                 </div>
                 <div>
-                  <small style="color:var(--gray-muted)">Cant.</small>
+                  <small style="color:var(--gray-muted)">${t('col_cant_short')}</small>
                   <input class="form-input" type="number" id="mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
                 </div>
                 <div style="padding-top:18px">
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuestoNew()">+ Añadir</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuestoNew()">${t('btn_añadir')}</button>
                 </div>
               </div>
               <div id="mat-repuestos-list" style="display:flex;flex-direction:column;gap:4px"></div>
               <input type="hidden" id="av-materiales">
             </div>
             <div class="form-field">
-              <label>Duración (horas y minutos)</label>
+              <label>${t('lbl_dur_hm')}</label>
               <div style="display:flex;gap:8px;align-items:center">
                 <input class="form-input" type="number" id="av-dur-h" min="0" max="999" placeholder="0" style="width:80px"> h
                 <input class="form-input" type="number" id="av-dur-m" min="0" max="59" placeholder="0" style="width:80px"> min
@@ -4155,14 +4635,14 @@ const AveriasPage = {
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none" id="av-zona-limpia-label">
                 <input type="checkbox" id="av-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0"
                   onchange="const l=document.getElementById('av-zona-limpia-label');l.style.borderColor=this.checked?'var(--green)':'var(--red)'">
-                <span style="font-size:13px;font-weight:600">🧹 Zona limpia y revisada</span>
+                <span style="font-size:13px;font-weight:600">${t('zona_limpia')}</span>
               </label>
             </div>
           </div>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">Registrar avería</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="AveriasPage._saveCreate()">${t('btn_registrar_av')}</button>`);
 
     // Buffer de fotos para el alta + partes de trabajo + repuestos
     AveriasPage._fotosBuffer = [];
@@ -4247,8 +4727,8 @@ const AveriasPage = {
       const cerrar = this.checked;
       document.getElementById('close-fields').style.display = cerrar ? '' : 'none';
       document.getElementById('toggle-close-label').style.borderColor = cerrar ? 'var(--green)' : 'var(--border)';
-      document.getElementById('av-fecha-label').textContent = cerrar ? 'Fecha fin (cuándo se resolvió)' : 'Fecha inicio';
-      document.getElementById('av-hora-label').textContent  = cerrar ? 'Hora fin'  : 'Hora inicio';
+      document.getElementById('av-fecha-label').textContent = cerrar ? t('lbl_fecha_fin') : t('lbl_fecha_ini');
+      document.getElementById('av-hora-label').textContent  = cerrar ? t('lbl_hora_fin')  : t('lbl_hora_ini');
     });
 
     // — Cascade wiring —
@@ -4260,8 +4740,8 @@ const AveriasPage = {
 
     almEl.addEventListener('change', async () => {
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
-      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      lineaEl.innerHTML = `<option value="">${t('sel_zona')}</option>`; lineaEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       hidEl.value = '';
       // Actualizar técnicos en multi-mecánico según almacén
       const tecPartEl = document.getElementById('av-parte-tec');
@@ -4276,7 +4756,7 @@ const AveriasPage = {
     });
     zonaEl.addEventListener('change', async () => {
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       hidEl.value = '';
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
@@ -4379,7 +4859,7 @@ const AveriasPage = {
     // Bloquear submit — deshabilitar botón para evitar doble envío
     AveriasPage._saving = true;
     const submitBtn = document.querySelector('#modal-overlay .btn-primary');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando…'; }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = t('cargando'); }
 
     // Declarar id ANTES del try para que sea accesible en la subida de fotos posterior
     const now = new Date();
@@ -4516,14 +4996,14 @@ const AveriasPage = {
     const productos = a.almacen ? await DataService.getProductosByAlmacen(a.almacen) : [];
     const clTipos = [...new Set(productos.map(p => p.tipo).filter(Boolean))].sort();
 
-    Modal.open(`Cerrar avería`, `
+    Modal.open(t('btn_cerrar_av'), `
       <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--red)">
         <strong>${UI.esc(a.equipo || a.id_activo)}</strong> · ${UI.esc(a.almacen)} · ${UI.esc(a.zona)}<br>
         <span style="color:var(--gray-muted)">${UI.esc(a.descripcion)}</span>
       </div>
       <form id="close-form" class="form-grid">
         <div class="form-field full">
-          <label>Solución aplicada *</label>
+          <label>${t('lbl_solucion')} *</label>
           <textarea class="form-input" id="cl-solucion" rows="2" required placeholder="Describe qué se hizo para resolver la avería..."></textarea>
         </div>
         <div class="form-field">
@@ -4538,10 +5018,10 @@ const AveriasPage = {
 
         <!-- PARTES DE TRABAJO -->
         <div class="form-section">
-          <div class="form-section-label">👷 Mecánicos que intervienen</div>
+          <div class="form-section-label">👷 ${t('mecanicos_intervienen')}</div>
           <div class="partes-row" style="margin-top:6px">
             <div>
-              <small style="color:var(--gray-muted)">Técnico</small>
+              <small style="color:var(--gray-muted)">${t('lbl_tecnico')}</small>
               <select class="form-input" id="cl-parte-tec" style="margin-top:2px">
                 <option value="">— Seleccionar —</option>
                 ${(a.almacen ? allTecnicos.filter(t=>t.activo && normalizeAlmacen(t.almacen)===normalizeAlmacen(a.almacen)) : allTecnicos.filter(t=>t.activo))
@@ -4549,15 +5029,15 @@ const AveriasPage = {
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Fecha</small>
+              <small style="color:var(--gray-muted)">${t('col_fecha')}</small>
               <input class="form-input" type="date" id="cl-parte-fecha" value="${today}" style="margin-top:2px">
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Notas (opcional)</small>
+              <small style="color:var(--gray-muted)">${t('lbl_notas')} (${t('opcional')})</small>
               <input class="form-input" id="cl-parte-notas" style="margin-top:2px" placeholder="Qué hizo este técnico...">
             </div>
             <div class="partes-btn-wrap" style="padding-top:18px">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParte()">+ Añadir</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addParte()">${t('btn_añadir')}</button>
             </div>
           </div>
           <div id="cl-partes-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
@@ -4569,30 +5049,30 @@ const AveriasPage = {
           ${productos.length === 0 ? `<p style="font-size:12px;color:var(--gray-muted);margin-top:6px">Sin stock disponible en este almacén.</p>` : `
           <div class="repuestos-row" style="margin-top:6px">
             <div>
-              <small style="color:var(--gray-muted)">Tipo</small>
+              <small style="color:var(--gray-muted)">${t('col_tipo')}</small>
               <select class="form-input" id="cl-tipo" style="margin-top:2px">
                 <option value="">— Tipo —</option>
                 ${clTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Familia</small>
+              <small style="color:var(--gray-muted)">${t('col_familia')}</small>
               <select class="form-input" id="cl-familia" disabled style="margin-top:2px">
                 <option value="">— Familia —</option>
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Producto</small>
+              <small style="color:var(--gray-muted)">${t('col_producto')}</small>
               <select class="form-input" id="cl-producto" disabled style="margin-top:2px">
                 <option value="">— Producto —</option>
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Cant.</small>
+              <small style="color:var(--gray-muted)">${t('col_cant_short')}</small>
               <input class="form-input" type="number" id="cl-prod-qty" min="1" value="1" style="width:60px;margin-top:2px" placeholder="Uds">
             </div>
             <div class="partes-btn-wrap" style="padding-top:18px">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">+ Añadir</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="AveriasPage._addRepuesto()">${t('btn_añadir')}</button>
             </div>
           </div>`}
           <div id="cl-repuestos-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
@@ -4611,7 +5091,7 @@ const AveriasPage = {
 
         <!-- FOTOS -->
         <div class="form-section">
-          <div class="form-section-label">📷 Fotos de la avería</div>
+          <div class="form-section-label">📷 ${t('fotos_problema')}</div>
           <div id="cl-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;min-height:0"></div>
           <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <input type="file" id="cl-foto-input" accept="image/*" multiple style="display:none"
@@ -4631,8 +5111,8 @@ const AveriasPage = {
           </label>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" style="background:var(--green)" onclick="AveriasPage._saveClose('${UI.esc(id)}')">✓ Confirmar cierre</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" style="background:var(--green)" onclick="AveriasPage._saveClose('${UI.esc(id)}')">${t('btn_confirmar_cierre')}</button>`);
 
     // Store repuestos in memory
     AveriasPage._repuestosSeleccionados = [];
@@ -4823,7 +5303,7 @@ const AveriasPage = {
     const el = document.getElementById('av-partes-list');
     if (!el) return;
     if (!AveriasPage._partesNuevos.length) {
-      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">Ningún mecánico añadido todavía.</p>';
+      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">' + t('ningun_mecanico') + '</p>';
       return;
     }
     el.innerHTML = AveriasPage._partesNuevos.map((p, i) => `
@@ -4870,7 +5350,7 @@ const AveriasPage = {
     const el = document.getElementById('cl-partes-list');
     if (!el) return;
     if (!AveriasPage._partesSeleccionados.length) {
-      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">Ningún mecánico añadido todavía.</p>';
+      el.innerHTML = '<p style="font-size:12px;color:var(--gray-muted);margin-top:4px">' + t('ningun_mecanico') + '</p>';
       return;
     }
     el.innerHTML = AveriasPage._partesSeleccionados.map((p, i) => `
@@ -4940,14 +5420,14 @@ const AveriasPage = {
     // Bloquear botón inmediatamente
     AveriasPage._saving = true;
     const submitBtn = document.querySelector('#modal-overlay .btn-primary');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Cerrando…'; }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = t('cargando'); }
 
     const a = await DataService.getAveria(id);
     if (!a) { AveriasPage._saving = false; return; }
     const fechaFin = document.getElementById('cl-fecha').value;
     const horaFin  = document.getElementById('cl-hora').value + ':00';
     let duracion = '';
-    const _resetBtn = () => { AveriasPage._saving = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✓ Confirmar cierre'; } };
+    const _resetBtn = () => { AveriasPage._saving = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = t('btn_confirmar_cierre'); } };
     if (a.fecha_inicio && a.hora_inicio && fechaFin) {
       try {
         const diff = new Date(`${fechaFin}T${horaFin}`) - new Date(`${a.fecha_inicio}T${a.hora_inicio}`);
@@ -5074,25 +5554,25 @@ const IncidenciasPage = {
     const canConvert = UserService.canConvertIncidencia();
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Incidencias</h1><p class="page-subtitle" id="inc-count">Cargando...</p></div>
+      <div><h1>${t('nav_incidencias')}</h1><p class="page-subtitle" id="inc-count">${t('cargando')}</p></div>
       <button class="btn btn-primary" onclick="IncidenciasPage.openNew()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nueva incidencia
+        ${t('btn_nueva_inc')}
       </button>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
-        <input type="search" class="search-box" id="inc-search" placeholder="Buscar descripción, equipo...">
+        <input type="search" class="search-box" id="inc-search" placeholder="${t('ph_buscar_inc')}">
         <select class="filter-select" id="inc-f-almacen">
-          <option value="">Todos los almacenes</option>
+          <option value="">${t('todos_alm')}</option>
           <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
         </select>
         <select class="filter-select" id="inc-f-estado">
-          <option value="">Todos los estados</option>
-          <option>Abierta</option><option>En curso</option><option>Cerrada</option>
+          <option value="">${t('todos_estados')}</option>
+          <option value="Abierta">${t('opt_abierta')}</option><option value="En curso">${t('opt_en_curso')}</option><option value="Cerrada">${t('opt_cerrada')}</option>
         </select>
         <select class="filter-select" id="inc-f-tipo">
-          <option value="">Todos los tipos</option>
+          <option value="">${t('todos_tipos')}</option>
           <option>Productividad</option><option>Seguridad</option><option>Calidad</option><option>Otro</option>
         </select>
       </div>
@@ -5101,8 +5581,8 @@ const IncidenciasPage = {
       <div class="table-wrap">
         <table class="table-clickable">
           <thead><tr>
-            <th>Fecha</th><th>Almacén</th><th>Zona</th><th>Tipo</th>
-            <th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Reportado por</th>
+            <th>${t('col_fecha')}</th><th>${t('col_almacen')}</th><th>${t('col_zona')}</th><th>${t('col_tipo')}</th>
+            <th>${t('col_desc')}</th><th>${t('col_prioridad')}</th><th>${t('col_estado')}</th><th>${t('col_reportado')}</th>
           </tr></thead>
           <tbody id="inc-tbody"></tbody>
         </table>
@@ -5113,14 +5593,14 @@ const IncidenciasPage = {
     if (almacen) {
       almacenFilter.value = almacen;
       almacenFilter.disabled = true;
-      almacenFilter.title = 'Solo puedes ver tu centro';
+      almacenFilter.title = t('solo_tu_centro');
     }
 
     this._data = await DataService.getIncidencias(almacen ? { almacen } : {});
     this._filtered = [...this._data];
     this._renderTable();
     const abiertas = this._data.filter(i => i.estado === 'Abierta' || i.estado === 'En curso').length;
-    document.getElementById('inc-count').textContent = `${this._data.length} incidencias — ${abiertas} activas`;
+    document.getElementById('inc-count').textContent = `${this._data.length} ${t('nav_incidencias')} — ${abiertas} ${t('activas')}`;
 
     ['inc-search','inc-f-almacen','inc-f-estado','inc-f-tipo'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
@@ -5148,7 +5628,7 @@ const IncidenciasPage = {
   _renderTable() {
     const tbody = document.getElementById('inc-tbody');
     if (!tbody) return;
-    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin incidencias','Prueba a cambiar los filtros o crea una nueva')}</td></tr>`; return; }
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty(t('sin_incidencias'), t('prueba_filtros'))}</td></tr>`; return; }
     tbody.innerHTML = this._filtered.map(i => `
       <tr onclick="IncidenciasPage.openDetail('${UI.esc(i.id)}')">
         <td style="white-space:nowrap">${UI.formatDate(i.fecha_registro, i.id)}</td>
@@ -5167,24 +5647,24 @@ const IncidenciasPage = {
     if (!i) return;
     const canConvert = UserService.canConvertIncidencia() && i.estado !== 'Cerrada';
     const canClose = i.estado !== 'Cerrada';
-    Modal.open(`Incidencia`, `
+    Modal.open(`${t('nav_incidencias')}`, `
       <div class="detail-grid">
-        <div class="detail-field"><label>Estado</label><p>${UI.estadoBadge(i.estado)}</p></div>
-        <div class="detail-field"><label>Prioridad</label><p>${UI.criticidadBadge(i.prioridad)}</p></div>
-        <div class="detail-field"><label>Fecha registro</label><p>${UI.formatDate(i.fecha_registro, i.id)} ${i.hora_registro||''}</p></div>
-        <div class="detail-field"><label>Tipo</label><p><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></p></div>
-        <div class="detail-field"><label>Almacén</label><p>${UI.esc(i.almacen||'—')}</p></div>
-        <div class="detail-field"><label>Zona / Línea</label><p>${UI.esc(i.zona||'—')}${i.linea?' · L'+i.linea:''}</p></div>
-        <div class="detail-field"><label>Equipo</label><p>${UI.esc(i.equipo||'—')}</p></div>
-        <div class="detail-field"><label>Reportado por</label><p>${UI.esc(i.reportado_por||'—')}</p></div>
-        <div class="detail-field"><label>Responsable</label><p>${UI.esc(i.responsable||'—')}</p></div>
-        <div class="detail-field full"><label>Descripción</label><p>${UI.esc(i.descripcion||'—')}</p></div>
-        ${i.solucion ? `<div class="detail-field full"><label>Resolución</label><p>${UI.esc(i.solucion)}</p></div>` : ''}
-        ${i.observaciones ? `<div class="detail-field full"><label>Observaciones</label><p>${UI.esc(i.observaciones)}</p></div>` : ''}
+        <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.estadoBadge(i.estado)}</p></div>
+        <div class="detail-field"><label>${t('lbl_prioridad')}</label><p>${UI.criticidadBadge(i.prioridad)}</p></div>
+        <div class="detail-field"><label>${t('lbl_fecha_reg')}</label><p>${UI.formatDate(i.fecha_registro, i.id)} ${i.hora_registro||''}</p></div>
+        <div class="detail-field"><label>${t('lbl_tipo')}</label><p><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></p></div>
+        <div class="detail-field"><label>${t('lbl_almacen')}</label><p>${UI.esc(i.almacen||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_zona_linea')}</label><p>${UI.esc(i.zona||'—')}${i.linea?' · L'+i.linea:''}</p></div>
+        <div class="detail-field"><label>${t('lbl_equipo')}</label><p>${UI.esc(i.equipo||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_reportado')}</label><p>${UI.esc(i.reportado_por||'—')}</p></div>
+        <div class="detail-field"><label>${t('lbl_responsable')}</label><p>${UI.esc(i.responsable||'—')}</p></div>
+        <div class="detail-field full"><label>${t('lbl_desc')}</label><p>${UI.esc(i.descripcion||'—')}</p></div>
+        ${i.solucion ? `<div class="detail-field full"><label>${t('lbl_resolucion')}</label><p>${UI.esc(i.solucion)}</p></div>` : ''}
+        ${i.observaciones ? `<div class="detail-field full"><label>${t('lbl_observaciones')}</label><p>${UI.esc(i.observaciones)}</p></div>` : ''}
       </div>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
-       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">✓ Resolver</button>` : ''}
-       ${canConvert ? `<button class="btn btn-primary" style="background:var(--red)" onclick="IncidenciasPage.convertirEnAveria('${UI.esc(id)}')">⚡ Convertir en avería</button>` : ''}`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
+       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">${t('btn_resolver')}</button>` : ''}
+       ${canConvert ? `<button class="btn btn-primary" style="background:var(--red)" onclick="IncidenciasPage.convertirEnAveria('${UI.esc(id)}')">${t('btn_convertir_av')}</button>` : ''}`);
   },
 
   async openNew() {
@@ -5198,80 +5678,80 @@ const IncidenciasPage = {
     const hh = String(now.getHours()).padStart(2,'0');
     const mm = String(now.getMinutes()).padStart(2,'0');
 
-    Modal.open('Nueva incidencia', `
+    Modal.open(t('modal_nueva_inc'), `
       <form id="inc-form" class="form-grid">
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="inc-almacen" required ${almacenLocked ? 'disabled' : ''}>
             <option value="">Seleccionar...</option>
             ${almacenes.map(a=>`<option${userAlmacen===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Zona</label>
+          <label>${t('lbl_zona')}</label>
           <select class="form-input" id="inc-zona" ${almacenLocked ? '' : 'disabled'}>
-            <option value="">Selecciona almacén</option>
+            <option value="">${t('sel_almacen')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Línea</label>
+          <label>${t('lbl_linea')}</label>
           <select class="form-input" id="inc-linea" disabled>
-            <option value="">Selecciona zona</option>
+            <option value="">${t('sel_zona')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Equipo</label>
+          <label>${t('lbl_equipo')}</label>
           <select class="form-input" id="inc-equipo" disabled>
-            <option value="">Selecciona línea</option>
+            <option value="">${t('sel_linea')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Tipo incidencia *</label>
+          <label>${t('lbl_tipo_inc')} *</label>
           <select class="form-input" id="inc-tipo" required>
-            <option value="">Seleccionar...</option>
+            <option value="">${t('seleccionar')}</option>
             <option>Productividad</option><option>Seguridad</option><option>Calidad</option><option>Otro</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Prioridad *</label>
+          <label>${t('lbl_prioridad')} *</label>
           <select class="form-input" id="inc-prioridad" required>
-            <option value="">Seleccionar...</option>
+            <option value="">${t('seleccionar')}</option>
             <option>Alta</option><option selected>Media</option><option>Baja</option>
           </select>
         </div>
         <div class="form-field full">
-          <label>Descripción *</label>
-          <textarea class="form-input" id="inc-desc" rows="3" required placeholder="Describe la incidencia detectada..."></textarea>
+          <label>${t('lbl_desc')} *</label>
+          <textarea class="form-input" id="inc-desc" rows="3" required placeholder="${t('ph_desc_inc')}"></textarea>
         </div>
         <div class="form-field">
-          <label>Reportado por</label>
+          <label>${t('lbl_reportado')}</label>
           <select class="form-input" id="inc-reportado">
             <option value="">Sin especificar</option>
             ${tecnicos.map(t=>`<option${t.nombre===user?.nombre?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Responsable</label>
+          <label>${t('lbl_responsable')}</label>
           <select class="form-input" id="inc-responsable">
             <option value="">Sin asignar</option>
             ${tecnicos.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Fecha</label>
+          <label>${t('col_fecha')}</label>
           <input class="form-input" type="date" id="inc-fecha" value="${today}">
         </div>
         <div class="form-field">
-          <label>Hora</label>
+          <label>${t('col_hora')}</label>
           <input class="form-input" type="time" id="inc-hora" value="${hh}:${mm}">
         </div>
         <div class="form-field full">
-          <label>Observaciones</label>
+          <label>${t('lbl_observaciones')}</label>
           <textarea class="form-input" id="inc-obs" rows="2" placeholder="Información adicional..."></textarea>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="IncidenciasPage._saveNew()">Registrar incidencia</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="IncidenciasPage._saveNew()">${t('btn_registrar_inc')}</button>`);
 
     // Cascade: almacén → zona → línea → equipo
     const almEl   = document.getElementById('inc-almacen');
@@ -5280,8 +5760,8 @@ const IncidenciasPage = {
     const equipEl = document.getElementById('inc-equipo');
     almEl.addEventListener('change', async () => {
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
-      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      lineaEl.innerHTML = `<option value="">${t('sel_zona')}</option>`; lineaEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       if (!almEl.value) { zonaEl.disabled = true; return; }
       const zs = await DataService.getZonasByAlmacen(almEl.value);
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
@@ -5289,7 +5769,7 @@ const IncidenciasPage = {
     });
     zonaEl.addEventListener('change', async () => {
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
@@ -5322,7 +5802,7 @@ const IncidenciasPage = {
     const id = `INC-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
     await DataService.saveIncidencia({
       id, almacen, zona, linea,
-      equipo: equipo === 'Selecciona línea' ? '' : equipo,
+      equipo: equipo === t('sel_linea') ? '' : equipo,
       tipo, prioridad, descripcion: desc,
       estado: 'Abierta',
       fecha_registro: document.getElementById('inc-fecha').value,
@@ -5365,7 +5845,7 @@ const IncidenciasPage = {
           <input class="form-input" type="date" id="incl-fecha" value="${today}">
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" style="background:var(--green)" onclick="IncidenciasPage._saveClose('${UI.esc(id)}')">✓ Marcar resuelta</button>`);
   },
 
@@ -5450,16 +5930,16 @@ const InventarioPage = {
 
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Inventario</h1><p class="page-subtitle" id="inv-subtitle">Cargando...</p></div>
+      <div><h1>${t('nav_inventario')}</h1><p class="page-subtitle" id="inv-subtitle">${t('cargando')}</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="InventarioPage.exportExcel()">⬇ Excel</button>
+        <button class="btn btn-secondary" onclick="InventarioPage.exportExcel()">${t('btn_excel')}</button>
         ${canManage ? `
-        <button class="btn btn-secondary" onclick="document.getElementById('inv-import-input').click()">⬆ Importar</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('inv-import-input').click()">${t('btn_importar')}</button>
         <input type="file" id="inv-import-input" accept=".xlsx,.xls" style="display:none"
           onchange="InventarioPage.importExcel(this.files[0]).then(()=>this.value='')">
         <button class="btn btn-primary" onclick="InventarioPage.openNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Añadir al inventario
+          ${t('btn_añadir_inv')}
         </button>` : ''}
       </div>
     </div>
@@ -5467,19 +5947,19 @@ const InventarioPage = {
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap;gap:10px">
         <!-- Selector de almacén: elemento principal de la vista -->
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:600;white-space:nowrap">Centro:</span>
+          <span style="font-size:13px;font-weight:600;white-space:nowrap">${t('centro_label')}</span>
           <select class="filter-select" id="inv-almacen-sel" style="font-weight:600" ${almacenLocked ? 'disabled title="Solo puedes ver tu centro"' : ''}>
-            ${!almacenLocked ? '<option value="">Todos los almacenes</option>' : ''}
+            ${!almacenLocked ? `<option value="">${t('todos_alm')}</option>` : ''}
             ${almacenes.map(a => `<option${userAlmacen === a ? ' selected' : ''}>${a}</option>`).join('')}
           </select>
         </div>
-        <input type="search" class="search-box" id="inv-search" placeholder="Buscar código, producto, familia...">
+        <input type="search" class="search-box" id="inv-search" placeholder="${t('ph_buscar_inv')}">
         <select class="filter-select" id="inv-f-tipo">
-          <option value="">Todos los tipos</option>
+          <option value="">${t('todos_tipos')}</option>
           ${tipos.map(t => `<option>${UI.esc(t)}</option>`).join('')}
         </select>
         <select class="filter-select" id="inv-f-familia">
-          <option value="">Todas las familias</option>
+          <option value="">${t('todas_familias')}</option>
           ${familias.map(f => `<option>${UI.esc(f)}</option>`).join('')}
         </select>
       </div>
@@ -5502,7 +5982,7 @@ const InventarioPage = {
         this._allData.filter(i => !tipo || i.tipo === tipo).map(i => i.familia).filter(Boolean)
       )].sort();
       const famEl = document.getElementById('inv-f-familia');
-      famEl.innerHTML = '<option value="">Todas las familias</option>' +
+      famEl.innerHTML = `<option value="">${t('todas_familias')}</option>` +
         familiasSel.map(f => `<option>${UI.esc(f)}</option>`).join('');
       this._applyFilters();
     });
@@ -5550,17 +6030,17 @@ const InventarioPage = {
     const isAdmin = UserService.getUser()?.rol === 'Admin';
     const thead = document.getElementById('inv-thead');
     if (thead) thead.innerHTML = `<tr>
-      <th>Cód. Producto</th><th>Producto</th><th>Tipo</th><th>Familia</th>
-      ${todosMode ? '<th>Por centro</th>' : ''}
-      <th style="text-align:right">Unidades</th>
+      <th>${t('col_cod_prod')}</th><th>${t('col_producto')}</th><th>${t('col_tipo')}</th><th>${t('col_familia')}</th>
+      ${todosMode ? `<th>${t('col_por_centro')}</th>` : ''}
+      <th style="text-align:right">${t('col_uds')}</th>
       ${isAdmin ? '<th></th>' : ''}
     </tr>`;
 
     // Subtítulo
     const totalUds = display.reduce((s, i) => s + (i.unidades || 0), 0);
-    const centroLabel = almacen || 'todos los centros';
+    const centroLabel = almacen || t('todos_los_centros');
     document.getElementById('inv-subtitle').textContent =
-      `${display.length} referencias en ${centroLabel} · ${totalUds} uds en stock`;
+      `${display.length} ${t('referencias_en')} ${centroLabel} · ${totalUds} ${t('uds_stock')}`;
 
     document.getElementById('inv-tbody').innerHTML = this._rows(display, todosMode);
   },
@@ -5633,7 +6113,7 @@ const InventarioPage = {
       ...allInv.map(i => i.tipo),
     ].filter(Boolean))].sort();
 
-    Modal.open('Añadir al inventario', `
+    Modal.open(t('btn_añadir_inv'), `
       <form id="inv-new-form" class="form-grid">
 
         <!-- PASO 1: Tipo -->
@@ -5742,8 +6222,8 @@ const InventarioPage = {
         </div>
 
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="InventarioPage._saveNew()">Guardar</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="InventarioPage._saveNew()">${t('save')}</button>`);
 
     // Cache para los handlers de cascada
     InventarioPage._catalogCache = allProds;
@@ -6033,8 +6513,8 @@ const InventarioPage = {
           ${stockHtml}
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="InventarioPage._saveEditProducto('${UI.esc(cod)}')">Guardar</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="InventarioPage._saveEditProducto('${UI.esc(cod)}')">${t('save')}</button>`);
     InventarioPage._editProd    = prod;
     InventarioPage._editInvRows = invRows;
   },
@@ -6228,19 +6708,19 @@ const MovimientosPage = {
     const almacenGlobal = getAlmacenFilter();
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Movimientos</h1><p class="page-subtitle" id="mov-count">Cargando...</p></div>
+      <div><h1>${t('nav_movimientos')}</h1><p class="page-subtitle" id="mov-count">${t('cargando')}</p></div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
-        <input type="search" class="search-box" id="mov-search" placeholder="Buscar código, producto, avería...">
+        <input type="search" class="search-box" id="mov-search" placeholder="${t('ph_buscar_mov')}">
         <select class="filter-select" id="mov-f-almacen">
-          <option value="">Todos los almacenes</option>
+          <option value="">${t('todos_alm')}</option>
           <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
         </select>
         <select class="filter-select" id="mov-f-tipo">
-          <option value="">Entradas y salidas</option>
-          <option value="Entrada">Solo entradas</option>
-          <option value="Salida">Solo salidas</option>
+          <option value="">${t('ent_sal')}</option>
+          <option value="Entrada">${t('solo_ent')}</option>
+          <option value="Salida">${t('solo_sal')}</option>
         </select>
         <input type="date" class="filter-select" id="mov-f-desde" title="Desde">
         <input type="date" class="filter-select" id="mov-f-hasta" title="Hasta">
@@ -6249,8 +6729,8 @@ const MovimientosPage = {
     <div class="card">
       <div class="table-wrap">
         <table><thead><tr>
-          <th>Fecha</th><th>Tipo</th><th>Cód. Producto</th><th>Producto</th>
-          <th>Almacén</th><th style="text-align:right">Cantidad</th><th>Usuario</th><th>Notas</th>
+          <th>${t('col_fecha')}</th><th>${t('col_tipo')}</th><th>${t('col_cod_prod')}</th><th>${t('col_producto')}</th>
+          <th>${t('col_almacen')}</th><th style="text-align:right">${t('col_cantidad')}</th><th>${t('col_usuario')}</th><th>${t('col_notas')}</th>
         </tr></thead>
         <tbody id="mov-tbody"></tbody>
         </table>
@@ -6262,7 +6742,7 @@ const MovimientosPage = {
     if (almacenGlobal) {
       almacenFilter.value = almacenGlobal;
       almacenFilter.disabled = true;
-      almacenFilter.title = 'Solo puedes ver datos de tu centro';
+      almacenFilter.title = t('solo_tu_centro');
     }
 
     // Cargar todos los movimientos
@@ -6296,7 +6776,7 @@ const MovimientosPage = {
     const entradas = this._filtered.filter(m => m.tipo_movimiento === 'Entrada').reduce((s, m) => s + Math.abs(m.cantidad || 0), 0);
     const salidas  = this._filtered.filter(m => m.tipo_movimiento === 'Salida').reduce((s, m) => s + Math.abs(m.cantidad || 0), 0);
     document.getElementById('mov-count').textContent =
-      `${this._filtered.length} movimientos — ${entradas} uds entradas · ${salidas} uds salidas`;
+      `${this._filtered.length} ${t('movimientos')} — ${entradas} ${t('uds_entradas')} · ${salidas} ${t('uds_salidas')}`;
     this._renderTable();
   },
 
@@ -6311,8 +6791,8 @@ const MovimientosPage = {
         : 'color:var(--red);font-weight:600';
       const cantText  = esEntrada ? `+${Math.abs(m.cantidad)}` : `-${Math.abs(m.cantidad)}`;
       const tipoBadge = esEntrada
-        ? `<span class="badge badge-green">↑ Entrada</span>`
-        : `<span class="badge badge-red">↓ Salida</span>`;
+        ? `<span class="badge badge-green">↑ ${t('entrada')}</span>`
+        : `<span class="badge badge-red">↓ ${t('salida')}</span>`;
       return `<tr>
         <td style="white-space:nowrap">${UI.formatDate(m.fecha)}</td>
         <td>${tipoBadge}</td>
@@ -6535,7 +7015,7 @@ const ConfigPage = {
 
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Configuración</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div>
+      <div><h1>${t('nav_config')}</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div>
     </div>
     <div class="config-grid">
 
@@ -6668,7 +7148,7 @@ const ConfigPage = {
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <input type="search" class="search-box" id="tec-search" placeholder="Buscar nombre..." style="width:160px" oninput="ConfigPage._filterTecTable()">
             <select class="filter-select" id="tec-f-almacen" onchange="ConfigPage._filterTecTable()">
-              <option value="">Todos los almacenes</option>
+              <option value="">${t('todos_alm')}</option>
               ${almacenes.map(a=>`<option${globalAlm===a?' selected':''}>${a}</option>`).join('')}
             </select>
             <select class="filter-select" id="tec-f-rol" onchange="ConfigPage._filterTecTable()">
@@ -6882,7 +7362,7 @@ const ConfigPage = {
           </select>
         </div>
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="tec-almacen">
             ${almacenes.map(a => `<option${(t.almacen||'Miramar')===a?' selected':''}>${a}</option>`).join('')}
           </select>
@@ -6896,16 +7376,16 @@ const ConfigPage = {
 
   openNewTecnico() {
     Modal.open('Añadir técnico', ConfigPage._tecFormHtml(),
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico(null)">Guardar</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico(null)">${t('save')}</button>`);
   },
 
   async editTecnico(id) {
     const t = await db.tecnicos.get(id);
     if (!t) return;
     Modal.open('Editar técnico', ConfigPage._tecFormHtml(t),
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico('${UI.esc(id)}')">Guardar cambios</button>`);
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" onclick="ConfigPage._saveTecnico('${UI.esc(id)}')">${t('btn_guardar_cambios')}</button>`);
   },
 
   async _saveTecnico(id) {
@@ -7000,7 +7480,7 @@ const ConfigPage = {
       </div>`,
       `${hasPw ? `<button class="btn btn-danger btn-sm" onclick="ConfigPage._resetPassword('${UI.esc(id)}')">🔄 Resetear</button>` : ''}
        <div style="flex:1"></div>
-       <button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ConfigPage._setPassword('${UI.esc(id)}')">Guardar contraseña</button>`
     );
   },
@@ -7157,34 +7637,41 @@ const UserSelectScreen = {
   // ── PASO 1: selección de almacén ──────────────────────────────
   _showStep1() {
     this._activeAlmacen = '';
-    document.getElementById('users-step-title').textContent = '¿En qué centro trabajas?';
-    document.getElementById('users-step-sub').textContent   = 'Selecciona tu centro de trabajo para continuar';
+    document.getElementById('users-step-title').textContent = t('step1_title');
+    document.getElementById('users-step-sub').textContent   = t('step1_sub');
     document.getElementById('users-step1').style.display = '';
     document.getElementById('users-step2').style.display = 'none';
 
     const ICONS = { Miramar:'🌊', Xeresa:'🌿', Murcia:'☀️', Alcacer:'🏭', Algemesi:'🍊', Todos:'⚙️' };
     const countByAlm = {};
-    this._tecnicos.forEach(t => { const a = t.almacen||'Sin asignar'; countByAlm[a] = (countByAlm[a]||0)+1; });
+    this._tecnicos.forEach(tc => { const a = tc.almacen||'Sin asignar'; countByAlm[a] = (countByAlm[a]||0)+1; });
     // Excluir 'Todos' (Admin) del paso 1 — el Admin aparece en todos los centros
-    const almacenes = [...new Set(this._tecnicos.map(t => t.almacen).filter(a => a && a !== 'Todos'))].sort();
+    const almacenes = [...new Set(this._tecnicos.map(tc => tc.almacen).filter(a => a && a !== 'Todos'))].sort();
 
-    document.getElementById('almacen-grid').innerHTML = almacenes.map(a => `
-      <div class="almacen-card" onclick="UserSelectScreen._selectAlmacen('${UI.esc(a)}')">
+    document.getElementById('almacen-grid').innerHTML = almacenes.map(a => {
+      const n = countByAlm[a] || 0;
+      const label = n === 1 ? `1 ${t('user_s')}` : `${n} ${t('user_pl')}`;
+      return `<div class="almacen-card" onclick="UserSelectScreen._selectAlmacen('${UI.esc(a)}')">
         <span style="font-size:34px">${ICONS[a]||'🏢'}</span>
         <span class="almacen-card-name">${UI.esc(a)}</span>
-        <span class="almacen-card-count">${countByAlm[a]||0} usuario${(countByAlm[a]||0)!==1?'s':''}</span>
-      </div>`).join('');
+        <span class="almacen-card-count">${label}</span>
+      </div>`;
+    }).join('');
   },
 
   // ── PASO 2: selección de usuario ─────────────────────────────
   _selectAlmacen(almacen) {
     this._activeAlmacen = almacen;
     document.getElementById('users-step-title').textContent = almacen;
-    document.getElementById('users-step-sub').textContent   = 'Selecciona tu usuario';
+    document.getElementById('users-step-sub').textContent   = t('step2_sub');
     document.getElementById('users-step1').style.display = 'none';
     document.getElementById('users-step2').style.display = '';
     const searchEl = document.getElementById('user-search');
-    if (searchEl) { searchEl.value = ''; searchEl.oninput = () => UserSelectScreen._renderGrid(); }
+    if (searchEl) {
+      searchEl.value = '';
+      searchEl.placeholder = t('search_ph');
+      searchEl.oninput = () => UserSelectScreen._renderGrid();
+    }
     this._renderGrid();
   },
 
@@ -7197,15 +7684,15 @@ const UserSelectScreen = {
       (!search || (t.nombre||'').toLowerCase().includes(search))
     );
     document.getElementById('users-grid').innerHTML = filtered.length
-      ? filtered.map(t => `
-          <div class="user-card" data-rol="${UI.esc(t.rol)}" onclick="UserSelectScreen._select('${UI.esc(t.id)}')">
-            <div class="user-avatar">${(t.nombre||'?')[0].toUpperCase()}</div>
-            <span class="user-name">${UI.esc(t.nombre)}</span>
-            <span class="user-rol-badge rol-${UI.esc(t.rol)}">${UI.esc(t.rol)}</span>
-            ${t.password ? '<span style="font-size:10px;color:var(--gray-muted)">🔒</span>'
-                         : '<span style="font-size:10px;color:var(--orange)">Sin contraseña</span>'}
+      ? filtered.map(u => `
+          <div class="user-card" data-rol="${UI.esc(u.rol)}" onclick="UserSelectScreen._select('${UI.esc(u.id)}')">
+            <div class="user-avatar">${(u.nombre||'?')[0].toUpperCase()}</div>
+            <span class="user-name">${UI.esc(u.nombre)}</span>
+            <span class="user-rol-badge rol-${UI.esc(u.rol)}">${UI.esc(u.rol)}</span>
+            ${u.password ? '<span style="font-size:10px;color:var(--gray-muted)">🔒</span>'
+                         : `<span style="font-size:10px;color:var(--orange)">${t('sin_password')}</span>`}
           </div>`).join('')
-      : `<p style="grid-column:1/-1;text-align:center;color:var(--gray-muted);padding:20px 0">No hay usuarios en este centro</p>`;
+      : `<p style="grid-column:1/-1;text-align:center;color:var(--gray-muted);padding:20px 0">${t('no_users')}</p>`;
   },
 
   // ── Selección de usuario con gestión de contraseña ───────────
@@ -7216,20 +7703,20 @@ const UserSelectScreen = {
 
     if (!t.password) {
       // Primera vez — crear contraseña
-      Modal.open(`Bienvenido, ${UI.esc(t.nombre)}`, `
+      Modal.open(`${t('welcome')}, ${UI.esc(t.nombre)}`, `
         <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
-          Es tu primera vez en el sistema. Crea una contraseña personal para acceder.
+          ${I18N.t('first_time')}
         </p>
         <div class="form-field">
-          <label>Nueva contraseña <span style="color:var(--red)">*</span></label>
-          <input class="form-input" id="pw-new" type="password" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+          <label>${I18N.t('new_pw')} <span style="color:var(--red)">*</span></label>
+          <input class="form-input" id="pw-new" type="password" placeholder="${I18N.t('new_pw_ph')}" autocomplete="new-password">
         </div>
         <div class="form-field">
-          <label>Repetir contraseña <span style="color:var(--red)">*</span></label>
-          <input class="form-input" id="pw-new2" type="password" placeholder="Repite la contraseña" autocomplete="new-password">
+          <label>${I18N.t('repeat_pw')} <span style="color:var(--red)">*</span></label>
+          <input class="form-input" id="pw-new2" type="password" placeholder="${I18N.t('repeat_pw_ph')}" autocomplete="new-password">
         </div>`,
-        `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-         <button class="btn btn-primary" onclick="UserSelectScreen._setFirstPassword()">Crear y entrar</button>`
+        `<button class="btn btn-secondary" onclick="Modal.close()">${I18N.t('cancel')}</button>
+         <button class="btn btn-primary" onclick="UserSelectScreen._setFirstPassword()">${I18N.t('create_enter')}</button>`
       );
       setTimeout(() => {
         document.getElementById('pw-new')?.focus();
@@ -7237,14 +7724,14 @@ const UserSelectScreen = {
       }, 80);
     } else {
       // Pedir contraseña
-      Modal.open(`Bienvenido, ${UI.esc(t.nombre)}`, `
+      Modal.open(`${I18N.t('welcome')}, ${UI.esc(t.nombre)}`, `
         <div class="form-field">
-          <label>Contraseña</label>
-          <input class="form-input" id="pw-input" type="password" placeholder="Introduce tu contraseña" autocomplete="current-password">
+          <label>${I18N.t('pw_label')}</label>
+          <input class="form-input" id="pw-input" type="password" placeholder="${I18N.t('pw_ph')}" autocomplete="current-password">
         </div>
-        <div id="pw-error" style="color:var(--red);font-size:12px;margin-top:4px;display:none">❌ Contraseña incorrecta</div>`,
-        `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
-         <button class="btn btn-primary" onclick="UserSelectScreen._checkPassword()">Entrar</button>`
+        <div id="pw-error" style="color:var(--red);font-size:12px;margin-top:4px;display:none">${I18N.t('pw_wrong')}</div>`,
+        `<button class="btn btn-secondary" onclick="Modal.close()">${I18N.t('cancel')}</button>
+         <button class="btn btn-primary" onclick="UserSelectScreen._checkPassword()">${I18N.t('enter')}</button>`
       );
       setTimeout(() => {
         const inp = document.getElementById('pw-input');
@@ -7257,8 +7744,8 @@ const UserSelectScreen = {
   async _setFirstPassword() {
     const pw1 = document.getElementById('pw-new')?.value  || '';
     const pw2 = document.getElementById('pw-new2')?.value || '';
-    if (pw1.length < 4) { toast('Mínimo 4 caracteres', 'error'); return; }
-    if (pw1 !== pw2)    { toast('Las contraseñas no coinciden', 'error'); return; }
+    if (pw1.length < 4) { toast(t('pw_short'), 'error'); return; }
+    if (pw1 !== pw2)    { toast(t('pw_nomatch'), 'error'); return; }
     const t = UserSelectScreen._pendingLogin;
     await db.tecnicos.put({ ...t, password: pw1 });
     UserSelectScreen._pendingLogin = { ...t, password: pw1 };
@@ -7295,6 +7782,8 @@ const UserSelectScreen = {
 // ═══════════════════════════════════════════════════════════════════
 const App = {
   async init() {
+    // Aplicar idioma guardado (DOM + dir + botones activos)
+    I18N.setLang(I18N._lang);
     UserService.load();
 
     // Check DB
@@ -7457,7 +7946,7 @@ const App = {
     if (eff) {
       sel.value = eff;
       sel.disabled = true;
-      sel.title = 'Solo puedes ver datos de tu centro';
+      sel.title = t('solo_tu_centro');
     } else {
       sel.disabled = false;
     }
@@ -7527,50 +8016,50 @@ const PartesPage = {
     if (!main) return;
     // Acceso: cualquier usuario logueado puede ver sus partes
     if (!UserService.isLoggedIn()) {
-      main.innerHTML = `<div class="page-header"><h1>Partes de trabajo</h1></div>
-        <p style="color:var(--gray-muted);padding:20px">Acceso restringido. Identifícate primero.</p>`;
+      main.innerHTML = `<div class="page-header"><h1>${t('nav_partes')}</h1></div>
+        <p style="color:var(--gray-muted);padding:20px">${t('acceso_restringido')}</p>`;
       return;
     }
 
     main.innerHTML = `<div class="page-header">
-      <h1>Partes de trabajo</h1>
+      <h1>${t('nav_partes')}</h1>
       <div class="page-actions">
-        <button class="btn btn-primary btn-sm" onclick="PartesPage._openNew()">➕ Nuevo Parte</button>
+        <button class="btn btn-primary btn-sm" onclick="PartesPage._openNew()">${t('btn_nuevo_parte')}</button>
         <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()" title="Ver SQL de configuración de tablas">⚙️ Setup SQL</button>
       </div>
     </div>
     <div class="pbi-controls">
       <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Almacén</span>
+        <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
         <select class="pbi-select" id="pt-alm">
-          <option value="">Todos</option>
+          <option value="">${t('todos')}</option>
           ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a=>`<option>${a}</option>`).join('')}
         </select>
       </div>
       <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Técnico</span>
-        <select class="pbi-select" id="pt-tec"><option value="">Todos</option></select>
+        <span class="pbi-ctrl-label">${t('lbl_tecnico')}</span>
+        <select class="pbi-select" id="pt-tec"><option value="">${t('todos')}</option></select>
       </div>
       <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Desde</span>
+        <span class="pbi-ctrl-label">${t('desde')}</span>
         <input type="date" class="pbi-select" id="pt-desde">
       </div>
       <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Hasta</span>
+        <span class="pbi-ctrl-label">${t('hasta')}</span>
         <input type="date" class="pbi-select" id="pt-hasta">
       </div>
       <div class="pbi-ctrl-group" style="justify-content:flex-end">
-        <button class="btn btn-secondary btn-sm" onclick="PartesPage._chartFilter=null;PartesPage._applyFilters()">Filtrar</button>
+        <button class="btn btn-secondary btn-sm" onclick="PartesPage._chartFilter=null;PartesPage._applyFilters()">${t('filter')}</button>
       </div>
     </div>
     <div id="pt-resumen" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
     <div class="table-container">
       <table class="data-table" id="pt-table">
         <thead><tr>
-          <th>Fecha</th><th>Técnico</th><th>Almacén</th><th>Activo / Equipo</th>
-          <th>Horas</th><th>Materiales</th><th>Avería</th><th>Notas</th><th></th>
+          <th>${t('col_fecha')}</th><th>${t('col_tecnico')}</th><th>${t('col_almacen')}</th><th>${t('col_activo_equipo')}</th>
+          <th>${t('col_horas')}</th><th>${t('col_materiales')}</th><th>${t('col_averia')}</th><th>${t('col_notas')}</th><th></th>
         </tr></thead>
-        <tbody id="pt-tbody"><tr><td colspan="9" style="text-align:center;color:var(--gray-muted)">Cargando…</td></tr></tbody>
+        <tbody id="pt-tbody"><tr><td colspan="9" style="text-align:center;color:var(--gray-muted)">${t('cargando')}</td></tr></tbody>
       </table>
     </div>`;
 
@@ -7618,7 +8107,7 @@ const PartesPage = {
     if (tecSel) {
       const effAlm = UserService.getEffectiveAlmacen();
       const list   = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
-      tecSel.innerHTML = '<option value="">Todos</option>' +
+      tecSel.innerHTML = `<option value="">${t('todos')}</option>` +
         list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
     }
 
@@ -7758,7 +8247,7 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
       <textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>`,
       `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.querySelector('#modal-body textarea')?.value);toast('SQL copiado ✓','success')">📋 Copiar SQL</button>
-       <button class="btn btn-primary" onclick="Modal.close()">Cerrar</button>`);
+       <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
   },
 
   _applyFilters() {
@@ -7946,78 +8435,78 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
           <input class="form-input" type="date" id="pf-fecha" value="${today}">
         </div>
         <div class="form-field">
-          <label>Horas trabajadas</label>
+          <label>${t('lbl_horas')}</label>
           <input class="form-input" type="number" id="pf-horas" min="0" max="24" step="0.5" value="1">
         </div>
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="pf-almacen" ${almLocked ? 'disabled' : ''}>
             <option value="">Seleccionar...</option>
             ${almList.map(a => `<option ${normalizeAlmacen(a)===normalizeAlmacen(effAlm) ? 'selected' : ''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Zona</label>
+          <label>${t('lbl_zona')}</label>
           <select class="form-input" id="pf-zona" disabled>
-            <option value="">Selecciona almacén</option>
+            <option value="">${t('sel_almacen')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Línea</label>
+          <label>${t('lbl_linea')}</label>
           <select class="form-input" id="pf-linea" disabled>
-            <option value="">Selecciona zona</option>
+            <option value="">${t('sel_zona')}</option>
           </select>
         </div>
         <div class="form-field full">
-          <label>Equipo</label>
+          <label>${t('lbl_equipo')}</label>
           <select class="form-input" id="pf-equipo" disabled>
-            <option value="">Selecciona línea</option>
+            <option value="">${t('sel_linea')}</option>
           </select>
           <input type="hidden" id="pf-activo-id">
         </div>
         <div class="form-field full">
-          <label>Avería relacionada <small style="color:var(--gray-muted)">(opcional)</small></label>
+          <label>${t('lbl_averia_rel')} <small style="color:var(--gray-muted)">(${t('opcional')})</small></label>
           <input class="form-input" id="pf-averia" placeholder="ID de avería o dejar vacío">
         </div>
         <div class="form-field full">
-          <label>Descripción del trabajo / Notas</label>
+          <label>${t('lbl_trabajo_notas')}</label>
           <textarea class="form-input" id="pf-notas" rows="3" placeholder="Describe el trabajo realizado…" style="resize:vertical"></textarea>
         </div>
         <div class="form-field full">
           <div class="form-section-label">📦 Materiales utilizados</div>
           <div class="materiales-row" style="margin-bottom:8px">
             <div>
-              <small style="color:var(--gray-muted)">Tipo</small>
+              <small style="color:var(--gray-muted)">${t('col_tipo')}</small>
               <select class="form-input" id="pf-mat-tipo" style="margin-top:2px">
                 <option value="">— Tipo —</option>
                 ${matTipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Familia</small>
+              <small style="color:var(--gray-muted)">${t('col_familia')}</small>
               <select class="form-input" id="pf-mat-familia" disabled style="margin-top:2px">
                 <option value="">— Familia —</option>
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Producto</small>
+              <small style="color:var(--gray-muted)">${t('col_producto')}</small>
               <select class="form-input" id="pf-mat-producto" style="margin-top:2px">
                 <option value="">— Producto —</option>
                 ${todosProds.map(p=>`<option value="${UI.esc(p.cod_producto)}">${UI.esc(p.producto)}</option>`).join('')}
               </select>
             </div>
             <div>
-              <small style="color:var(--gray-muted)">Cant.</small>
+              <small style="color:var(--gray-muted)">${t('col_cant_short')}</small>
               <input class="form-input" type="number" id="pf-mat-qty" min="1" value="1" style="width:60px;margin-top:2px">
             </div>
             <div style="padding-top:18px">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="PartesPage._addMaterial()">+ Añadir</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="PartesPage._addMaterial()">${t('btn_añadir')}</button>
             </div>
           </div>
           <div id="pf-mat-list" style="display:flex;flex-direction:column;gap:4px"></div>
         </div>
       </div>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="PartesPage._saveParte()">Guardar Parte</button>`);
 
     PartesPage._ptMaterials = [];
@@ -8032,8 +8521,8 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 
     almEl.addEventListener('change', async () => {
       zonaEl.innerHTML = '<option value="">Seleccionar zona...</option>';
-      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      lineaEl.innerHTML = `<option value="">${t('sel_zona')}</option>`; lineaEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       hidEl.value = '';
       if (!almEl.value) { zonaEl.disabled = true; return; }
       const zs = await DataService.getZonasByAlmacen(almEl.value);
@@ -8042,7 +8531,7 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
     });
     zonaEl.addEventListener('change', async () => {
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>';
-      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       hidEl.value = '';
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
@@ -8267,25 +8756,25 @@ const InspeccionesPage = {
     const almacenGlobal = getAlmacenFilter();
     document.getElementById('content').innerHTML = `
     <div class="page-header">
-      <div><h1>Inspecciones OCA</h1><p class="page-subtitle" id="insp-count">Cargando...</p></div>
+      <div><h1>${t('nav_inspecciones')}</h1><p class="page-subtitle" id="insp-count">${t('cargando')}</p></div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary" onclick="InspeccionesPage.exportExcel()">📊 Excel</button>
-        <button class="btn btn-primary" onclick="InspeccionesPage.openForm(null)">+ Nueva inspección</button>
+        <button class="btn btn-secondary" onclick="InspeccionesPage.exportExcel()">${t('btn_excel')}</button>
+        <button class="btn btn-primary" onclick="InspeccionesPage.openForm(null)">${t('btn_nueva_insp')}</button>
       </div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
-        <input type="search" class="search-box" id="insp-search" placeholder="Buscar empresa, tipo, observaciones...">
+        <input type="search" class="search-box" id="insp-search" placeholder="${t('ph_buscar_insp')}">
         <select class="filter-select" id="insp-f-almacen">
-          <option value="">Todos los almacenes</option>
+          <option value="">${t('todos_alm')}</option>
           ${this._ALMACENES.map(a=>`<option${almacenGlobal===a?' selected':''}>${a}</option>`).join('')}
         </select>
         <select class="filter-select" id="insp-f-tipo">
-          <option value="">Todos los tipos</option>
+          <option value="">${t('todos_tipos')}</option>
           ${this._TIPOS.map(t=>`<option>${t}</option>`).join('')}
         </select>
         <select class="filter-select" id="insp-f-resultado">
-          <option value="">Todos los resultados</option>
+          <option value="">${t('todos_resultados')}</option>
           ${this._RESULTADOS.map(r=>`<option>${r}</option>`).join('')}
         </select>
       </div>
@@ -8293,13 +8782,13 @@ const InspeccionesPage = {
     <div class="card">
       <table class="data-table">
         <thead><tr>
-          <th onclick="InspeccionesPage._setSort('almacen')"   style="cursor:pointer;user-select:none">Almacén <span id="insp-sort-almacen"></span></th>
-          <th onclick="InspeccionesPage._setSort('tipo')"      style="cursor:pointer;user-select:none">Tipo <span id="insp-sort-tipo"></span></th>
-          <th onclick="InspeccionesPage._setSort('empresa')"   style="cursor:pointer;user-select:none">Empresa <span id="insp-sort-empresa"></span></th>
-          <th onclick="InspeccionesPage._setSort('fecha')"     style="cursor:pointer;user-select:none">Fecha <span id="insp-sort-fecha"></span></th>
-          <th onclick="InspeccionesPage._setSort('resultado')" style="cursor:pointer;user-select:none">Resultado <span id="insp-sort-resultado"></span></th>
-          <th onclick="InspeccionesPage._setSort('proxima')"   style="cursor:pointer;user-select:none">Próxima <span id="insp-sort-proxima"></span></th>
-          <th>Estado</th><th>Doc.</th><th></th>
+          <th onclick="InspeccionesPage._setSort('almacen')"   style="cursor:pointer;user-select:none">${t('col_almacen')} <span id="insp-sort-almacen"></span></th>
+          <th onclick="InspeccionesPage._setSort('tipo')"      style="cursor:pointer;user-select:none">${t('col_tipo')} <span id="insp-sort-tipo"></span></th>
+          <th onclick="InspeccionesPage._setSort('empresa')"   style="cursor:pointer;user-select:none">${t('col_empresa')} <span id="insp-sort-empresa"></span></th>
+          <th onclick="InspeccionesPage._setSort('fecha')"     style="cursor:pointer;user-select:none">${t('col_fecha')} <span id="insp-sort-fecha"></span></th>
+          <th onclick="InspeccionesPage._setSort('resultado')" style="cursor:pointer;user-select:none">${t('col_resultado')} <span id="insp-sort-resultado"></span></th>
+          <th onclick="InspeccionesPage._setSort('proxima')"   style="cursor:pointer;user-select:none">${t('col_proxima')} <span id="insp-sort-proxima"></span></th>
+          <th>${t('col_estado')}</th><th>${t('col_doc')}</th><th></th>
         </tr></thead>
         <tbody id="insp-tbody"><tr><td colspan="9">${UI.loading()}</td></tr></tbody>
       </table>
@@ -8330,7 +8819,7 @@ const InspeccionesPage = {
 
   _semaforo(dias) {
     if (dias === null) return '';
-    if (dias < 0)  return `<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">VENCIDA</span>`;
+    if (dias < 0)  return `<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${t('vencida')}</span>`;
     if (dias <= 30) return `<span style="background:#f97316;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
     if (dias <= 60) return `<span style="background:#eab308;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
     return `<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${dias}d</span>`;
@@ -8397,32 +8886,32 @@ const InspeccionesPage = {
   async openForm(id) {
     const insp = id ? await db.inspecciones.get(id) : null;
     const isEdit = !!insp;
-    Modal.open(isEdit ? `Editar inspección` : 'Nueva inspección', `
+    Modal.open(isEdit ? t('modal_editar_insp') : t('btn_nueva_insp'), `
       <form id="insp-form" class="form-grid">
         <div class="form-field">
-          <label>Almacén *</label>
+          <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="fi-almacen" required>
             <option value="">Seleccionar...</option>
             ${this._ALMACENES.map(a=>`<option${insp?.almacen===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Tipo inspección *</label>
+          <label>${t('lbl_tipo_insp')} *</label>
           <select class="form-input" id="fi-tipo" required>
             <option value="">Seleccionar...</option>
             ${this._TIPOS.map(t=>`<option${insp?.tipo===t?' selected':''}>${t}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Empresa inspectora</label>
+          <label>${t('lbl_empresa')}</label>
           <input class="form-input" id="fi-empresa" value="${UI.esc(insp?.empresa||'')}" placeholder="Nombre de la empresa">
         </div>
         <div class="form-field">
-          <label>Nº Registro instalación</label>
+          <label>${t('lbl_num_registro')}</label>
           <input class="form-input" id="fi-num-registro" value="${UI.esc(insp?.num_registro||'')}" placeholder="Ej: IF/001562-1">
         </div>
         <div class="form-field">
-          <label>Resultado</label>
+          <label>${t('lbl_resultado')}</label>
           <select class="form-input" id="fi-resultado">
             <option value="">—</option>
             ${this._RESULTADOS.map(r=>`<option${insp?.resultado===r?' selected':''}>${r}</option>`).join('')}
@@ -8433,22 +8922,22 @@ const InspeccionesPage = {
           <input class="form-input" type="date" id="fi-fecha" value="${insp?.fecha||''}">
         </div>
         <div class="form-field">
-          <label>Próxima inspección</label>
+          <label>${t('lbl_proxima_insp')}</label>
           <input class="form-input" type="date" id="fi-proxima" value="${insp?.proxima||''}">
         </div>
         <div class="form-field full">
-          <label>Observaciones / Deficiencias</label>
+          <label>${t('lbl_obs_def')}</label>
           <textarea class="form-input" id="fi-observaciones" rows="3" placeholder="Deficiencias encontradas, condiciones...">${UI.esc(insp?.observaciones||'')}</textarea>
         </div>
         <div class="form-field full">
-          <label>Certificado PDF ${insp?.documento?'<a href="'+UI.esc(insp.documento)+'" target="_blank" style="margin-left:8px;font-size:12px">📄 Ver actual</a>':''}</label>
+          <label>${t('lbl_cert_pdf')} ${insp?.documento?'<a href="'+UI.esc(insp.documento)+'" target="_blank" style="margin-left:8px;font-size:12px">📄 Ver actual</a>':''}</label>
           <input class="form-input" type="file" id="fi-pdf" accept="application/pdf">
           <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.':'Sube el certificado y los campos se rellenarán automáticamente ✨'}</span>
         </div>
       </form>`,
-      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" id="insp-save-btn" onclick="InspeccionesPage.saveInspeccion('${id||''}')">
-         ${isEdit ? 'Guardar cambios' : 'Crear inspección'}
+         ${isEdit ? t('btn_guardar_cambios') : t('btn_crear_insp')}
        </button>`);
 
     // Auto-parseo al seleccionar PDF
@@ -8532,7 +9021,7 @@ const InspeccionesPage = {
       console.error('[saveInspeccion]', e);
       toast('Error al guardar: ' + (e.message || String(e)), 'error');
       const btn = document.getElementById('insp-save-btn');
-      if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+      if (btn) { btn.disabled = false; btn.textContent = t('btn_guardar_cambios'); }
     }
   },
 
@@ -8596,8 +9085,8 @@ const PartesAnalisisPage = {
     const main = document.getElementById('content');
     if (!main) return;
     if (!UserService.isAdmin() && !UserService.isResponsable()) {
-      main.innerHTML = `<div class="page-header"><h1>Análisis Partes</h1></div>
-        <p style="color:var(--gray-muted);padding:20px">Acceso restringido a Responsables y Administradores.</p>`;
+      main.innerHTML = `<div class="page-header"><h1>${t('nav_analisis')}</h1></div>
+        <p style="color:var(--gray-muted);padding:20px">${t('acceso_restringido_admin')}</p>`;
       return;
     }
 
@@ -8613,15 +9102,15 @@ const PartesAnalisisPage = {
     </div>
     <div class="pbi-controls">
       <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Almacén</span>
+        <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
         <select class="pbi-select" id="pa-alm" ${effAlm ? 'disabled' : ''}>
-          <option value="">Todos</option>
+          <option value="">${t('todos')}</option>
           ${almList.map(a=>`<option ${effAlm && normalizeAlmacen(a)===normalizeAlmacen(effAlm)?'selected':''}>${a}</option>`).join('')}
         </select>
       </div>
       <div class="pbi-ctrl-group">
         <span class="pbi-ctrl-label">Técnico</span>
-        <select class="pbi-select" id="pa-tec"><option value="">Todos</option></select>
+        <select class="pbi-select" id="pa-tec"><option value="">${t('todos')}</option></select>
       </div>
       <div class="pbi-ctrl-group">
         <span class="pbi-ctrl-label">Desde</span>
@@ -8632,7 +9121,7 @@ const PartesAnalisisPage = {
         <input type="date" class="pbi-select" id="pa-hasta">
       </div>
       <div class="pbi-ctrl-group" style="justify-content:flex-end">
-        <button class="btn btn-secondary btn-sm" onclick="PartesAnalisisPage._rebuild()">Filtrar</button>
+        <button class="btn btn-secondary btn-sm" onclick="PartesAnalisisPage._rebuild()">${t('filter')}</button>
       </div>
     </div>
     <div id="pa-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
@@ -8684,7 +9173,7 @@ const PartesAnalisisPage = {
     const tecSel = document.getElementById('pa-tec');
     if (tecSel) {
       const list = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
-      tecSel.innerHTML = '<option value="">Todos</option>' + list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
+      tecSel.innerHTML = `<option value="">${t('todos')}</option>` + list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
     }
     if (effAlm) this._gf.almacen = effAlm;
 
@@ -8727,7 +9216,7 @@ const PartesAnalisisPage = {
         <div class="kpi-body"><div class="kpi-value">${totalHoras.toFixed(1)}h</div><div class="kpi-label">Total horas</div></div>
       </div>
       <div class="kpi-card" style="min-width:130px;flex:0 0 auto;background:var(--surface)">
-        <div class="kpi-body"><div class="kpi-value">${tecActivos}</div><div class="kpi-label">Técnicos activos</div></div>
+        <div class="kpi-body"><div class="kpi-value">${tecActivos}</div><div class="kpi-label">${t('kpi_tecnicos')}</div></div>
       </div>
       <div class="kpi-card" style="min-width:130px;flex:0 0 auto;background:var(--surface)">
         <div class="kpi-body"><div class="kpi-value">${rows.length ? (totalHoras / tecActivos || 0).toFixed(1) : '0.0'}h</div><div class="kpi-label">Media por técnico</div></div>
