@@ -7843,13 +7843,13 @@ const UserSelectScreen = {
 
   // ── Selección de usuario con gestión de contraseña ───────────
   async _select(id) {
-    const t = await db.tecnicos.get(id);
-    if (!t) return;
-    UserSelectScreen._pendingLogin = t;
+    const tec = await db.tecnicos.get(id);
+    if (!tec) return;
+    UserSelectScreen._pendingLogin = tec;
 
-    if (!t.password) {
+    if (!tec.password) {
       // Primera vez — crear contraseña
-      Modal.open(`${t('welcome')}, ${UI.esc(t.nombre)}`, `
+      Modal.open(`${I18N.t('welcome')}, ${UI.esc(tec.nombre)}`, `
         <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
           ${I18N.t('first_time')}
         </p>
@@ -7870,7 +7870,7 @@ const UserSelectScreen = {
       }, 80);
     } else {
       // Pedir contraseña
-      Modal.open(`${I18N.t('welcome')}, ${UI.esc(t.nombre)}`, `
+      Modal.open(`${I18N.t('welcome')}, ${UI.esc(tec.nombre)}`, `
         <div class="form-field">
           <label>${I18N.t('pw_label')}</label>
           <input class="form-input" id="pw-input" type="password" placeholder="${I18N.t('pw_ph')}" autocomplete="current-password">
@@ -7890,21 +7890,21 @@ const UserSelectScreen = {
   async _setFirstPassword() {
     const pw1 = document.getElementById('pw-new')?.value  || '';
     const pw2 = document.getElementById('pw-new2')?.value || '';
-    if (pw1.length < 4) { toast(t('pw_short'), 'error'); return; }
-    if (pw1 !== pw2)    { toast(t('pw_nomatch'), 'error'); return; }
-    const t = UserSelectScreen._pendingLogin;
-    await db.tecnicos.put({ ...t, password: pw1 });
-    UserSelectScreen._pendingLogin = { ...t, password: pw1 };
+    if (pw1.length < 4) { toast(I18N.t('pw_short'), 'error'); return; }
+    if (pw1 !== pw2)    { toast(I18N.t('pw_nomatch'), 'error'); return; }
+    const tec = UserSelectScreen._pendingLogin;
+    await db.tecnicos.put({ ...tec, password: pw1 });
+    UserSelectScreen._pendingLogin = { ...tec, password: pw1 };
     Modal.close();
     UserSelectScreen._doLogin(UserSelectScreen._pendingLogin);
   },
 
   async _checkPassword() {
-    const pw = document.getElementById('pw-input')?.value || '';
-    const t  = UserSelectScreen._pendingLogin;
-    if (pw === (t.password || '')) {
+    const pw  = document.getElementById('pw-input')?.value || '';
+    const tec = UserSelectScreen._pendingLogin;
+    if (pw === (tec.password || '')) {
       Modal.close();
-      UserSelectScreen._doLogin(t);
+      UserSelectScreen._doLogin(tec);
     } else {
       const errEl = document.getElementById('pw-error');
       if (errEl) errEl.style.display = '';
