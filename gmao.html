@@ -289,6 +289,14 @@ ul{list-style:none}
 .pbi-ctrl-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gray-muted)}
 .pbi-select{height:28px;padding:0 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--gray-text);cursor:pointer;outline:none;transition:border-color .2s}
 .pbi-select:focus{border-color:var(--green)}
+.pa-togbtn{padding:4px 14px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;background:var(--surface);color:var(--gray-text);cursor:pointer;transition:all .15s;white-space:nowrap}
+.pa-togbtn:hover{border-color:var(--green);color:var(--green)}
+.pa-togbtn.active{background:var(--green);color:#fff;border-color:var(--green)}
+.pa-togbtn:disabled{opacity:.45;cursor:not-allowed}
+.pa-filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--bg);border:1px solid var(--border)}
+.pa-filter-row:first-child{border-radius:8px 8px 0 0;border-bottom:none}
+.pa-filter-row:last-child{border-radius:0 0 8px 8px;margin-bottom:14px}
+.pa-filter-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
 .chart-pill{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--gray-muted);transition:all .15s;white-space:nowrap}
 .chart-pill:hover{border-color:var(--green);color:var(--green)}
 .chart-pill.active{background:var(--green);color:#fff;border-color:var(--green)}
@@ -629,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.15</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.16</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1730,28 +1738,13 @@ const DataService = {
     const creados = [], errores = [];
     for (const a of sinParte) {
       try {
-        // Extraer fecha del ID de avería (AV-YYYYMMDD-HHMMSS) — fuente 100% fiable
-        // Fallback: fecha_fin o fecha_inicio del registro
-        let fechaParte = new Date().toISOString().slice(0,10);
-        const idMatch = String(a.id).match(/AV-(\d{4})(\d{2})(\d{2})/);
-        if (idMatch) {
-          fechaParte = `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`;
-        } else {
-          const _rawFecha = a.fecha_fin || a.fecha_inicio || '';
-          if (_rawFecha) {
-            const s = String(_rawFecha).trim();
-            const sm = s.match(/^(\d{1,2})([\/-])(\d{1,2})\2(\d{4})/);
-            if (sm) {
-              const a2 = parseInt(sm[1]), b2 = parseInt(sm[3]), y2 = sm[4];
-              let d2, m2;
-              if (a2 > 12)      { d2 = sm[1]; m2 = sm[3]; }
-              else if (b2 > 12) { m2 = sm[1]; d2 = sm[3]; }
-              else              { d2 = sm[1]; m2 = sm[3]; }
-              fechaParte = `${y2}-${m2.padStart(2,'0')}-${d2.padStart(2,'0')}`;
-            } else if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-              fechaParte = s.slice(0,10);
-            }
-          }
+        // Fecha del parte: preferir fecha_fin (cuando se resolvió), luego fecha_inicio.
+        // savePartes._toISO normalizará el formato automáticamente.
+        // Solo usar fecha del ID como último recurso (el ID refleja cuándo se registró, no cuándo se trabajó).
+        let fechaParte = (a.fecha_fin || a.fecha_inicio || '').trim();
+        if (!fechaParte) {
+          const idMatch = String(a.id).match(/AV-(\d{4})(\d{2})(\d{2})/);
+          fechaParte = idMatch ? `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}` : new Date().toISOString().slice(0,10);
         }
         let horas = 0;
         if (a.duracion) {
@@ -9232,7 +9225,7 @@ const PartesAnalisisPage = {
   _chartTec: null,
   _chartAlm: null,
   _chartEvol: null,
-  _gf: { almacen: '', tecnico: '', desde: '', hasta: '' },
+  _gf: { almacenes: [], tecnico: '', desde: '', hasta: '', preset: '' },
 
   async render() {
     const main = document.getElementById('content');
@@ -9253,29 +9246,26 @@ const PartesAnalisisPage = {
         <button class="btn btn-primary btn-sm" onclick="Router.navigate('partes')">📋 Ver Partes</button>
       </div>
     </div>
-    <div class="pbi-controls">
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
-        <select class="pbi-select" id="pa-alm" ${effAlm ? 'disabled' : ''}>
-          <option value="">${t('todos')}</option>
-          ${almList.map(a=>`<option ${effAlm && normalizeAlmacen(a)===normalizeAlmacen(effAlm)?'selected':''}>${a}</option>`).join('')}
-        </select>
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Técnico</span>
-        <select class="pbi-select" id="pa-tec"><option value="">${t('todos')}</option></select>
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Desde</span>
-        <input type="date" class="pbi-select" id="pa-desde">
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">Hasta</span>
-        <input type="date" class="pbi-select" id="pa-hasta">
-      </div>
-      <div class="pbi-ctrl-group" style="justify-content:flex-end">
-        <button class="btn btn-secondary btn-sm" onclick="PartesAnalisisPage._rebuild()">${t('filter')}</button>
-      </div>
+    <!-- Fila 1: Almacenes -->
+    <div class="pa-filter-row">
+      <span class="pbi-ctrl-label" style="margin-right:4px">Almacén</span>
+      <button id="pa-btn-alm-todos" class="pa-togbtn active" onclick="PartesAnalisisPage._toggleAlm('')" ${effAlm?'disabled':''}>Todos</button>
+      ${almList.map(a=>`<button id="pa-btn-alm-${a.toLowerCase()}" class="pa-togbtn${effAlm&&normalizeAlmacen(a)===normalizeAlmacen(effAlm)?' active':''}" onclick="PartesAnalisisPage._toggleAlm('${a}')" ${effAlm?'disabled':''}>${a}</button>`).join('')}
+      <div class="pa-filter-sep" style="margin-left:auto"></div>
+      <span class="pbi-ctrl-label" style="margin-right:4px">Técnico</span>
+      <select class="pbi-select" id="pa-tec" onchange="PartesAnalisisPage._rebuild()" style="height:28px"><option value="">Todos</option></select>
+    </div>
+    <!-- Fila 2: Horizonte temporal -->
+    <div class="pa-filter-row">
+      <span class="pbi-ctrl-label" style="margin-right:4px">Período</span>
+      <button id="pa-preset-hoy" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('hoy')">Hoy</button>
+      <button id="pa-preset-ayer" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('ayer')">Ayer</button>
+      <button id="pa-preset-semana" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('semana')">Esta semana</button>
+      <button id="pa-preset-mes" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('mes')">Este mes</button>
+      <div class="pa-filter-sep"></div>
+      <input type="date" class="pbi-select" id="pa-desde" onchange="PartesAnalisisPage._clearPreset();PartesAnalisisPage._rebuild()" style="width:132px">
+      <span style="color:var(--gray-muted);font-size:12px">→</span>
+      <input type="date" class="pbi-select" id="pa-hasta" onchange="PartesAnalisisPage._clearPreset();PartesAnalisisPage._rebuild()" style="width:132px">
     </div>
     <div id="pa-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -9328,16 +9318,17 @@ const PartesAnalisisPage = {
       const list = effAlm ? tecnicos.filter(t => normalizeAlmacen(t.almacen) === normalizeAlmacen(effAlm)) : tecnicos;
       tecSel.innerHTML = `<option value="">${t('todos')}</option>` + list.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('');
     }
-    if (effAlm) this._gf.almacen = effAlm;
+    this._gf = { almacenes: effAlm ? [effAlm] : [], tecnico: '', desde: '', hasta: '', preset: '' };
+    this._updateAlmBtns();
 
     this._rebuild();
   },
 
   _getFiltered() {
-    const alm   = document.getElementById('pa-alm')?.value    || '';
-    const tec   = document.getElementById('pa-tec')?.value    || '';
-    const desde = document.getElementById('pa-desde')?.value  || '';
-    const hasta = document.getElementById('pa-hasta')?.value  || '';
+    const alms  = this._gf.almacenes;
+    const tec   = document.getElementById('pa-tec')?.value   || '';
+    const desde = document.getElementById('pa-desde')?.value || '';
+    const hasta = document.getElementById('pa-hasta')?.value || '';
 
     const averiaMap = {};
     this._allAverias.forEach(a => { averiaMap[a.id] = a; });
@@ -9346,12 +9337,75 @@ const PartesAnalisisPage = {
       .map(p => ({ ...p, _av: averiaMap[p.averia_id] || {} }))
       .filter(r => {
         const rowAlm = r.almacen || r._av.almacen || '';
-        if (alm   && normalizeAlmacen(rowAlm) !== normalizeAlmacen(alm)) return false;
+        if (alms.length > 0 && !alms.some(a => normalizeAlmacen(a) === normalizeAlmacen(rowAlm))) return false;
         if (tec   && r.tecnico !== tec) return false;
         if (desde && (r.fecha || '') < desde) return false;
         if (hasta && (r.fecha || '') > hasta) return false;
         return true;
       });
+  },
+
+  _toggleAlm(alm) {
+    const almList = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    if (!alm) {
+      this._gf.almacenes = [];
+    } else {
+      const idx = this._gf.almacenes.findIndex(a => normalizeAlmacen(a) === normalizeAlmacen(alm));
+      if (idx >= 0) this._gf.almacenes.splice(idx, 1);
+      else this._gf.almacenes.push(alm);
+      // Si quedan todos seleccionados → equivale a "Todos"
+      if (this._gf.almacenes.length === almList.length) this._gf.almacenes = [];
+    }
+    this._updateAlmBtns();
+    this._rebuild();
+  },
+
+  _updateAlmBtns() {
+    const almList = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const todos = document.getElementById('pa-btn-alm-todos');
+    if (todos) todos.classList.toggle('active', this._gf.almacenes.length === 0);
+    almList.forEach(a => {
+      const btn = document.getElementById(`pa-btn-alm-${a.toLowerCase()}`);
+      if (btn) btn.classList.toggle('active', this._gf.almacenes.some(x => normalizeAlmacen(x) === normalizeAlmacen(a)));
+    });
+  },
+
+  _setPreset(preset) {
+    const hoy = new Date();
+    const fmt = d => d.toISOString().slice(0,10);
+    let desde, hasta;
+    if (preset === 'hoy') {
+      desde = hasta = fmt(hoy);
+    } else if (preset === 'ayer') {
+      const ay = new Date(hoy); ay.setDate(ay.getDate() - 1);
+      desde = hasta = fmt(ay);
+    } else if (preset === 'semana') {
+      const lu = new Date(hoy);
+      lu.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+      desde = fmt(lu); hasta = fmt(hoy);
+    } else if (preset === 'mes') {
+      desde = fmt(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+      hasta = fmt(hoy);
+    }
+    this._gf.preset = preset;
+    const de = document.getElementById('pa-desde');
+    const ha = document.getElementById('pa-hasta');
+    if (de) de.value = desde;
+    if (ha) ha.value = hasta;
+    this._updatePresetBtns();
+    this._rebuild();
+  },
+
+  _clearPreset() {
+    this._gf.preset = '';
+    this._updatePresetBtns();
+  },
+
+  _updatePresetBtns() {
+    ['hoy','ayer','semana','mes'].forEach(p => {
+      const btn = document.getElementById(`pa-preset-${p}`);
+      if (btn) btn.classList.toggle('active', this._gf.preset === p);
+    });
   },
 
   _rebuild() {
@@ -9405,7 +9459,7 @@ const PartesAnalisisPage = {
           const tecnico = entries[els[0].index][0];
           const desde = document.getElementById('pa-desde')?.value || '';
           const hasta = document.getElementById('pa-hasta')?.value || '';
-          const alm   = document.getElementById('pa-alm')?.value   || '';
+          const alm = PartesAnalisisPage._gf.almacenes.length === 1 ? PartesAnalisisPage._gf.almacenes[0] : '';
           PartesPage._pendingFilter = { tecnico, almacen: alm, desde, hasta };
           Router.navigate('partes');
         },
