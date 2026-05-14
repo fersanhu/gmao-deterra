@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.17</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.18</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -658,7 +658,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
       </button>
       <span id="topbar-title">Dashboard</span>
       <select class="almacen-select" id="global-almacen-filter">
-        <option value="">${t('todos_alm')}</option>
+        <option value="" data-i18n="todos_alm">Todos los almacenes</option>
         <option>Miramar</option>
         <option>Xeresa</option>
         <option>Murcia</option>
@@ -2377,8 +2377,9 @@ const DashboardPage = {
   _chartAverias: null,
   _chartCrit:    null,
   _chartZonas:   null,
-  _allAverias: [],     // todas las averías (sin filtro de almacén global)
+  _allAverias: [],
   _chartMode: 'mes',
+  _chartAlm: '',          // almacén seleccionado en el gráfico de evolución (single)
 
   // ── Getters de los controles del panel ──────────────────────────
   _getCtrl(id) { return document.getElementById(id)?.value || ''; },
@@ -2395,7 +2396,7 @@ const DashboardPage = {
   _rebuildAveriasChart() {
     const mode    = this._chartMode || 'mes';
     const periodo = parseInt(this._getCtrl('chart-period') || '12');
-    const almSel  = this._getCtrl('chart-almacen');
+    const almSel  = this._chartAlm || '';
     const estado  = this._getCtrl('chart-estado');
     const zona    = this._getCtrl('chart-zona');
     const linea   = this._getCtrl('chart-linea');
@@ -2687,11 +2688,14 @@ const DashboardPage = {
         <!-- Almacén -->
         <div class="pbi-ctrl-group">
           <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
-          <select id="chart-almacen" class="pbi-select" onchange="DashboardPage._rebuildAveriasChart()">
-            <option value="">${t('todos')}</option>
-            <option>Miramar</option><option>Xeresa</option><option>Alcacer</option>
-            <option>Murcia</option><option>Algemesi</option>
-          </select>
+          <div style="display:flex;gap:3px;flex-wrap:wrap">
+            <button class="chart-pill active" id="ca-todos"     onclick="DashboardPage._setChartAlm('')">Tod.</button>
+            <button class="chart-pill"        id="ca-miramar"   onclick="DashboardPage._setChartAlm('Miramar')">Mir.</button>
+            <button class="chart-pill"        id="ca-xeresa"    onclick="DashboardPage._setChartAlm('Xeresa')">Xer.</button>
+            <button class="chart-pill"        id="ca-alcacer"   onclick="DashboardPage._setChartAlm('Alcacer')">Alc.</button>
+            <button class="chart-pill"        id="ca-murcia"    onclick="DashboardPage._setChartAlm('Murcia')">Mur.</button>
+            <button class="chart-pill"        id="ca-algemesi"  onclick="DashboardPage._setChartAlm('Algemesi')">Alg.</button>
+          </div>
         </div>
         <!-- Estado -->
         <div class="pbi-ctrl-group">
@@ -2736,15 +2740,16 @@ const DashboardPage = {
       <button class="chart-pill"        id="gf-semana" onclick="DashboardPage._setGF('periodo','semana')">${t('sem')}</button>
       <button class="chart-pill"        id="gf-mes"    onclick="DashboardPage._setGF('periodo','mes')">${t('mes')}</button>
       <div class="pbi-sep"></div>
-      <select id="gf-almacen" class="pbi-select" onchange="DashboardPage._setGF('almacen',this.value)">
-        <option value="">${t('todos_alm')}</option>
-        <option>Miramar</option><option>Xeresa</option><option>Alcacer</option><option>Murcia</option><option>Algemesi</option>
-      </select>
-      <select id="gf-estado" class="pbi-select" onchange="DashboardPage._setGF('estado',this.value)">
-        <option value="">${t('todos_estados')}</option>
-        <option value="Abierta">${t('opt_abiertas')}</option>
-        <option value="Cerrada">${t('opt_cerradas')}</option>
-      </select>
+      <button class="chart-pill active" id="gfa-todos"    onclick="DashboardPage._toggleGFAlm('')">${t('todos_alm')}</button>
+      <button class="chart-pill"        id="gfa-miramar"  onclick="DashboardPage._toggleGFAlm('Miramar')">Miramar</button>
+      <button class="chart-pill"        id="gfa-xeresa"   onclick="DashboardPage._toggleGFAlm('Xeresa')">Xeresa</button>
+      <button class="chart-pill"        id="gfa-alcacer"  onclick="DashboardPage._toggleGFAlm('Alcacer')">Alcacer</button>
+      <button class="chart-pill"        id="gfa-murcia"   onclick="DashboardPage._toggleGFAlm('Murcia')">Murcia</button>
+      <button class="chart-pill"        id="gfa-algemesi" onclick="DashboardPage._toggleGFAlm('Algemesi')">Algemesi</button>
+      <div class="pbi-sep"></div>
+      <button class="chart-pill active" id="gfe-todos"   onclick="DashboardPage._setGFEstado('')">${t('todos_estados')}</button>
+      <button class="chart-pill"        id="gfe-abierta" onclick="DashboardPage._setGFEstado('Abierta')">${t('opt_abiertas')}</button>
+      <button class="chart-pill"        id="gfe-cerrada" onclick="DashboardPage._setGFEstado('Cerrada')">${t('opt_cerradas')}</button>
       <div class="pbi-sep"></div>
       <span id="gf-cross-badge" class="pbi-cross-badge" style="display:none" onclick="DashboardPage._clearCross()">× Filtro cruzado activo</span>
       <button class="chart-pill" style="margin-left:auto" onclick="DashboardPage._clearGF()">✕ Limpiar todo</button>
@@ -2920,10 +2925,10 @@ const DashboardPage = {
   },
 
   // ── Estado global de filtros ──────────────────────────────────────
-  _gf: { periodo: '', almacen: '', estado: '', crossZona: '', crossTec: '' },
+  _gf: { periodo: '', almacenes: [], estado: '', crossZona: '', crossTec: '' },
 
   _applyGF(avs) {
-    const { periodo, almacen, estado, crossZona, crossTec } = this._gf;
+    const { periodo, almacenes, estado, crossZona, crossTec } = this._gf;
     const ahora = new Date();
     const hoy   = ahora.toISOString().slice(0, 10);
     const ayerD = new Date(ahora); ayerD.setDate(ahora.getDate() - 1);
@@ -2932,7 +2937,7 @@ const DashboardPage = {
     const inicioSemana = lunes.toISOString().slice(0, 10);
     const inicioMes    = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-01`;
     return avs.filter(a => {
-      if (almacen && normalizeAlmacen(a.almacen) !== normalizeAlmacen(almacen)) return false;
+      if (almacenes.length && !almacenes.some(x => normalizeAlmacen(x) === normalizeAlmacen(a.almacen))) return false;
       if (estado  && a.estado !== estado) return false;
       if (crossZona && (a.zona   || '').trim() !== crossZona) return false;
       if (crossTec  && (a.tecnico|| '').trim() !== crossTec)  return false;
@@ -2948,7 +2953,7 @@ const DashboardPage = {
   },
 
   _setGF(key, val) {
-    if (!this._gf) this._gf = { periodo:'', almacen:'', estado:'', crossZona:'', crossTec:'' };
+    if (!this._gf) this._gf = { periodo:'', almacenes:[], estado:'', crossZona:'', crossTec:'' };
     this._gf[key] = val;
     if (key === 'periodo') {
       ['todo','dia','ayer','semana','mes'].forEach(id => {
@@ -2959,10 +2964,56 @@ const DashboardPage = {
     this._rebuildAll();
   },
 
+  _toggleGFAlm(alm) {
+    const ALM = ['Miramar','Xeresa','Alcacer','Murcia','Algemesi'];
+    if (!alm) {
+      this._gf.almacenes = [];
+    } else {
+      const idx = this._gf.almacenes.findIndex(x => normalizeAlmacen(x) === normalizeAlmacen(alm));
+      if (idx >= 0) this._gf.almacenes.splice(idx, 1);
+      else this._gf.almacenes.push(alm);
+      if (this._gf.almacenes.length === ALM.length) this._gf.almacenes = [];
+    }
+    this._updateGFAlmBtns();
+    this._rebuildAll();
+  },
+
+  _updateGFAlmBtns() {
+    const ALM = ['Miramar','Xeresa','Alcacer','Murcia','Algemesi'];
+    const todos = document.getElementById('gfa-todos');
+    if (todos) todos.className = `chart-pill${this._gf.almacenes.length === 0 ? ' active' : ''}`;
+    ALM.forEach(a => {
+      const b = document.getElementById(`gfa-${a.toLowerCase()}`);
+      if (b) b.className = `chart-pill${this._gf.almacenes.some(x => normalizeAlmacen(x)===normalizeAlmacen(a)) ? ' active' : ''}`;
+    });
+  },
+
+  _setGFEstado(est) {
+    this._gf.estado = est;
+    ['','Abierta','Cerrada'].forEach(v => {
+      const id = v === '' ? 'gfe-todos' : `gfe-${v.toLowerCase()}`;
+      const b = document.getElementById(id);
+      if (b) b.className = `chart-pill${v === est ? ' active' : ''}`;
+    });
+    this._rebuildAll();
+  },
+
+  _setChartAlm(alm) {
+    this._chartAlm = alm;
+    const ALM = ['Miramar','Xeresa','Alcacer','Murcia','Algemesi'];
+    const todos = document.getElementById('ca-todos');
+    if (todos) todos.className = `chart-pill${!alm ? ' active' : ''}`;
+    ALM.forEach(a => {
+      const b = document.getElementById(`ca-${a.toLowerCase()}`);
+      if (b) b.className = `chart-pill${normalizeAlmacen(a)===normalizeAlmacen(alm) ? ' active' : ''}`;
+    });
+    this._rebuildAveriasChart();
+  },
+
   _clearGF() {
-    this._gf = { periodo:'', almacen:'', estado:'', crossZona:'', crossTec:'' };
-    const alm = document.getElementById('gf-almacen'); if (alm) alm.value = '';
-    const est = document.getElementById('gf-estado');  if (est) est.value = '';
+    this._gf = { periodo:'', almacenes:[], estado:'', crossZona:'', crossTec:'' };
+    this._updateGFAlmBtns();
+    this._setGFEstado('');
     ['todo','dia','ayer','semana','mes'].forEach(id => {
       const b = document.getElementById(`gf-${id}`);
       if (b) b.className = `chart-pill${id === 'todo' ? ' active' : ''}`;
@@ -8160,6 +8211,8 @@ const PartesPage = {
   _averias: [],
   _activos: [],
   _pendingFilter: null,
+  _almacenes: [],
+  _preset: '',
 
   async render() {
     const main = document.getElementById('content');
@@ -8178,29 +8231,26 @@ const PartesPage = {
         <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()" title="Ver SQL de configuración de tablas">⚙️ Setup SQL</button>
       </div>
     </div>
-    <div class="pbi-controls">
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">${t('lbl_almacen')}</span>
-        <select class="pbi-select" id="pt-alm">
-          <option value="">${t('todos')}</option>
-          ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a=>`<option>${a}</option>`).join('')}
-        </select>
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">${t('lbl_tecnico')}</span>
-        <select class="pbi-select" id="pt-tec"><option value="">${t('todos')}</option></select>
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">${t('desde')}</span>
-        <input type="date" class="pbi-select" id="pt-desde">
-      </div>
-      <div class="pbi-ctrl-group">
-        <span class="pbi-ctrl-label">${t('hasta')}</span>
-        <input type="date" class="pbi-select" id="pt-hasta">
-      </div>
-      <div class="pbi-ctrl-group" style="justify-content:flex-end">
-        <button class="btn btn-secondary btn-sm" onclick="PartesPage._chartFilter=null;PartesPage._applyFilters()">${t('filter')}</button>
-      </div>
+    <!-- Fila 1: Almacenes -->
+    <div class="pa-filter-row">
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('lbl_almacen')}</span>
+      <button id="pt-btn-alm-todos"    class="pa-togbtn active" onclick="PartesPage._toggleAlm('')">Todos</button>
+      ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a=>`<button id="pt-btn-alm-${a.toLowerCase()}" class="pa-togbtn" onclick="PartesPage._toggleAlm('${a}')">${a}</button>`).join('')}
+      <div class="pa-filter-sep" style="margin-left:auto"></div>
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('lbl_tecnico')}</span>
+      <select class="pbi-select" id="pt-tec" onchange="PartesPage._applyFilters()" style="height:28px"><option value="">${t('todos')}</option></select>
+    </div>
+    <!-- Fila 2: Período -->
+    <div class="pa-filter-row">
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('periodo')}</span>
+      <button id="pt-preset-hoy"    class="pa-togbtn" onclick="PartesPage._setPreset('hoy')">${t('hoy')}</button>
+      <button id="pt-preset-ayer"   class="pa-togbtn" onclick="PartesPage._setPreset('ayer')">${t('ayer')}</button>
+      <button id="pt-preset-semana" class="pa-togbtn" onclick="PartesPage._setPreset('semana')">${t('sem')}</button>
+      <button id="pt-preset-mes"    class="pa-togbtn" onclick="PartesPage._setPreset('mes')">${t('mes')}</button>
+      <div class="pa-filter-sep"></div>
+      <input type="date" class="pbi-select" id="pt-desde" onchange="PartesPage._clearPreset();PartesPage._applyFilters()" style="width:132px">
+      <span style="color:var(--gray-muted);font-size:12px">→</span>
+      <input type="date" class="pbi-select" id="pt-hasta" onchange="PartesPage._clearPreset();PartesPage._applyFilters()" style="width:132px">
     </div>
     <div id="pt-resumen" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
     <div class="table-container">
@@ -8215,10 +8265,9 @@ const PartesPage = {
 
     // Pre-filtrar por almacén del responsable
     const effAlm = UserService.getEffectiveAlmacen();
-    if (effAlm) {
-      const sel = document.getElementById('pt-alm');
-      if (sel) sel.value = effAlm;
-    }
+    this._almacenes = effAlm ? [effAlm] : [];
+    this._preset = '';
+    this._updateAlmBtns();
 
     await this._loadData();
   },
@@ -8265,11 +8314,10 @@ const PartesPage = {
     if (this._pendingFilter) {
       const pf = this._pendingFilter;
       this._pendingFilter = null;
-      const almEl = document.getElementById('pt-alm');
+      if (pf.almacen) { this._almacenes = [pf.almacen]; this._updateAlmBtns(); }
       const tecEl = document.getElementById('pt-tec');
       const desEl = document.getElementById('pt-desde');
       const hasEl = document.getElementById('pt-hasta');
-      if (pf.almacen && almEl) almEl.value = pf.almacen;
       if (pf.tecnico && tecEl) tecEl.value = pf.tecnico;
       if (pf.desde   && desEl) desEl.value = pf.desde;
       if (pf.hasta   && hasEl) hasEl.value = pf.hasta;
@@ -8400,8 +8448,54 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
        <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
   },
 
+  _toggleAlm(alm) {
+    const ALM = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    if (!alm) { this._almacenes = []; }
+    else {
+      const idx = this._almacenes.findIndex(x => normalizeAlmacen(x) === normalizeAlmacen(alm));
+      if (idx >= 0) this._almacenes.splice(idx, 1);
+      else this._almacenes.push(alm);
+      if (this._almacenes.length === ALM.length) this._almacenes = [];
+    }
+    this._updateAlmBtns();
+    this._applyFilters();
+  },
+
+  _updateAlmBtns() {
+    const ALM = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const t = document.getElementById('pt-btn-alm-todos');
+    if (t) t.classList.toggle('active', this._almacenes.length === 0);
+    ALM.forEach(a => {
+      const b = document.getElementById(`pt-btn-alm-${a.toLowerCase()}`);
+      if (b) b.classList.toggle('active', this._almacenes.some(x => normalizeAlmacen(x)===normalizeAlmacen(a)));
+    });
+  },
+
+  _setPreset(preset) {
+    const hoy = new Date(), fmt = d => d.toISOString().slice(0,10);
+    let desde, hasta;
+    if (preset === 'hoy')    { desde = hasta = fmt(hoy); }
+    else if (preset === 'ayer')   { const ay=new Date(hoy);ay.setDate(ay.getDate()-1);desde=hasta=fmt(ay); }
+    else if (preset === 'semana') { const lu=new Date(hoy);lu.setDate(hoy.getDate()-((hoy.getDay()+6)%7));desde=fmt(lu);hasta=fmt(hoy); }
+    else if (preset === 'mes')    { desde=fmt(new Date(hoy.getFullYear(),hoy.getMonth(),1));hasta=fmt(hoy); }
+    this._preset = preset;
+    const de=document.getElementById('pt-desde'), ha=document.getElementById('pt-hasta');
+    if (de) de.value=desde; if (ha) ha.value=hasta;
+    this._updatePresetBtns();
+    this._applyFilters();
+  },
+
+  _clearPreset() { this._preset=''; this._updatePresetBtns(); },
+
+  _updatePresetBtns() {
+    ['hoy','ayer','semana','mes'].forEach(p => {
+      const b=document.getElementById(`pt-preset-${p}`);
+      if (b) b.classList.toggle('active', this._preset===p);
+    });
+  },
+
   _applyFilters() {
-    const alm   = document.getElementById('pt-alm')?.value    || '';
+    const alms  = this._almacenes || [];
     const tec   = document.getElementById('pt-tec')?.value    || '';
     const desde = document.getElementById('pt-desde')?.value  || '';
     const hasta = document.getElementById('pt-hasta')?.value  || '';
@@ -8413,9 +8507,9 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 
     let rows = this._partes.map(p => ({ ...p, _av: averiaMap[p.averia_id] || {} }));
 
-    if (alm)   rows = rows.filter(r => {
+    if (alms.length) rows = rows.filter(r => {
       const rowAlm = r.almacen || r._av.almacen || '';
-      return normalizeAlmacen(rowAlm) === normalizeAlmacen(alm);
+      return alms.some(a => normalizeAlmacen(a) === normalizeAlmacen(rowAlm));
     });
     if (tec)   rows = rows.filter(r => r.tecnico === tec);
     if (desde) rows = rows.filter(r => (r.fecha || '') >= desde);
