@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.18</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.21</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -713,6 +713,10 @@ const I18N = {
       const map = { es:'Español', en:'English', ar:'العربية' };
       btn.classList.toggle('active', map[lang] === title);
     });
+    // Re-renderizar la página actual para actualizar contenido dinámico (${t(...)})
+    if (typeof Router !== 'undefined' && Router._initialized) {
+      Router.handle();
+    }
   },
 
   t(key) {
@@ -725,6 +729,13 @@ const I18N = {
       const attr = el.getAttribute('data-i18n-attr');
       if (attr) el.setAttribute(attr, this.t(key));
       else      el.textContent = this.t(key);
+    });
+    // Forzar redibujado de <select> cuya opción seleccionada tiene data-i18n
+    // (algunos browsers no actualizan el texto mostrado al cambiar textContent del <option>)
+    document.querySelectorAll('select').forEach(sel => {
+      const v = sel.value;
+      sel.value = '';
+      sel.value = v;
     });
   },
 
@@ -1136,6 +1147,9 @@ const t = (key) => I18N.t(key);
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
+// Cuenta Supabase Auth compartida — permite usar RLS "authenticated" en lugar de "anon"
+const APP_AUTH_EMAIL = 'gmao-app@grupoguillem.com';
+const APP_AUTH_PASS  = '3v4w73020152015'; // ← cambia esto antes de desplegar
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ANTHROPIC_KEY = () => localStorage.getItem('gmao_anthropic_key') || '';
 
@@ -3430,19 +3444,41 @@ function _showImportDiff(title, changes, labels, onApply) {
      </div>`
   ).join('');
 
-  const items = changes.map((ch, i) => `
-    <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+  const renderDel = ch => {
+    const info = Object.entries(ch.record)
+      .filter(([k]) => labels[k])
+      .map(([k,v]) => `${labels[k]}: ${v===null||v===undefined||v===''?'—':v}`)
+      .slice(0, 5).join(' · ');
+    return `<div style="font-size:12px;color:#e57373;margin-top:4px;opacity:.8">${info}</div>`;
+  };
+
+  const nNew = changes.filter(c=>c.type==='new').length;
+  const nMod = changes.filter(c=>c.type==='modified').length;
+  const nDel = changes.filter(c=>c.type==='deleted').length;
+  const sumParts = [
+    nNew && `<span style="color:#66bb6a;font-weight:600">${nNew} nuevo${nNew!==1?'s':''}</span>`,
+    nMod && `<span style="color:#ffa726;font-weight:600">${nMod} modificado${nMod!==1?'s':''}</span>`,
+    nDel && `<span style="color:#e57373;font-weight:600">${nDel} a eliminar</span>`
+  ].filter(Boolean).join(' · ');
+
+  const items = changes.map((ch, i) => {
+    const borderColor = ch.type==='deleted' ? 'rgba(229,115,115,.35)' : ch.type==='new' ? 'rgba(102,187,106,.25)' : 'var(--border)';
+    const bgExtra    = ch.type==='deleted' ? 'background:rgba(229,115,115,.06);' : '';
+    const badgeColor = ch.type==='deleted' ? '#e57373' : ch.type==='new' ? '#66bb6a' : '#ffa726';
+    const badgeText  = ch.type==='deleted' ? '🗑 ELIMINAR' : ch.type==='new' ? 'NUEVO' : 'MODIFICADO';
+    const body       = ch.type==='new' ? renderNew(ch) : ch.type==='deleted' ? renderDel(ch) : renderMod(ch);
+    return `
+    <div style="border:1px solid ${borderColor};border-radius:8px;padding:10px 12px;margin-bottom:8px;${bgExtra}">
       <label style="display:flex;gap:10px;cursor:pointer;align-items:flex-start">
         <input type="checkbox" class="diff-cb" data-idx="${i}" checked style="margin-top:3px;flex-shrink:0">
         <div>
           <strong style="font-size:13px">${ch.id}</strong>
-          <span style="font-size:11px;margin-left:8px;font-weight:700;color:${ch.type==='new'?'#66bb6a':'#ffa726'}">
-            ${ch.type==='new'?'NUEVO':'MODIFICADO'}
-          </span>
-          ${ch.type==='new' ? renderNew(ch) : renderMod(ch)}
+          <span style="font-size:11px;margin-left:8px;font-weight:700;color:${badgeColor}">${badgeText}</span>
+          ${body}
         </div>
       </label>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   const modal = document.createElement('div');
   modal.id = 'import-diff-modal';
@@ -3454,9 +3490,8 @@ function _showImportDiff(title, changes, labels, onApply) {
         <button onclick="document.getElementById('import-diff-modal').remove()"
           style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-muted);line-height:1">✕</button>
       </div>
-      <p style="color:var(--gray-muted);font-size:13px;margin-bottom:10px">
-        ${changes.length} cambio${changes.length!==1?'s':''} detectado${changes.length!==1?'s':''}
-      </p>
+      <p style="font-size:13px;margin-bottom:10px">${sumParts}</p>
+      ${nDel ? `<p style="font-size:12px;color:#e57373;margin-bottom:10px;padding:8px 12px;background:rgba(229,115,115,.1);border-radius:6px;border:1px solid rgba(229,115,115,.25)">⚠️ Los elementos marcados como <strong>ELIMINAR</strong> no están en el Excel y serán borrados de la base de datos.</p>` : ''}
       <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:12px">
         <input type="checkbox" id="diff-sel-all" checked
           onchange="document.querySelectorAll('#import-diff-modal .diff-cb').forEach(cb=>cb.checked=this.checked)">
@@ -3471,11 +3506,13 @@ function _showImportDiff(title, changes, labels, onApply) {
   document.body.appendChild(modal);
 
   document.getElementById('diff-apply-btn').onclick = async () => {
-    const selected = [...document.querySelectorAll('#import-diff-modal .diff-cb')]
+    const sel = [...document.querySelectorAll('#import-diff-modal .diff-cb')]
       .filter(cb => cb.checked)
-      .map(cb => changes[+cb.dataset.idx].record);
+      .map(cb => changes[+cb.dataset.idx]);
+    const toUpsert = sel.filter(ch => ch.type !== 'deleted').map(ch => ch.record);
+    const toDelete = sel.filter(ch => ch.type === 'deleted').map(ch => ch.record);
     modal.remove();
-    await onApply(selected);
+    await onApply(toUpsert, toDelete);
   };
 }
 
@@ -3741,6 +3778,7 @@ const ActivosPage = {
       const existentes = await db.activos.toArray();
       const exMap = new Map(existentes.map(a => [a.id_activo, a]));
       const changes = [];
+      const importedIds = new Set(imported.map(i => i.id_activo));
       for (const imp of imported) {
         const ex = exMap.get(imp.id_activo);
         if (!ex) {
@@ -3754,11 +3792,17 @@ const ActivosPage = {
           if (fields.length) changes.push({ id: imp.id_activo, type:'modified', fields, record: { ...ex, ...imp } });
         }
       }
+      for (const ex of existentes) {
+        if (!importedIds.has(ex.id_activo))
+          changes.push({ id: ex.id_activo, type:'deleted', fields:[], record: ex });
+      }
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
-      _showImportDiff('Validar cambios — Activos', changes, LABELS, async selected => {
+      _showImportDiff('Validar cambios — Activos', changes, LABELS, async (toUpsert, toDelete) => {
         try {
-          for (const rec of selected) await db.activos.put(rec);
-          toast(`${selected.length} activo${selected.length!==1?'s':''} actualizado${selected.length!==1?'s':''} ✓`, 'success');
+          for (const rec of toUpsert) await db.activos.put(rec);
+          for (const rec of toDelete) await db.activos.delete(rec.id_activo);
+          const parts = [toUpsert.length && `${toUpsert.length} actualizado${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminado${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
+          toast(`${parts} ✓`, 'success');
           await ActivosPage.render();
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
       });
@@ -6800,37 +6844,39 @@ const InventarioPage = {
       const existentes = await db.inventario.toArray();
       const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
       const changes = [];
+      const importedKeys = new Set();
       for (const imp of imported) {
         const normAlm = normalizeAlmacen(imp.almacen);
         imp.almacen = normAlm || imp.almacen;
         const key = `${imp.cod_producto}_${normAlm}`;
+        importedKeys.add(key);
         const ex = exMap.get(key);
-        const id = ex?.id || key;
         if (!ex) {
           changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { ...imp, id: key } });
         } else {
-          // Solo comparar campos que viven en inventario (tamano* son de productos, no de inventario)
           const INV_FIELDS = ['nombre','producto','tipo','familia','almacen','unidades','precio_unidad','unidad_medida'];
           const fields = INV_FIELDS.reduce((acc, k) => {
             const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
           }, []);
-          // Siempre usar ex.id (Supabase real) para evitar duplicados en el upsert
           if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp, id: ex.id } });
         }
       }
+      for (const [key, ex] of exMap) {
+        if (!importedKeys.has(key))
+          changes.push({ id: `${ex.cod_producto} (${ex.almacen})`, type:'deleted', fields:[], record: ex });
+      }
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
-      _showImportDiff('Validar cambios — Inventario', changes, LABELS, async selected => {
+      _showImportDiff('Validar cambios — Inventario', changes, LABELS, async (toUpsert, toDelete) => {
         try {
           toast('Guardando...', 'info');
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
 
-          // Separar registros de inventario y de productos
           const invRecs = [];
           const prodRecs = [];
-          for (const rec of selected) {
+          for (const rec of toUpsert) {
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
             invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
@@ -6840,26 +6886,22 @@ const InventarioPage = {
                 tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
                 tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
             } else {
-              // Producto nuevo importado desde Excel: crear también en tabla productos
               prodRecs.push({
                 cod_producto: rec.cod_producto,
                 nombre:   rec.nombre   || rec.producto || rec.cod_producto,
                 producto: rec.producto || rec.nombre   || rec.cod_producto,
-                tipo:     rec.tipo     || '',
-                familia:  rec.familia  || '',
-                tamano:   tamano  || '',
-                tamano2:  tamano2 || '',
-                tamano3:  tamano3 || '',
-                tamano4:  tamano4 || '',
+                tipo: rec.tipo||'', familia: rec.familia||'',
+                tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'',
               });
             }
           }
 
-          // bulkPut en chunks de 500 → mucho más rápido que put individual
           await db.inventario.bulkPut(invRecs);
           if (prodRecs.length) await db.productos.bulkPut(prodRecs);
+          for (const rec of toDelete) await db.inventario.delete(rec.id);
 
-          toast(`${selected.length} línea${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
+          const parts = [toUpsert.length && `${toUpsert.length} línea${toUpsert.length!==1?'s':''} actualizada${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminada${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
+          toast(`${parts} ✓`, 'success');
           await InventarioPage.render();
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
       });
@@ -7746,6 +7788,7 @@ const ConfigPage = {
       const existentes = await db.averias.toArray();
       const exMap = new Map(existentes.map(a => [String(a.id), a]));
       const changes = [];
+      const importedIds = new Set(imported.map(i => String(i.id)));
       for (const imp of imported) {
         const ex = exMap.get(imp.id);
         if (!ex) {
@@ -7765,11 +7808,17 @@ const ConfigPage = {
           if (fields.length) changes.push({ id: imp.id, type:'modified', fields, record: { ...ex, ...imp } });
         }
       }
+      for (const ex of existentes) {
+        if (!importedIds.has(String(ex.id)))
+          changes.push({ id: ex.id, type:'deleted', fields:[], record: ex });
+      }
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
-      _showImportDiff('Validar cambios — Averías', changes, LABELS, async selected => {
+      _showImportDiff('Validar cambios — Averías', changes, LABELS, async (toUpsert, toDelete) => {
         try {
-          for (const rec of selected) await db.averias.put(rec);
-          toast(`${selected.length} avería${selected.length!==1?'s':''} actualizada${selected.length!==1?'s':''} ✓`, 'success');
+          for (const rec of toUpsert) await db.averias.put(rec);
+          for (const rec of toDelete) await db.averias.delete(rec.id);
+          const parts = [toUpsert.length && `${toUpsert.length} actualizada${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminada${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
+          toast(`${parts} ✓`, 'success');
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
       });
     } catch(e) { toast('Error: ' + e.message, 'error'); }
@@ -7983,6 +8032,18 @@ const UserSelectScreen = {
 // ═══════════════════════════════════════════════════════════════════
 const App = {
   async init() {
+    // Login automático con cuenta de app — activa sesión "authenticated" para RLS
+    try {
+      const { data: sessionData } = await sb.auth.getSession();
+      if (!sessionData?.session) {
+        const { error: authErr } = await sb.auth.signInWithPassword({
+          email: APP_AUTH_EMAIL,
+          password: APP_AUTH_PASS,
+        });
+        if (authErr) console.warn('[Auth] Login de app fallido:', authErr.message);
+      }
+    } catch(e) { console.warn('[Auth] Error al iniciar sesión de app:', e.message); }
+
     // Aplicar idioma guardado (DOM + dir + botones activos)
     I18N.setLang(I18N._lang);
     UserService.load();
