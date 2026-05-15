@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.21</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.22</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1149,7 +1149,8 @@ const SUPABASE_URL = 'https://carflugxcezjsxplumhn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmZsdWd4Y2V6anN4cGx1bWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzg3MzMsImV4cCI6MjA5MDY1NDczM30.WPNBvZ5tqTOA_mig--n20TnEIViZoFIAa7NbjnsPjw4';
 // Cuenta Supabase Auth compartida — permite usar RLS "authenticated" en lugar de "anon"
 const APP_AUTH_EMAIL = 'gmao-app@grupoguillem.com';
-const APP_AUTH_PASS  = '3v4w73020152015'; // ← cambia esto antes de desplegar
+const APP_AUTH_PASS  = '3v4w73020152015';
+const SETUP_PIN      = '2015';     // PIN requerido para la importación inicial
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ANTHROPIC_KEY = () => localStorage.getItem('gmao_anthropic_key') || '';
 
@@ -8140,6 +8141,33 @@ const App = {
   _initImportScreen() {
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
+    const step1    = document.getElementById('setup-step-1');
+
+    // Bloquear el drop zone hasta que se introduzca el PIN de administrador
+    dropZone.style.pointerEvents = 'none';
+    dropZone.style.opacity = '0.35';
+    fileInput.disabled = true;
+
+    // Insertar campo de PIN antes del drop zone
+    const pinHtml = `
+      <div id="setup-pin-wrap" style="margin-bottom:18px">
+        <p style="font-size:13px;color:#555;margin-bottom:8px;text-align:center">
+          🔒 Acceso restringido a administradores.<br>Introduce el PIN de configuración para continuar.
+        </p>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <input id="setup-pin-input" type="password" placeholder="PIN de administrador"
+            style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;width:200px"
+            onkeydown="if(event.key==='Enter') App._checkSetupPin()">
+          <button onclick="App._checkSetupPin()"
+            style="padding:8px 16px;background:#275D3A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">
+            Acceder
+          </button>
+        </div>
+        <p id="setup-pin-error" style="color:#e53935;font-size:12px;text-align:center;margin-top:6px;display:none">
+          PIN incorrecto
+        </p>
+      </div>`;
+    step1.insertAdjacentHTML('afterbegin', pinHtml);
 
     dropZone.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -8150,6 +8178,23 @@ const App = {
     document.getElementById('btn-continue').addEventListener('click', async () => {
       await UserSelectScreen.show();
     });
+  },
+
+  _checkSetupPin() {
+    const input = document.getElementById('setup-pin-input');
+    const errEl = document.getElementById('setup-pin-error');
+    if (input.value.trim() === SETUP_PIN) {
+      document.getElementById('setup-pin-wrap').remove();
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('file-input');
+      dropZone.style.pointerEvents = '';
+      dropZone.style.opacity = '';
+      fileInput.disabled = false;
+    } else {
+      errEl.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
   },
 
   async runImport(file) {
