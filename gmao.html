@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.24</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.25</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -7219,6 +7219,240 @@ const AlertService = {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
     if (!res.ok) { const e = await res.json(); throw new Error(e.description || 'sendPhoto error'); }
   },
+
+  // ── POLLING — recepción de mensajes ──────────────────────────────
+  _pollTimer: null,
+  _lastUpdateId: parseInt(localStorage.getItem('gmao_tg_offset') || '0'),
+
+  startPolling() {
+    if (this._pollTimer || !this._token() || !this._chatId()) return;
+    this._poll();
+    this._pollTimer = setInterval(() => this._poll(), 30000);
+    console.log('[TgBot] Polling iniciado');
+  },
+
+  stopPolling() {
+    if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
+  },
+
+  async _poll() {
+    const token = this._token();
+    if (!token) return;
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${token}/getUpdates?offset=${this._lastUpdateId + 1}&limit=10&timeout=0`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.ok || !data.result.length) return;
+      for (const upd of data.result) {
+        this._lastUpdateId = upd.update_id;
+        localStorage.setItem('gmao_tg_offset', String(upd.update_id));
+        const msg = upd.message || upd.edited_message;
+        if (!msg?.text) continue;
+        const fromChat = String(msg.chat.id);
+        const myChat   = this._chatId();
+        if (myChat && fromChat !== myChat) continue; // ignorar chats ajenos
+        await this._handleIncoming(msg.text.trim(), fromChat);
+      }
+    } catch(e) { console.warn('[TgBot poll]', e.message); }
+  },
+
+  async _replyTo(chatId, text) {
+    const token = this._token();
+    if (!token) return;
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+  },
+
+  async _handleIncoming(text, chatId) {
+    try {
+      const reply = text.startsWith('/')
+        ? await this._handleCommand(text)
+        : await this._handleAI(text);
+      if (reply) await this._replyTo(chatId, reply);
+    } catch(e) {
+      await this._replyTo(chatId, '❌ Error: ' + e.message);
+    }
+  },
+
+  // ── COMANDOS ─────────────────────────────────────────────────────
+  async _handleCommand(text) {
+    const parts = text.split(/\s+/);
+    const cmd   = parts[0].toLowerCase();
+    const arg   = parts.slice(1).join(' ');
+    switch (cmd) {
+      case '/ayuda': case '/help': case '/start':
+        return `🤖 <b>GMAO Bot — Comandos</b>\n\n` +
+          `/averias — Averías abiertas ahora\n` +
+          `/resumen — KPIs del día\n` +
+          `/stock — Productos con stock bajo\n` +
+          `/inspecciones — Vencidas y próximas 30 días\n` +
+          `/tecnico [nombre] — Partes de un técnico esta semana\n\n` +
+          `También puedes escribir cualquier pregunta en lenguaje natural y la IA te responderá.`;
+      case '/averias':      return await this._cmdAverias();
+      case '/resumen':      return await this._cmdResumen();
+      case '/stock':        return await this._cmdStock();
+      case '/inspecciones': return await this._cmdInspecciones();
+      case '/tecnico':      return await this._cmdTecnico(arg);
+      default: return `Comando no reconocido. Escribe /ayuda para ver los disponibles.`;
+    }
+  },
+
+  async _cmdAverias() {
+    const av = await db.averias.toArray();
+    const ab = av.filter(a => a.estado === 'Abierta');
+    if (!ab.length) return '✅ No hay averías abiertas en este momento.';
+    const byAlm = {};
+    ab.forEach(a => { const k = a.almacen||'?'; byAlm[k] = (byAlm[k]||0)+1; });
+    const resumen = Object.entries(byAlm).sort((a,b)=>b[1]-a[1])
+      .map(([alm,n]) => `  • ${alm}: <b>${n}</b>`).join('\n');
+    const top = ab.slice(0,3).map(a =>
+      `  ⚠️ <b>${a.almacen}</b> — ${(a.descripcion||'').slice(0,50)}`).join('\n');
+    return `🔧 <b>Averías abiertas: ${ab.length}</b>\n\n<b>Por almacén:</b>\n${resumen}\n\n<b>Más recientes:</b>\n${top}`;
+  },
+
+  async _cmdResumen() {
+    const hoy = new Date().toISOString().slice(0,10);
+    const [av, pt, insp] = await Promise.all([
+      db.averias.toArray(), db.partes_trabajo.toArray(), db.inspecciones.toArray()
+    ]);
+    const abiertas  = av.filter(a => a.estado === 'Abierta').length;
+    const hoyAv     = av.filter(a => (a.fecha_inicio||'').slice(0,10) === hoy).length;
+    const hoyPt     = pt.filter(p => (p.fecha||'').slice(0,10) === hoy).length;
+    const vencidas  = insp.filter(i => i.proxima && i.proxima < hoy).length;
+    const [dd,mm,yy] = [hoy.slice(8), hoy.slice(5,7), hoy.slice(0,4)];
+    return `📊 <b>Resumen GMAO — ${dd}/${mm}/${yy}</b>\n\n` +
+      `🔴 Averías abiertas: <b>${abiertas}</b>\n` +
+      `📋 Averías creadas hoy: <b>${hoyAv}</b>\n` +
+      `🛠 Partes registrados hoy: <b>${hoyPt}</b>\n` +
+      `⏰ Inspecciones vencidas: <b>${vencidas}</b>`;
+  },
+
+  async _cmdStock() {
+    const inv = await db.inventario.toArray();
+    const bajos = inv.filter(i => i.unidades !== null && i.unidades < 5)
+      .sort((a,b) => a.unidades - b.unidades);
+    if (!bajos.length) return '✅ No hay productos con stock bajo (< 5 unidades).';
+    const lines = bajos.slice(0,10)
+      .map(i => `  • ${i.nombre||i.cod_producto} (${i.almacen}): <b>${i.unidades}</b> ud.`).join('\n');
+    return `📦 <b>Stock bajo — ${bajos.length} producto${bajos.length!==1?'s':''}</b>\n\n${lines}` +
+      (bajos.length > 10 ? `\n  ...y ${bajos.length-10} más` : '');
+  },
+
+  async _cmdInspecciones() {
+    const hoy = new Date().toISOString().slice(0,10);
+    const d30 = new Date(); d30.setDate(d30.getDate()+30);
+    const lim30 = d30.toISOString().slice(0,10);
+    const insp = await db.inspecciones.toArray();
+    const venc  = insp.filter(i => i.proxima && i.proxima < hoy);
+    const prox  = insp.filter(i => i.proxima && i.proxima >= hoy && i.proxima <= lim30);
+    let txt = `🔍 <b>Inspecciones</b>\n\n`;
+    if (venc.length) {
+      txt += `🔴 <b>Vencidas (${venc.length}):</b>\n` +
+        venc.slice(0,6).map(i=>`  • ${i.almacen} — ${i.tipo} → venció <b>${i.proxima}</b>`).join('\n') + '\n\n';
+    }
+    if (prox.length) {
+      txt += `🟡 <b>Próximas 30 días (${prox.length}):</b>\n` +
+        prox.slice(0,6).map(i=>`  • ${i.almacen} — ${i.tipo} → <b>${i.proxima}</b>`).join('\n');
+    }
+    if (!venc.length && !prox.length) txt += '✅ Todo en orden. Sin vencidas ni próximas en 30 días.';
+    return txt;
+  },
+
+  async _cmdTecnico(nombre) {
+    if (!nombre) return 'Indica el nombre. Ej: <code>/tecnico Javi</code>';
+    const hoy   = new Date();
+    const lunes = new Date(hoy); lunes.setDate(hoy.getDate() - ((hoy.getDay()+6)%7));
+    const lunesStr = lunes.toISOString().slice(0,10);
+    const partes = await db.partes_trabajo.toArray();
+    const filtrados = partes.filter(p =>
+      (p.tecnico||'').toLowerCase().includes(nombre.toLowerCase()) &&
+      (p.fecha||'') >= lunesStr
+    );
+    if (!filtrados.length) return `No hay partes de "${nombre}" esta semana.`;
+    const totalH = filtrados.reduce((s,p)=>s+(p.horas||0),0);
+    const lines  = filtrados.slice(0,8)
+      .map(p=>`  • ${p.fecha} — ${p.horas}h${p.notas?' ('+p.notas.slice(0,40)+')':''}`).join('\n');
+    return `🛠 <b>${nombre} — Esta semana</b>\n${filtrados.length} partes · ${totalH.toFixed(1)}h total\n\n${lines}`;
+  },
+
+  // ── IA — lenguaje natural ─────────────────────────────────────────
+  async _handleAI(question) {
+    const key = ANTHROPIC_KEY();
+    if (!key) return '⚠️ API key de Anthropic no configurada en el GMAO (Configuración → Integraciones).';
+    const hoy = new Date().toISOString().slice(0,10);
+    const [av, pt, inv, insp, tec] = await Promise.all([
+      db.averias.toArray(), db.partes_trabajo.toArray(),
+      db.inventario.toArray(), db.inspecciones.toArray(), db.tecnicos.toArray(),
+    ]);
+    const hace7 = new Date(); hace7.setDate(hace7.getDate()-7);
+    const h7 = hace7.toISOString().slice(0,10);
+    const d30 = new Date(); d30.setDate(d30.getDate()+30);
+    const lim30 = d30.toISOString().slice(0,10);
+
+    const ctx = {
+      fecha_hoy: hoy,
+      averias: {
+        total: av.length,
+        abiertas: av.filter(a=>a.estado==='Abierta').length,
+        cerradas_hoy: av.filter(a=>a.estado==='Cerrada'&&(a.fecha_fin||'').slice(0,10)===hoy).length,
+        creadas_hoy: av.filter(a=>(a.fecha_inicio||'').slice(0,10)===hoy).length,
+        abiertas_detalle: av.filter(a=>a.estado==='Abierta').slice(0,20).map(a=>({
+          id:a.id, almacen:a.almacen, equipo:a.equipo||'',
+          descripcion:(a.descripcion||'').slice(0,80),
+          tecnico:a.tecnico, criticidad:a.criticidad, fecha:a.fecha_inicio,
+        })),
+      },
+      partes_trabajo: {
+        total_semana: pt.filter(p=>(p.fecha||'')>=h7).length,
+        horas_semana: pt.filter(p=>(p.fecha||'')>=h7).reduce((s,p)=>s+(p.horas||0),0).toFixed(1),
+        por_tecnico: Object.entries(
+          pt.filter(p=>(p.fecha||'')>=h7).reduce((acc,p)=>{
+            acc[p.tecnico||'?']=(acc[p.tecnico||'?']||0)+(p.horas||0); return acc;
+          },{})
+        ).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([t,h])=>({tecnico:t,horas:+h.toFixed(1)})),
+      },
+      inspecciones: {
+        total: insp.length,
+        vencidas: insp.filter(i=>i.proxima&&i.proxima<hoy).map(i=>({almacen:i.almacen,tipo:i.tipo,proxima:i.proxima})),
+        proximas_30d: insp.filter(i=>i.proxima&&i.proxima>=hoy&&i.proxima<=lim30).map(i=>({almacen:i.almacen,tipo:i.tipo,proxima:i.proxima})),
+      },
+      inventario: {
+        stock_bajo: inv.filter(i=>i.unidades!==null&&i.unidades<5).slice(0,20)
+          .map(i=>({nombre:i.nombre||i.cod_producto,almacen:i.almacen,unidades:i.unidades})),
+      },
+      tecnicos_activos: tec.filter(t=>t.activo).map(t=>({nombre:t.nombre,rol:t.rol,almacen:t.almacen})),
+    };
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 500,
+        system: `Eres el asistente del GMAO (Gestión de Mantenimiento) de Grupo Guillem Export.
+Respondes preguntas sobre el estado actual del sistema de mantenimiento.
+Responde siempre en español, de forma concisa y útil. Usa emojis para legibilidad.
+Máximo 250 palabras. No menciones que eres una IA a menos que te lo pregunten.
+
+DATOS ACTUALES (${hoy}):
+${JSON.stringify(ctx)}`,
+        messages: [{ role: 'user', content: question }],
+      }),
+    });
+    if (!resp.ok) throw new Error(`Claude API ${resp.status}`);
+    const data = await resp.json();
+    return data.content[0].text.trim();
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -8084,6 +8318,7 @@ const App = {
     this._initSessionWatcher();
     this._checkWeeklyBackup();
     AlertService.checkAndSendDailyReport();
+    AlertService.startPolling();
   },
 
   async _checkWeeklyBackup() {
