@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.22</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.24</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -4624,13 +4624,17 @@ const AveriasPage = {
   async _saveEdit(id) {
     const a = await DataService.getAveria(id);
     if (!a) return;
+    const _fechaEdit = document.getElementById('ea-fecha-inicio').value;
+    if (_fechaEdit && _fechaEdit > new Date().toISOString().slice(0,10) && !UserService.canMoveInventario()) {
+      toast('No puedes registrar averías con fecha futura', 'error'); return;
+    }
     const updated = {
       ...a,
       almacen:     document.getElementById('ea-almacen').value,
       zona:        document.getElementById('ea-zona').value.trim(),
       linea:       document.getElementById('ea-linea').value.trim(),
       equipo:      document.getElementById('ea-equipo').value.trim(),
-      fecha_inicio:document.getElementById('ea-fecha-inicio').value,
+      fecha_inicio:_fechaEdit,
       hora_inicio: document.getElementById('ea-hora-inicio').value,
       descripcion: document.getElementById('ea-desc').value.trim(),
       tecnico:     document.getElementById('ea-tecnico').value,
@@ -5059,6 +5063,12 @@ const AveriasPage = {
       const durH = parseInt(document.getElementById('av-dur-h')?.value) || 0;
       const durM = parseInt(document.getElementById('av-dur-m')?.value) || 0;
       if (durH * 60 + durM < 5) { toast('La duración debe ser de al menos 5 minutos', 'error'); return; }
+    }
+
+    // Validar fecha futura — solo Admin y Responsable pueden registrar en el futuro
+    const _fechaForm = document.getElementById('av-fecha').value;
+    if (_fechaForm && _fechaForm > new Date().toISOString().slice(0,10) && !UserService.canMoveInventario()) {
+      toast('No puedes registrar averías con fecha futura', 'error'); return;
     }
 
     // Bloquear submit — deshabilitar botón para evitar doble envío
@@ -8976,6 +8986,9 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`
 
     if (!tecnico) { toast('Selecciona un técnico', 'error'); return; }
     if (!fecha)   { toast('Indica la fecha', 'error'); return; }
+    if (fecha > new Date().toISOString().slice(0,10) && !UserService.canMoveInventario()) {
+      toast('No puedes registrar partes con fecha futura', 'error'); return;
+    }
 
     // Edición: reutilizar el ID existente; nuevo: generar uno nuevo
     const id = this._ptEditingId || `pt_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
@@ -9334,8 +9347,8 @@ const InspeccionesPage = {
       const btn = document.getElementById('insp-save-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
 
-      const fecha    = document.getElementById('fi-fecha').value;
-      const proxima  = document.getElementById('fi-proxima').value;
+      const fecha    = document.getElementById('fi-fecha').value   || null;
+      const proxima  = document.getElementById('fi-proxima').value || null;
       const empresa     = document.getElementById('fi-empresa').value.trim();
       const num_registro= document.getElementById('fi-num-registro').value.trim();
       const resultado   = document.getElementById('fi-resultado').value;
