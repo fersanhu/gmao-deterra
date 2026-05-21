@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.1</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.2</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -6920,6 +6920,7 @@ const InventarioPage = {
                 tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
             } else {
               prodRecs.push({
+                id:          rec.cod_producto,
                 cod_producto: rec.cod_producto,
                 nombre:   rec.nombre   || rec.producto || rec.cod_producto,
                 producto: rec.producto || rec.nombre   || rec.cod_producto,
