@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v6.25</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.0</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -7381,51 +7381,137 @@ const AlertService = {
   },
 
   // ── IA — lenguaje natural ─────────────────────────────────────────
+  _grp(arr, keyFn) {
+    return arr.reduce((acc, x) => { const k = keyFn(x)||'?'; acc[k]=(acc[k]||0)+1; return acc; }, {});
+  },
+  _grpSum(arr, keyFn, valFn) {
+    return arr.reduce((acc, x) => {
+      const k = keyFn(x)||'?';
+      if (!acc[k]) acc[k] = {count:0, horas:0};
+      acc[k].count++; acc[k].horas += valFn(x)||0;
+      return acc;
+    }, {});
+  },
+
   async _handleAI(question) {
     const key = ANTHROPIC_KEY();
     if (!key) return '⚠️ API key de Anthropic no configurada en el GMAO (Configuración → Integraciones).';
+
     const hoy = new Date().toISOString().slice(0,10);
     const [av, pt, inv, insp, tec] = await Promise.all([
       db.averias.toArray(), db.partes_trabajo.toArray(),
       db.inventario.toArray(), db.inspecciones.toArray(), db.tecnicos.toArray(),
     ]);
-    const hace7 = new Date(); hace7.setDate(hace7.getDate()-7);
-    const h7 = hace7.toISOString().slice(0,10);
-    const d30 = new Date(); d30.setDate(d30.getDate()+30);
-    const lim30 = d30.toISOString().slice(0,10);
 
+    // Rangos de fecha útiles
+    const hace30d = new Date(); hace30d.setDate(hace30d.getDate()-30);
+    const h30 = hace30d.toISOString().slice(0,10);
+    const prox30d = new Date(); prox30d.setDate(prox30d.getDate()+30);
+    const lim30 = prox30d.toISOString().slice(0,10);
+
+    // ── Averías: agregados completos (toda la historia) ──
+    const avAbiertas  = av.filter(a => a.estado === 'Abierta');
+    const avCerradas  = av.filter(a => a.estado === 'Cerrada');
+
+    const avPorAlmacen = {};
+    ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].forEach(alm => {
+      const sub = av.filter(a => a.almacen === alm);
+      avPorAlmacen[alm] = {
+        total: sub.length,
+        abiertas: sub.filter(a=>a.estado==='Abierta').length,
+        cerradas: sub.filter(a=>a.estado==='Cerrada').length,
+        alta:     sub.filter(a=>a.criticidad==='Alta').length,
+      };
+    });
+
+    const avPorTecnico = Object.entries(this._grp(av, a=>a.tecnico))
+      .sort((a,b)=>b[1]-a[1]).slice(0,15)
+      .map(([t,n]) => ({ tecnico:t, total:n,
+        abiertas: av.filter(a=>a.tecnico===t&&a.estado==='Abierta').length,
+        cerradas: av.filter(a=>a.tecnico===t&&a.estado==='Cerrada').length,
+      }));
+
+    const avPorMes = Object.entries(this._grp(av, a=>(a.fecha_inicio||'').slice(0,7)))
+      .filter(([m])=>m.length===7).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12)
+      .map(([mes,n]) => ({mes, total:n,
+        cerradas: av.filter(a=>(a.fecha_inicio||'').slice(0,7)===mes&&a.estado==='Cerrada').length,
+      }));
+
+    // ── Partes: agregados completos ──
+    const ptPorTecnico = Object.entries(this._grpSum(pt, p=>p.tecnico, p=>p.horas))
+      .sort((a,b)=>b[1].horas-a[1].horas).slice(0,15)
+      .map(([t,v])=>({tecnico:t, partes:v.count, horas:+v.horas.toFixed(1)}));
+
+    const ptPorAlmacen = Object.entries(this._grpSum(pt, p=>p.almacen||p._av?.almacen, p=>p.horas))
+      .sort((a,b)=>b[1].count-a[1].count)
+      .map(([a,v])=>({almacen:a, partes:v.count, horas:+v.horas.toFixed(1)}));
+
+    const ptPorMes = Object.entries(this._grp(pt, p=>(p.fecha||'').slice(0,7)))
+      .filter(([m])=>m.length===7).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12)
+      .map(([mes,n])=>({mes, partes:n}));
+
+    // ── Contexto final ──
     const ctx = {
       fecha_hoy: hoy,
+
       averias: {
         total: av.length,
-        abiertas: av.filter(a=>a.estado==='Abierta').length,
-        cerradas_hoy: av.filter(a=>a.estado==='Cerrada'&&(a.fecha_fin||'').slice(0,10)===hoy).length,
+        abiertas: avAbiertas.length,
+        cerradas: avCerradas.length,
         creadas_hoy: av.filter(a=>(a.fecha_inicio||'').slice(0,10)===hoy).length,
-        abiertas_detalle: av.filter(a=>a.estado==='Abierta').slice(0,20).map(a=>({
+        cerradas_hoy: avCerradas.filter(a=>(a.fecha_fin||'').slice(0,10)===hoy).length,
+        por_almacen: avPorAlmacen,
+        por_tecnico: avPorTecnico,
+        por_mes_ultimos12: avPorMes,
+        abiertas_detalle: avAbiertas.slice(0,25).map(a=>({
           id:a.id, almacen:a.almacen, equipo:a.equipo||'',
-          descripcion:(a.descripcion||'').slice(0,80),
+          descripcion:(a.descripcion||'').slice(0,70),
           tecnico:a.tecnico, criticidad:a.criticidad, fecha:a.fecha_inicio,
         })),
+        cerradas_recientes_30d: avCerradas
+          .filter(a=>(a.fecha_fin||a.fecha_inicio||'')>=h30)
+          .slice(0,20).map(a=>({
+            almacen:a.almacen, equipo:a.equipo||'',
+            descripcion:(a.descripcion||'').slice(0,60),
+            tecnico:a.tecnico, fecha_inicio:a.fecha_inicio, fecha_fin:a.fecha_fin,
+          })),
       },
+
       partes_trabajo: {
-        total_semana: pt.filter(p=>(p.fecha||'')>=h7).length,
-        horas_semana: pt.filter(p=>(p.fecha||'')>=h7).reduce((s,p)=>s+(p.horas||0),0).toFixed(1),
-        por_tecnico: Object.entries(
-          pt.filter(p=>(p.fecha||'')>=h7).reduce((acc,p)=>{
-            acc[p.tecnico||'?']=(acc[p.tecnico||'?']||0)+(p.horas||0); return acc;
-          },{})
-        ).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([t,h])=>({tecnico:t,horas:+h.toFixed(1)})),
+        total: pt.length,
+        por_tecnico: ptPorTecnico,
+        por_almacen: ptPorAlmacen,
+        por_mes_ultimos12: ptPorMes,
+        ultimos_30d: pt.filter(p=>(p.fecha||'')>=h30).length,
+        horas_totales: +pt.reduce((s,p)=>s+(p.horas||0),0).toFixed(1),
       },
+
       inspecciones: {
         total: insp.length,
-        vencidas: insp.filter(i=>i.proxima&&i.proxima<hoy).map(i=>({almacen:i.almacen,tipo:i.tipo,proxima:i.proxima})),
-        proximas_30d: insp.filter(i=>i.proxima&&i.proxima>=hoy&&i.proxima<=lim30).map(i=>({almacen:i.almacen,tipo:i.tipo,proxima:i.proxima})),
+        vencidas: insp.filter(i=>i.proxima&&i.proxima<hoy)
+          .map(i=>({almacen:i.almacen, tipo:i.tipo, proxima:i.proxima, resultado:i.resultado})),
+        proximas_30d: insp.filter(i=>i.proxima&&i.proxima>=hoy&&i.proxima<=lim30)
+          .map(i=>({almacen:i.almacen, tipo:i.tipo, proxima:i.proxima})),
+        por_almacen: Object.entries(this._grp(insp, i=>i.almacen))
+          .map(([alm,n])=>({almacen:alm, total:n,
+            vencidas: insp.filter(i=>i.almacen===alm&&i.proxima&&i.proxima<hoy).length,
+          })),
+        por_tipo: Object.entries(this._grp(insp, i=>i.tipo))
+          .sort((a,b)=>b[1]-a[1]).map(([tipo,n])=>({tipo,total:n})),
       },
+
       inventario: {
-        stock_bajo: inv.filter(i=>i.unidades!==null&&i.unidades<5).slice(0,20)
-          .map(i=>({nombre:i.nombre||i.cod_producto,almacen:i.almacen,unidades:i.unidades})),
+        total_referencias: inv.length,
+        stock_bajo: inv.filter(i=>i.unidades!==null&&i.unidades<5)
+          .sort((a,b)=>a.unidades-b.unidades).slice(0,20)
+          .map(i=>({nombre:i.nombre||i.cod_producto, almacen:i.almacen, unidades:i.unidades})),
+        por_almacen: Object.entries(this._grp(inv, i=>i.almacen))
+          .map(([alm,n])=>({almacen:alm, referencias:n,
+            stock_bajo: inv.filter(i=>i.almacen===alm&&i.unidades!==null&&i.unidades<5).length,
+          })),
       },
-      tecnicos_activos: tec.filter(t=>t.activo).map(t=>({nombre:t.nombre,rol:t.rol,almacen:t.almacen})),
+
+      tecnicos: tec.filter(t=>t.activo).map(t=>({nombre:t.nombre, rol:t.rol, almacen:t.almacen})),
     };
 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -7438,13 +7524,13 @@ const AlertService = {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
-        max_tokens: 500,
-        system: `Eres el asistente del GMAO (Gestión de Mantenimiento) de Grupo Guillem Export.
-Respondes preguntas sobre el estado actual del sistema de mantenimiento.
-Responde siempre en español, de forma concisa y útil. Usa emojis para legibilidad.
-Máximo 250 palabras. No menciones que eres una IA a menos que te lo pregunten.
+        max_tokens: 600,
+        system: `Eres el asistente del GMAO de Grupo Guillem Export (empresa agroalimentaria con almacenes en Miramar, Xeresa, Murcia, Alcacer y Algemesi).
+Tienes acceso completo al histórico del sistema: averías abiertas y cerradas, partes de trabajo, inspecciones e inventario.
+Responde siempre en español, de forma concisa y útil. Usa emojis. Máximo 300 palabras.
+Si te preguntan por un técnico, almacén o periodo concreto, busca en los datos y responde con cifras exactas.
 
-DATOS ACTUALES (${hoy}):
+DATOS COMPLETOS DEL SISTEMA (${hoy}):
 ${JSON.stringify(ctx)}`,
         messages: [{ role: 'user', content: question }],
       }),
