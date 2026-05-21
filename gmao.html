@@ -637,7 +637,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.0</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.1</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -3554,6 +3554,12 @@ const ActivosPage = {
           <option value="">${t('todos_estados')}</option>
           <option value="Operativo">${t('est_operativo')}</option><option value="Parado">${t('est_parado')}</option><option value="Baja">${t('est_baja')}</option><option value="En reparacion">${t('est_en_rep')}</option>
         </select>
+        <select class="filter-select" id="filter-anio-desde-act" title="Año desde">
+          <option value="">Año desde</option>
+        </select>
+        <select class="filter-select" id="filter-anio-hasta-act" title="Año hasta">
+          <option value="">Año hasta</option>
+        </select>
       </div>
     </div>
     <div class="card">
@@ -3589,11 +3595,20 @@ const ActivosPage = {
     const zonaEl = document.getElementById('filter-zona-act');
     zonas.forEach(z => { const o = document.createElement('option'); o.value = z; o.textContent = z; zonaEl.appendChild(o); });
 
+    // Populate año filters
+    const anios = [...new Set(this._data.map(a => a.anio).filter(Boolean))].sort((a,b) => a-b);
+    const desdeEl = document.getElementById('filter-anio-desde-act');
+    const hastaEl = document.getElementById('filter-anio-hasta-act');
+    anios.forEach(y => {
+      const o1 = document.createElement('option'); o1.value = y; o1.textContent = y; desdeEl.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = y; o2.textContent = y; hastaEl.appendChild(o2);
+    });
+
     this._filtered = [...this._data];
     this._renderTable();
     document.getElementById('activos-count').textContent = `${this._data.length} ${t('activos_reg')}`;
 
-    ['activos-search','filter-almacen-act','filter-zona-act','filter-estado-act'].forEach(id => {
+    ['activos-search','filter-almacen-act','filter-zona-act','filter-estado-act','filter-anio-desde-act','filter-anio-hasta-act'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
       document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
     });
@@ -3605,17 +3620,24 @@ const ActivosPage = {
   },
 
   _applyFilters() {
-    const search = document.getElementById('activos-search')?.value.toLowerCase() || '';
+    const search  = document.getElementById('activos-search')?.value.toLowerCase() || '';
     const almacen = document.getElementById('filter-almacen-act')?.value || '';
-    const zona = document.getElementById('filter-zona-act')?.value || '';
-    const estado = document.getElementById('filter-estado-act')?.value || '';
-    this._filtered = this._data.filter(a =>
-      (!almacen || a.almacen === almacen) &&
-      (!zona    || a.zona === zona) &&
-      (!estado  || a.estado === estado) &&
-      (!search  || a.equipo.toLowerCase().includes(search) || a.zona.toLowerCase().includes(search) ||
-                   a.tipo_maquina.toLowerCase().includes(search) || a.almacen.toLowerCase().includes(search))
-    );
+    const zona    = document.getElementById('filter-zona-act')?.value || '';
+    const estado  = document.getElementById('filter-estado-act')?.value || '';
+    const desde   = parseInt(document.getElementById('filter-anio-desde-act')?.value) || null;
+    const hasta   = parseInt(document.getElementById('filter-anio-hasta-act')?.value) || null;
+    this._filtered = this._data.filter(a => {
+      const anio = parseInt(a.anio) || null;
+      return (!almacen || a.almacen === almacen) &&
+             (!zona    || a.zona === zona) &&
+             (!estado  || a.estado === estado) &&
+             (!desde   || (anio && anio >= desde)) &&
+             (!hasta   || (anio && anio <= hasta)) &&
+             (!search  || (a.equipo||'').toLowerCase().includes(search) ||
+                          (a.zona||'').toLowerCase().includes(search) ||
+                          (a.tipo_maquina||'').toLowerCase().includes(search) ||
+                          (a.almacen||'').toLowerCase().includes(search));
+    });
     document.getElementById('activos-count').textContent = `${this._filtered.length} ${t('de')} ${this._data.length}`;
     this._renderTable();
   },
