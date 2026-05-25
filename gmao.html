@@ -503,6 +503,16 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   html[dir="rtl"] #sidebar.open{transform:translateX(0)}
   html[dir="rtl"] #main-panel{margin-right:0}
 }
+
+/* ── HEATMAP PLANTA×ZONA ── */
+.heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.heatmap-table{border-collapse:separate;border-spacing:3px;width:100%;min-width:420px}
+.heatmap-table th{color:var(--gray-muted);font-size:11px;font-weight:600;text-align:center;padding:4px 6px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+.heatmap-table th.row-header{text-align:right;min-width:90px;padding-right:10px}
+.heatmap-cell{width:80px;height:38px;border-radius:5px;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.heatmap-cell:hover{transform:scale(1.08);z-index:1;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.heatmap-cell.zero{background:var(--gray-light);color:var(--border);cursor:default}
+.heatmap-cell.zero:hover{transform:none;box-shadow:none}
 </style>
 </head>
 <body>
@@ -637,7 +647,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.5</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -2901,6 +2911,40 @@ const DashboardPage = {
       </div>
     </div>
 
+    <!-- ═══ MAPA DE CALOR PLANTA × ZONA ═══ -->
+    <div class="chart-wrap" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <div>
+          <span class="chart-title" style="margin:0;font-size:15px">Mapa de calor — Almacén × Zona</span>
+          <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">Clic en celda para ver listado filtrado</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <!-- Toggle modo -->
+          <div style="display:flex;gap:3px">
+            <button class="chart-pill active" id="hm-modo-count"    onclick="DashboardPage._heatmapToggle('count')">Nº averías</button>
+            <button class="chart-pill"        id="hm-modo-duracion" onclick="DashboardPage._heatmapToggle('duracion')">Duración total</button>
+          </div>
+          <!-- Leyenda escala -->
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--gray-muted)">Escala:</span>
+            <span style="display:inline-flex;gap:2px;align-items:center">
+              <span style="width:14px;height:14px;border-radius:3px;background:#dbeafe;display:inline-block"></span>
+              <span style="width:14px;height:14px;border-radius:3px;background:#93c5fd;display:inline-block"></span>
+              <span style="width:14px;height:14px;border-radius:3px;background:#fbbf24;display:inline-block"></span>
+              <span style="width:14px;height:14px;border-radius:3px;background:#f97316;display:inline-block"></span>
+              <span style="width:14px;height:14px;border-radius:3px;background:#ef4444;display:inline-block"></span>
+            </span>
+            <span style="font-size:11px;color:var(--gray-muted)">baja → alta</span>
+          </div>
+        </div>
+      </div>
+      <div class="heatmap-scroll">
+        <div id="heatmap-container">
+          <span style="font-size:13px;color:var(--gray-muted)">Cargando…</span>
+        </div>
+      </div>
+    </div>
+
     `;
 
     // KPI técnicos — filtrado por almacén
@@ -2925,6 +2969,7 @@ const DashboardPage = {
       if (!this._chartMode) this._chartMode = 'mes';
       this._rebuildAveriasChart();
       this._rebuildAll();
+      this._renderHeatmap(all);
     });
 
 
@@ -3035,6 +3080,106 @@ const DashboardPage = {
     });
     this._updateCrossBadge();
     this._rebuildAll();
+  },
+
+  // ── Mapa de calor Almacén × Zona ─────────────────────────────────
+  _heatmapMode: 'count', // 'count' | 'duracion'
+
+  _heatmapToggle(mode) {
+    this._heatmapMode = mode;
+    ['count','duracion'].forEach(m => {
+      const b = document.getElementById(`hm-modo-${m}`);
+      if (b) b.className = `chart-pill${m === mode ? ' active' : ''}`;
+    });
+    this._renderHeatmap(this._allAverias || []);
+  },
+
+  _renderHeatmap(avs) {
+    const container = document.getElementById('heatmap-container');
+    if (!container) return;
+
+    const mode = this._heatmapMode || 'count';
+    const ALM_ORDER = ['Miramar','Xeresa','Alcacer','Murcia','Algemesi'];
+    const durToMin = d => { if (!d) return 0; const p = String(d).split(':').map(Number); return isNaN(p[0]) ? 0 : p[0]*60 + (p[1]||0); };
+    const fmtMin  = m => m >= 60 ? `${(m/60).toFixed(1)}h` : `${m}m`;
+
+    // Construir matriz: { zona → { almacen → { count, mins } } }
+    const zonaTotals = {}; // zona → { count, mins }
+    const matrix = {};
+    for (const a of avs) {
+      const zona = (a.zona || '').trim() || '(sin zona)';
+      const alm  = ALM_ORDER.find(x => normalizeAlmacen(x) === normalizeAlmacen(a.almacen||'')) || null;
+      if (!alm) continue;
+      if (!matrix[zona])      matrix[zona] = {};
+      if (!matrix[zona][alm]) matrix[zona][alm] = { count: 0, mins: 0 };
+      matrix[zona][alm].count++;
+      matrix[zona][alm].mins += durToMin(a.duracion);
+      if (!zonaTotals[zona]) zonaTotals[zona] = { count: 0, mins: 0 };
+      zonaTotals[zona].count++;
+      zonaTotals[zona].mins += durToMin(a.duracion);
+    }
+
+    // Top 12 zonas — ordenadas por el campo activo
+    const zonas = Object.keys(zonaTotals)
+      .sort((a,b) => mode === 'duracion'
+        ? zonaTotals[b].mins  - zonaTotals[a].mins
+        : zonaTotals[b].count - zonaTotals[a].count)
+      .slice(0, 12);
+    if (!zonas.length) { container.innerHTML = '<span style="font-size:13px;color:var(--gray-muted)">Sin datos</span>'; return; }
+
+    // Máximo para escala de color
+    let maxVal = 0;
+    for (const zona of zonas) for (const alm of ALM_ORDER) {
+      const cell = matrix[zona]?.[alm];
+      const v = cell ? (mode === 'duracion' ? cell.mins : cell.count) : 0;
+      if (v > maxVal) maxVal = v;
+    }
+
+    const heatColor = (v) => {
+      if (!v || !maxVal) return null;
+      const r = v / maxVal;
+      if (r < 0.2) return { bg:'#dbeafe', fg:'#1e40af' };
+      if (r < 0.4) return { bg:'#93c5fd', fg:'#1e3a8a' };
+      if (r < 0.6) return { bg:'#fbbf24', fg:'#78350f' };
+      if (r < 0.8) return { bg:'#f97316', fg:'#fff' };
+      return { bg:'#ef4444', fg:'#fff' };
+    };
+
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const colHeader = mode === 'duracion' ? 'Total dur.' : 'Total';
+
+    let html = `<table class="heatmap-table"><thead><tr><th class="row-header">Zona</th>`;
+    for (const alm of ALM_ORDER) html += `<th>${esc(alm)}</th>`;
+    html += `<th>${colHeader}</th></tr></thead><tbody>`;
+
+    for (const zona of zonas) {
+      html += `<tr><th class="row-header" title="${esc(zona)}">${esc(zona.length>16 ? zona.slice(0,15)+'…' : zona)}</th>`;
+      for (const alm of ALM_ORDER) {
+        const cell = matrix[zona]?.[alm];
+        const v    = cell ? (mode === 'duracion' ? cell.mins : cell.count) : 0;
+        const col  = heatColor(v);
+        if (!v) {
+          html += `<td class="heatmap-cell zero">—</td>`;
+        } else {
+          const label   = mode === 'duracion' ? fmtMin(v) : String(v);
+          const tooltip = mode === 'duracion'
+            ? `${fmtMin(v)} — ${esc(alm)} / ${esc(zona)}`
+            : `${v} avería${v!==1?'s':''} — ${esc(alm)} / ${esc(zona)}`;
+          html += `<td class="heatmap-cell" style="background:${col.bg};color:${col.fg}" title="${tooltip}" onclick="DashboardPage._heatmapClick('${esc(alm)}','${esc(zona)}')">${label}</td>`;
+        }
+      }
+      const tot = zonaTotals[zona];
+      const totLabel = mode === 'duracion' ? fmtMin(tot.mins) : String(tot.count);
+      html += `<td style="text-align:center;font-weight:600;font-size:12px;color:var(--gray-text);padding:0 8px;white-space:nowrap">${totLabel}</td>`;
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  },
+
+  _heatmapClick(almacen, zona) {
+    this._goToAverias({ almacen, zona: zona === '(sin zona)' ? '' : zona });
   },
 
   _goToAverias(filters) {
