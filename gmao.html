@@ -2303,13 +2303,13 @@ const UI = {
 // ═══════════════════════════════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════════════════════════════
-function toast(msg, type = '') {
+function toast(msg, type = '', duration = 2400) {
   const el = document.createElement('div');
   el.className = `toast${type ? ' toast-'+type : ''}`;
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.style.transition = 'opacity .4s', 2000);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 2400);
+  setTimeout(() => el.style.transition = 'opacity .4s', duration - 400);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, duration);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7055,27 +7055,24 @@ const InventarioPage = {
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
 
+          // Verificar que todos los artículos a importar existen en el catálogo (tienen ID)
+          const sinId = toUpsert.filter(rec => !prodMap.has(rec.cod_producto));
+          if (sinId.length) {
+            const lista = sinId.map(r => r.cod_producto).join(', ');
+            toast(`No se puede importar: los siguientes códigos no existen en el catálogo (sin ID): ${lista}`, 'error', 8000);
+            return;
+          }
+
           const invRecs = [];
           const prodRecs = [];
           for (const rec of toUpsert) {
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
             invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
-            if (prod) {
-              prodRecs.push({ ...prod,
-                nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
-                tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
-                tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
-            } else {
-              prodRecs.push({
-                id:          rec.cod_producto,
-                cod_producto: rec.cod_producto,
-                nombre:   rec.nombre   || rec.producto || rec.cod_producto,
-                producto: rec.producto || rec.nombre   || rec.cod_producto,
-                tipo: rec.tipo||'', familia: rec.familia||'',
-                tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'',
-              });
-            }
+            prodRecs.push({ ...prod,
+              nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
+              tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
+              tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
           }
 
           await db.inventario.bulkPut(invRecs);
