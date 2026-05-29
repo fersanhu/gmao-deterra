@@ -647,7 +647,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.5</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.6</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -7055,13 +7055,22 @@ const InventarioPage = {
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
 
-          // Verificar que todos los artículos a importar existen en el catálogo (tienen ID)
+          // Auto-crear productos que no existen aún en el catálogo
           const sinId = toUpsert.filter(rec => !prodMap.has(rec.cod_producto));
-          if (sinId.length) {
-            const lista = sinId.map(r => r.cod_producto).join(', ');
-            toast(`No se puede importar: los siguientes códigos no existen en el catálogo (sin ID): ${lista}`, 'error', 8000);
-            return;
+          for (const rec of sinId) {
+            const { tamano, tamano2, tamano3, tamano4 } = rec;
+            const newProd = {
+              cod_producto: rec.cod_producto,
+              nombre: rec.nombre || rec.producto || '',
+              producto: rec.producto || rec.nombre || '',
+              tipo: rec.tipo || '',
+              familia: rec.familia || '',
+              tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'',
+            };
+            const createdId = await db.productos.add(newProd);
+            prodMap.set(rec.cod_producto, { ...newProd, id: createdId });
           }
+          if (sinId.length) toast(`${sinId.length} producto${sinId.length!==1?'s':''} nuevo${sinId.length!==1?'s':''} creado${sinId.length!==1?'s':''} en catálogo`, 'info');
 
           const invRecs = [];
           const prodRecs = [];
