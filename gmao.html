@@ -2232,6 +2232,11 @@ const DataService = {
     const arr = await db.activos.filter(a => a.almacen === almacen && a.zona === zona && String(a.linea) === String(linea)).toArray();
     return arr.map(a => ({ id_activo: a.id_activo, equipo: a.equipo }));
   },
+  // Equipos de una zona sin distinguir línea (para zonas sin línea definida)
+  async getEquiposByAlmacenZona(almacen, zona) {
+    const arr = await db.activos.filter(a => a.almacen === almacen && a.zona === zona).toArray();
+    return arr.map(a => ({ id_activo: a.id_activo, equipo: a.equipo }));
+  },
   async getTiposMaquina() {
     const arr = await db.activos.toArray();
     return [...new Set(arr.map(a => a.tipo_maquina).filter(Boolean))].sort();
@@ -4490,6 +4495,22 @@ const ActivosPage = {
         // Update references in averias
         const refs = await db.averias.where('id_activo').equals(oldId).toArray();
         await Promise.all(refs.map(av => db.averias.put({...av, id_activo})));
+        // Migrar preventivos (plan_activos) al nuevo id_activo (id = plan_id_idActivo)
+        const paIdMap = {};
+        const pas = await db.plan_activos.where('id_activo').equals(oldId).toArray();
+        for (const pa of pas) {
+          const nuevoPaId = `${pa.plan_id}_${id_activo}`;
+          paIdMap[pa.id] = nuevoPaId;
+          await db.plan_activos.put({ ...pa, id: nuevoPaId, id_activo });
+          if (nuevoPaId !== pa.id) await db.plan_activos.delete(pa.id);
+        }
+        // OTs no cerradas: actualizar activo, snapshot y origen preventivo
+        const ots = (await db.ordenes_trabajo.toArray())
+          .filter(o => o.estado !== 'Cerrada' && (o.id_activo === oldId || paIdMap[o.origen_id]));
+        for (const o of ots) {
+          await db.ordenes_trabajo.put({ ...o, id_activo, almacen, zona, linea, equipo,
+            origen_id: paIdMap[o.origen_id] || o.origen_id });
+        }
       }
       Modal.close();
       toast(oldId ? 'Activo actualizado ✓' : 'Activo creado ✓', 'success');
@@ -5345,6 +5366,14 @@ const AveriasPage = {
       hidEl.value = '';
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      if (ls.length === 0) {
+        // Zona sin líneas → elegir equipo directamente
+        lineaEl.innerHTML = '<option value="">(sin línea)</option>'; lineaEl.disabled = true;
+        const eq = await DataService.getEquiposByAlmacenZona(almEl.value, zonaEl.value);
+        equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+        equipEl.disabled = false;
+        return;
+      }
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
       lineaEl.disabled = false;
     });
@@ -6373,6 +6402,13 @@ const IncidenciasPage = {
       equipEl.innerHTML = `<option value="">${t('sel_linea')}</option>`; equipEl.disabled = true;
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      if (ls.length === 0) {
+        lineaEl.innerHTML = '<option value="">(sin línea)</option>'; lineaEl.disabled = true;
+        const eq = await DataService.getEquiposByAlmacenZona(almEl.value, zonaEl.value);
+        equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option>${UI.esc(e.equipo)}</option>`).join('');
+        equipEl.disabled = false;
+        return;
+      }
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
       lineaEl.disabled = false;
     });
@@ -7052,6 +7088,7 @@ const InventarioPage = {
   async openEditProducto(cod) {
     const allProds = await db.productos.toArray();
     const allInv   = await db.inventario.toArray();
+    const fams = [...new Set(allProds.map(p => p.familia).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
     let prod = allProds.find(p => p.cod_producto === cod);
     if (!prod) {
       const invItem = allInv.find(i => i.cod_producto === cod);
@@ -7113,6 +7150,11 @@ const InventarioPage = {
               oninput="InventarioPage._updateEditPreview()">
           </div>
           <div class="form-field">
+            <label>Familia</label>
+            <input class="form-input" id="ep-familia" list="ep-fam-list" value="${UI.esc(prod.familia||'')}" placeholder="Escribe o elige…">
+            <datalist id="ep-fam-list">${fams.map(f=>`<option value="${UI.esc(f)}"></option>`).join('')}</datalist>
+          </div>
+          <div class="form-field">
             <label>Tamaño</label>
             <input class="form-input" id="ep-tamano" value="${UI.esc(prod.tamano||'')}"
               oninput="InventarioPage._updateEditPreview()">
@@ -7163,6 +7205,7 @@ const InventarioPage = {
     const tamano2    = (document.getElementById('ep-tamano2')?.value || '').trim();
     const tamano3    = (document.getElementById('ep-tamano3')?.value || '').trim();
     const tamano4    = (document.getElementById('ep-tamano4')?.value || '').trim();
+    const familia    = (document.getElementById('ep-familia')?.value || '').trim();
     if (!nombreBase) { toast('El nombre base es obligatorio', 'error'); return; }
     const nombre = [nombreBase, tamano, tamano2, tamano3, tamano4].filter(Boolean).join(' ');
     const prod = InventarioPage._editProd;
@@ -7172,7 +7215,7 @@ const InventarioPage = {
       const allProds = await db.productos.toArray();
       prodId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0) + 1;
     }
-    await db.productos.put({ ...prod, id: prodId, nombre: nombreBase, producto: nombre, tamano, tamano2, tamano3, tamano4 });
+    await db.productos.put({ ...prod, id: prodId, nombre: nombreBase, producto: nombre, familia, tamano, tamano2, tamano3, tamano4 });
     // Guardar cambios de stock y precio en inventario
     const invRows = InventarioPage._editInvRows || [];
     const udsEls    = document.querySelectorAll('.ep-inv-uds');
@@ -7181,6 +7224,7 @@ const InventarioPage = {
     const invUpdates = invRows.map((r, i) => ({
       ...r,
       producto:      nombre,
+      familia,
       unidades:      parseFloat(udsEls[i]?.value    ?? r.unidades)    || 0,
       precio_unidad: parseFloat(precioEls[i]?.value ?? r.precio_unidad) || 0,
       unidad_medida: ((udmedEls[i]?.value ?? r.unidad_medida) || '').trim(),
@@ -9719,6 +9763,14 @@ ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS ot_id TEXT DEFAULT '';`;
       hidEl.value = '';
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      if (ls.length === 0) {
+        // Zona sin líneas → elegir equipo directamente
+        lineaEl.innerHTML = '<option value="">(sin línea)</option>'; lineaEl.disabled = true;
+        const eq = await DataService.getEquiposByAlmacenZona(almEl.value, zonaEl.value);
+        equipEl.innerHTML = '<option value="">Seleccionar equipo...</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+        equipEl.disabled = false;
+        return;
+      }
       lineaEl.innerHTML = '<option value="">Seleccionar línea...</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
       lineaEl.disabled = false;
     });
@@ -10921,6 +10973,13 @@ const PlanesPage = {
       equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      if (ls.length === 0) {
+        lineaEl.innerHTML = '<option value="">(sin línea)</option>'; lineaEl.disabled = true;
+        const eq = await DataService.getEquiposByAlmacenZona(almEl.value, zonaEl.value);
+        equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+        equipEl.disabled = false;
+        return;
+      }
       lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
       lineaEl.disabled = false;
     });
@@ -11128,6 +11187,13 @@ const OrdenesPage = {
       equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
       if (!zonaEl.value) { lineaEl.disabled = true; return; }
       const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      if (ls.length === 0) {
+        lineaEl.innerHTML = '<option value="">(sin línea)</option>'; lineaEl.disabled = true;
+        const eq = await DataService.getEquiposByAlmacenZona(almEl.value, zonaEl.value);
+        equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+        equipEl.disabled = false;
+        return;
+      }
       lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
       lineaEl.disabled = false;
     });
