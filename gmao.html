@@ -733,7 +733,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.2</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.5</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -7302,10 +7302,14 @@ const InventarioPage = {
       const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
       const changes = [];
       const importedKeys = new Set();
-      // Solo comparar campos que son responsabilidad del inventario (stock, precio, almacén).
-      // Nombre/tipo/familia/tamaños son catálogo de producto — se actualizan siempre en productos
-      // sin mostrarse como diff de inventario para evitar falsos positivos al exportar-reimportar.
-      const INV_FIELDS = ['unidades','precio_unidad','unidad_medida'];
+      // Campos de inventario (stock/precio/ud) → se comparan con la fila de inventario.
+      // Campos de catálogo (tipo/familia/nombre/tamaños) → se comparan con el MAESTRO
+      // productos usando el mismo fallback que la exportación (prod || inventario),
+      // para no dar falsos positivos y detectar cambios de clasificación.
+      const _prods = await db.productos.toArray();
+      const prodByCod = new Map(_prods.map(p => [p.cod_producto, p]));
+      const INV_FIELDS  = ['unidades','precio_unidad','unidad_medida'];
+      const PROD_FIELDS = ['tipo','familia','nombre','producto','tamano','tamano2','tamano3','tamano4'];
       for (const imp of imported) {
         const normAlm = normalizeAlmacen(imp.almacen);
         imp.almacen = normAlm || imp.almacen;
@@ -7315,11 +7319,26 @@ const InventarioPage = {
         if (!ex) {
           changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { ...imp, id: key } });
         } else {
-          const fields = INV_FIELDS.reduce((acc, k) => {
+          const prod = prodByCod.get(imp.cod_producto) || {};
+          const fields = [];
+          for (const k of INV_FIELDS) {
             const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
-            if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
-            return acc;
-          }, []);
+            if (ov !== nv) fields.push({ name:k, old:ov, new:nv });
+          }
+          // Valor "efectivo" replicando EXACTAMENTE los fallbacks de la exportación,
+          // para no marcar falsos cambios (p. ej. Nombre vacío en el catálogo).
+          const eff = {
+            nombre:   prod.nombre   || '',
+            producto: prod.producto || ex.producto || '',
+            tipo:     prod.tipo     || ex.tipo     || '',
+            familia:  prod.familia  || ex.familia  || '',
+            tamano:   prod.tamano   || '', tamano2: prod.tamano2 || '',
+            tamano3:  prod.tamano3  || '', tamano4: prod.tamano4 || '',
+          };
+          for (const k of PROD_FIELDS) {
+            const ov = String(eff[k] ?? ''); const nv = String(imp[k] ?? '');
+            if (ov !== nv) fields.push({ name:k, old:ov, new:nv });
+          }
           if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp, id: ex.id } });
         }
       }
@@ -7334,36 +7353,23 @@ const InventarioPage = {
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
 
-          // Auto-crear productos que no existen aún en el catálogo
-          const sinId = toUpsert.filter(rec => !prodMap.has(rec.cod_producto));
-          let maxProdId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
-          for (const rec of sinId) {
-            const { tamano, tamano2, tamano3, tamano4 } = rec;
-            const newProd = {
-              id: ++maxProdId,
-              cod_producto: rec.cod_producto,
-              nombre: rec.nombre || rec.producto || '',
-              producto: rec.producto || rec.nombre || '',
-              tipo: rec.tipo || '',
-              familia: rec.familia || '',
-              tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'',
-              precio: 0,
-            };
-            await db.productos.put(newProd);
-            prodMap.set(rec.cod_producto, newProd);
-          }
-          if (sinId.length) toast(`${sinId.length} producto${sinId.length!==1?'s':''} nuevo${sinId.length!==1?'s':''} creado${sinId.length!==1?'s':''} en catálogo`, 'info');
-
+          // NO se crean artículos nuevos en el catálogo al importar inventario.
+          // Solo se actualiza el catálogo de productos que YA existen; las líneas de
+          // inventario sin producto en catálogo se actualizan igualmente (tipo/familia
+          // quedan en el snapshot de inventario, que la vista usa como respaldo).
           const invRecs = [];
           const prodRecs = [];
           for (const rec of toUpsert) {
             const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
             invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
-            prodRecs.push({ ...prod,
-              nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
-              tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
-              tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            if (prod) {
+              prodRecs.push({ ...prod,
+                nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
+                tipo: rec.tipo || prod.tipo || '', familia: rec.familia || prod.familia || '',
+                tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
+                tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+            }
           }
 
           await db.inventario.bulkPut(invRecs);
