@@ -171,6 +171,22 @@ ul{list-style:none}
   margin-left:auto;background:var(--red);color:#fff;
   font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:20px;text-align:center;
 }
+/* Grupos plegables del menú */
+.nav-group-header{
+  display:flex;align-items:center;gap:11px;padding:9px 20px;
+  color:rgba(255,255,255,0.5);cursor:pointer;user-select:none;
+  font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+}
+.nav-group-header:hover{color:#fff}
+.nav-group-ico{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.nav-group-dot{width:7px;height:7px;border-radius:50%;background:var(--red);margin-left:6px}
+.nav-chevron{margin-left:auto;width:13px;height:13px;transition:transform .18s;opacity:.55}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-group-items{display:none}
+.nav-group.open>.nav-group-items{display:block}
+.nav-group.flat>.nav-group-items{display:block}
+.nav-group-items .nav-item{padding-left:34px}
+.nav-group.flat .nav-item{padding-left:20px}
 .sidebar-bottom{border-top:1px solid rgba(255,255,255,0.12);padding:14px 20px;flex-shrink:0}
 .sidebar-user{display:flex;align-items:center;gap:10px;cursor:pointer}
 .sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
@@ -597,46 +613,116 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
       <div class="sidebar-logo-sub" data-i18n="sidebar_sub">GMAO · Mantenimiento</div>
     </div>
     <nav class="nav-items">
-      <div class="nav-item active" data-route="dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
+      <!-- Cuadros de mando -->
+      <div class="nav-group" data-group="cuadros">
+        <div class="nav-group-header">
+          <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="nav-group-title">Cuadros de mando</span>
+          <span class="nav-group-dot" style="display:none"></span>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item" data-route="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
+          </div>
+          <div class="nav-item" data-route="partes-analisis">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span class="nav-label" data-i18n="nav_analisis">Análisis Partes</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item" data-route="partes-analisis">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span class="nav-label" data-i18n="nav_analisis">Análisis Partes</span>
+      <!-- Operativa -->
+      <div class="nav-group" data-group="operativa">
+        <div class="nav-group-header">
+          <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.7 2.7-2-2 2.7-2.7z"/></svg>
+          <span class="nav-group-title">Operativa</span>
+          <span class="nav-group-dot" style="display:none"></span>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item" data-route="averias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span class="nav-label" data-i18n="nav_averias">Averías</span>
+            <span class="nav-badge" id="badge-averias" style="display:none">0</span>
+          </div>
+          <div class="nav-item" data-route="incidencias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="nav-label" data-i18n="nav_incidencias">Incidencias</span>
+            <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
+          </div>
+          <div class="nav-item" data-route="ordenes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <span class="nav-label">Órdenes de trabajo</span>
+            <span class="nav-badge" id="badge-ordenes" style="display:none">0</span>
+          </div>
+          <div class="nav-item" data-route="partes" id="nav-partes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="nav-label" data-i18n="nav_partes">Partes</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item" data-route="activos">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-        <span class="nav-label" data-i18n="nav_activos">Activos</span>
+      <!-- Preventivo -->
+      <div class="nav-group" data-group="preventivo">
+        <div class="nav-group-header">
+          <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
+          <span class="nav-group-title">Preventivo</span>
+          <span class="nav-group-dot" style="display:none"></span>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item" data-route="preventivos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M22 12v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <span class="nav-label">Preventivos pendientes</span>
+            <span class="nav-badge" id="badge-preventivos" style="display:none">0</span>
+          </div>
+          <div class="nav-item" data-route="planes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
+            <span class="nav-label">Planes / Gamas</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item" data-route="averias">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span class="nav-label" data-i18n="nav_averias">Averías</span>
-        <span class="nav-badge" id="badge-averias" style="display:none">0</span>
+      <!-- Activos -->
+      <div class="nav-group" data-group="activos">
+        <div class="nav-group-header">
+          <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span class="nav-group-title">Activos</span>
+          <span class="nav-group-dot" style="display:none"></span>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item" data-route="activos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+            <span class="nav-label" data-i18n="nav_activos">Activos</span>
+          </div>
+          <div class="nav-item" data-route="inspecciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
+            <span class="nav-label" data-i18n="nav_inspecciones">Inspecciones</span>
+            <span class="nav-badge" id="badge-inspecciones" style="display:none">0</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item" data-route="incidencias">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span class="nav-label" data-i18n="nav_incidencias">Incidencias</span>
-        <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
+      <!-- Almacén -->
+      <div class="nav-group" data-group="almacen">
+        <div class="nav-group-header">
+          <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="5"/><path d="M4 8v11a1 1 0 001 1h14a1 1 0 001-1V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          <span class="nav-group-title">Almacén</span>
+          <span class="nav-group-dot" style="display:none"></span>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item" data-route="inventario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <span class="nav-label" data-i18n="nav_inventario">Inventario</span>
+          </div>
+          <div class="nav-item" data-route="movimientos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+            <span class="nav-label" data-i18n="nav_movimientos">Movimientos</span>
+          </div>
+        </div>
       </div>
-      <div class="nav-item" data-route="partes" id="nav-partes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span class="nav-label" data-i18n="nav_partes">Partes</span>
-      </div>
-      <div class="nav-item" data-route="inventario">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        <span class="nav-label" data-i18n="nav_inventario">Inventario</span>
-      </div>
-      <div class="nav-item" data-route="movimientos">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-        <span class="nav-label" data-i18n="nav_movimientos">Movimientos</span>
-      </div>
-      <div class="nav-item" data-route="inspecciones">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
-        <span class="nav-label" data-i18n="nav_inspecciones">Inspecciones</span>
-        <span class="nav-badge" id="badge-inspecciones" style="display:none">0</span>
-      </div>
-      <div class="nav-item" data-route="config">
+      <!-- Configuración (suelto) -->
+      <div class="nav-item nav-config" data-route="config">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
         <span class="nav-label" data-i18n="nav_config">Configuración</span>
       </div>
@@ -647,7 +733,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v7.7</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.0</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1248,6 +1334,9 @@ const db = {
   fotos_averias:  makeTable('fotos_averias',  'id'),
   metadata:       makeTable('metadata',       'key'),
   inspecciones:   makeTable('inspecciones',   'id'),
+  planes:          makeTable('planes',          'id'),
+  plan_activos:    makeTable('plan_activos',    'id'),
+  ordenes_trabajo: makeTable('ordenes_trabajo', 'id'),
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -1724,7 +1813,7 @@ const DataService = {
       } catch(e) {
         if (_isSchemaErr(e)) {
           // Columnas opcionales no existen aún → guardar solo base
-          const { activo_id, equipo, almacen, materiales, ...base } = clean;
+          const { activo_id, equipo, almacen, materiales, ot_id, ...base } = clean;
           await db.partes_trabajo.put(base);
         } else {
           throw e;  // relanzar para que el catch exterior lo muestre
@@ -2343,7 +2432,7 @@ const Router = {
 
     // Roles sin privilegios solo pueden ver Averías y Partes
     const _priv = UserService.isAdmin() || UserService.isResponsable();
-    if (!_priv && base !== 'averias' && base !== 'partes') {
+    if (!_priv && base !== 'averias' && base !== 'partes' && base !== 'ordenes') {
       window.location.hash = 'averias';
       return;
     }
@@ -2353,7 +2442,9 @@ const Router = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
-    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', partes:'Partes de trabajo', config:'Configuración' };
+    NavGroups.openFor(base);
+    NavGroups.refreshDots();
+    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', planes:'Planes / Gamas', preventivos:'Preventivos pendientes', ordenes:'Órdenes de trabajo', partes:'Partes de trabajo', config:'Configuración' };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -2365,7 +2456,42 @@ const Router = {
     document.querySelectorAll('.nav-item[data-route]').forEach(el => {
       el.addEventListener('click', () => this.navigate(el.dataset.route));
     });
+    document.querySelectorAll('.nav-group-header').forEach(h => {
+      h.addEventListener('click', () => NavGroups.toggle(h.closest('.nav-group')));
+    });
+    NavGroups.restore();
     document.getElementById('global-almacen-filter').addEventListener('change', () => this.handle());
+  },
+};
+
+// Grupos plegables del menú lateral (acordeón + persistencia en localStorage)
+const NavGroups = {
+  _KEY: 'gmao_nav_groups',
+  _state() { try { return JSON.parse(localStorage.getItem(this._KEY) || '{}'); } catch { return {}; } },
+  _save(s) { localStorage.setItem(this._KEY, JSON.stringify(s)); },
+  toggle(g) {
+    if (!g) return;
+    g.classList.toggle('open');
+    const s = this._state(); s[g.dataset.group] = g.classList.contains('open'); this._save(s);
+    this.refreshDots();
+  },
+  restore() {
+    const s = this._state();
+    document.querySelectorAll('.nav-group').forEach(g => {
+      g.classList.toggle('open', s[g.dataset.group] !== false);  // por defecto abierto
+    });
+    this.refreshDots();
+  },
+  openFor(route) {
+    const g = document.querySelector(`.nav-item[data-route="${route}"]`)?.closest('.nav-group');
+    if (g) g.classList.add('open');
+  },
+  refreshDots() {
+    document.querySelectorAll('.nav-group').forEach(g => {
+      const dot = g.querySelector('.nav-group-dot'); if (!dot) return;
+      const hasBadge = [...g.querySelectorAll('.nav-badge')].some(b => b.style.display !== 'none' && (b.textContent || '0') !== '0');
+      dot.style.display = (!g.classList.contains('open') && hasBadge) ? '' : 'none';
+    });
   },
 };
 
@@ -2647,9 +2773,90 @@ const DashboardPage = {
     });
   },
 
+  // ── Panel de mantenimiento preventivo (Fase 5) ──────────────────
+  async _preventivoStats(almacen) {
+    let ots = [], averias = [];
+    try { ots = await db.ordenes_trabajo.toArray(); } catch (_) {}
+    try { averias = await db.averias.toArray(); } catch (_) {}
+    if (almacen) {
+      const f = normalizeAlmacen(almacen);
+      ots = ots.filter(o => normalizeAlmacen(o.almacen) === f);
+      averias = averias.filter(a => normalizeAlmacen(a.almacen) === f);
+    }
+    const hoy = new Date().toISOString().slice(0,10);
+    const prev = ots.filter(o => o.tipo === 'Preventivo' || o.origen === 'PREVENTIVO');
+    const abiertas = ots.filter(o => o.estado !== 'Cerrada').length;
+    const vencidas = ots.filter(o => o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy).length;
+    const cerradas = ots.filter(o => o.estado === 'Cerrada').length;
+    const baseCump = cerradas + vencidas;
+    const cumplimiento = baseCump ? Math.round(cerradas / baseCump * 100) : 100;
+
+    // Ratio preventivo/correctivo — últimos 90 días (por cierre)
+    const d90 = new Date(Date.now() - 90*86400000).toISOString().slice(0,10);
+    const prevCerr = prev.filter(o => o.estado === 'Cerrada' && (o.fecha_fin||'') >= d90).length;
+    const corrCerr = averias.filter(a => a.estado === 'Cerrada' && (a.fecha_fin||a.fecha_inicio||'') >= d90).length;
+    const totalCC = prevCerr + corrCerr;
+    const pctPrev = totalCC ? Math.round(prevCerr / totalCC * 100) : 0;
+
+    // MTTR — tiempo medio de reparación de averías cerradas (horas)
+    const toTs = (fecha, hora) => {
+      if (!fecha) return null;
+      const d = new Date(`${fecha}T${hora || '00:00:00'}`);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    };
+    let sumH = 0, nH = 0;
+    for (const a of averias) {
+      if (a.estado !== 'Cerrada') continue;
+      const ini = toTs(a.fecha_inicio, a.hora_inicio), fin = toTs(a.fecha_fin, a.hora_fin);
+      if (ini && fin && fin > ini) { sumH += (fin - ini) / 3600000; nH++; }
+    }
+    const mttr = nH ? sumH / nH : null;
+
+    // MTBF — días medios entre averías por activo
+    const byAct = {};
+    for (const a of averias) {
+      const f = a.fecha_inicio;
+      if (!f || !a.id_activo) continue;
+      (byAct[a.id_activo] = byAct[a.id_activo] || []).push(f);
+    }
+    let sumG = 0, nG = 0;
+    for (const k in byAct) {
+      const fs = byAct[k].filter(Boolean).sort();
+      for (let i = 1; i < fs.length; i++) {
+        const g = (new Date(fs[i]) - new Date(fs[i-1])) / 86400000;
+        if (g >= 0) { sumG += g; nG++; }
+      }
+    }
+    const mtbf = nG ? sumG / nG : null;
+
+    const fmtH = h => h == null ? '—' : (h < 48 ? `${h.toFixed(1)} h` : `${(h/24).toFixed(1)} d`);
+    const cColor = cumplimiento >= 80 ? 'var(--green)' : cumplimiento >= 50 ? 'var(--orange)' : 'var(--red)';
+    const tile = (val, label, color) => `<div style="flex:1;min-width:118px;background:var(--bg);border-radius:10px;padding:14px 16px">
+      <div style="font-size:24px;font-weight:700;color:${color||'var(--text)'}">${val}</div>
+      <div style="font-size:12px;color:var(--gray-muted);margin-top:2px">${label}</div></div>`;
+
+    return `
+    <div class="chart-wrap" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span class="chart-title" style="margin:0;font-size:15px">🔧 Mantenimiento preventivo</span>
+        <button class="btn btn-secondary btn-sm" onclick="Router.navigate('ordenes')">Ver OTs →</button>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${tile(prev.length, 'OTs preventivas')}
+        ${tile(abiertas, 'Abiertas')}
+        ${tile(vencidas, 'Vencidas', vencidas ? 'var(--red)' : 'var(--green)')}
+        ${tile(cumplimiento + '%', 'Cumplimiento', cColor)}
+        ${tile(pctPrev + '%', 'Preventivo (90d)')}
+        ${tile(fmtH(mttr), 'MTTR averías')}
+        ${tile(fmtH(mtbf != null ? mtbf * 24 : null), 'MTBF por activo')}
+      </div>
+    </div>`;
+  },
+
   async render() {
     const almacen = getAlmacenFilter();
     const s = await DataService.getDashboardStats(almacen);
+    const prevHtml = await this._preventivoStats(almacen);
     const content = document.getElementById('content');
 
     content.innerHTML = `
@@ -2667,6 +2874,8 @@ const DashboardPage = {
         <div class="kpi-body"><div class="kpi-value" id="kpi-tecnicos">—</div><div class="kpi-label">${t('kpi_tecnicos')}</div><div class="kpi-sub">${almacen||t('todos_alm')}</div></div>
       </div>
     </div>
+
+    ${prevHtml}
 
     <!-- ═══ GRÁFICA POWER BI ═══ -->
     <div class="chart-wrap" style="margin-bottom:16px">
@@ -6055,6 +6264,7 @@ const IncidenciasPage = {
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
        ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">${t('btn_resolver')}</button>` : ''}
+       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--blue,#2563eb);color:var(--blue,#2563eb)" onclick="IncidenciasPage.generarOT('${UI.esc(id)}')">➕ Generar OT</button>` : ''}
        ${canConvert ? `<button class="btn btn-primary" style="background:var(--red)" onclick="IncidenciasPage.convertirEnAveria('${UI.esc(id)}')">${t('btn_convertir_av')}</button>` : ''}`);
   },
 
@@ -6254,6 +6464,31 @@ const IncidenciasPage = {
     toast('Incidencia resuelta ✓', 'success');
     App.updateBadges();
     await IncidenciasPage.render();
+  },
+
+  async generarOT(id) {
+    const i = await db.incidencias.get(id);
+    if (!i) return;
+    if (!confirm('¿Generar una orden de trabajo a partir de esta incidencia?')) return;
+    const otId = await OrdenesPage._nextId();
+    const hoy = new Date().toISOString().slice(0,10);
+    const critMap = { 'Alta':'Alta', 'Media':'Moderada', 'Baja':'Baja' };
+    await db.ordenes_trabajo.put({
+      id: otId, origen: 'INCIDENCIA', origen_id: i.id, plan_id: '',
+      id_activo: i.id_activo || '',
+      almacen: i.almacen || '', zona: i.zona || '', linea: i.linea || '', equipo: i.equipo || '',
+      titulo: `Incidencia: ${(i.descripcion||'').slice(0,60)}`,
+      descripcion: i.descripcion || '',
+      tipo: 'Correctivo', criticidad: critMap[i.prioridad] || 'Moderada',
+      estado: i.responsable ? 'Asignada' : 'Pendiente', tecnico: i.responsable || '',
+      fecha_emision: hoy, fecha_prevista: hoy, fecha_inicio: null, fecha_fin: null,
+      checklist: [], solucion: '', materiales: '', coste: 0, horas: 0, parte_id: '', zona_limpia: true,
+    });
+    await DataService.saveIncidencia({ ...i, estado: 'En curso' });
+    Modal.close();
+    toast(`OT ${otId} generada desde incidencia ✓`, 'success');
+    App.updateBadges();
+    Router.navigate('ordenes');
   },
 
   async convertirEnAveria(id) {
@@ -8777,15 +9012,26 @@ const App = {
       el.style.display = UserService.canManageConfig() ? '' : 'none';
     });
     // Rutas restringidas a Admin/Responsable
-    ['dashboard','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones'].forEach(route => {
+    ['dashboard','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones','planes','preventivos'].forEach(route => {
       document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
         el.style.display = isPriv ? '' : 'none';
       });
     });
-    // Partes: visible para todos los roles (incluso Técnico/Externo)
-    document.querySelectorAll('.nav-item[data-route="partes"]').forEach(el => {
+    // Partes y Órdenes: visibles para todos los roles (incluso Técnico/Externo)
+    document.querySelectorAll('.nav-item[data-route="partes"], .nav-item[data-route="ordenes"]').forEach(el => {
       el.style.display = '';
     });
+
+    // Agrupación: privilegiados ven grupos con cabecera; técnicos ven modo
+    // plano (sin cabeceras, ítems siempre visibles) → solo Averías/OT/Partes.
+    document.querySelectorAll('.nav-group').forEach(g => {
+      const header = g.querySelector('.nav-group-header');
+      g.classList.toggle('flat', !isPriv);
+      if (header) header.style.display = isPriv ? '' : 'none';
+      const algunoVisible = [...g.querySelectorAll('.nav-item')].some(it => it.style.display !== 'none');
+      g.style.display = algunoVisible ? '' : 'none';
+    });
+    NavGroups.refreshDots();
 
     // Ocultar botones de gestión de activos a no-Admin
     document.querySelectorAll('[data-admin-only]').forEach(el => {
@@ -8812,6 +9058,19 @@ const App = {
       if (bAv) { bAv.textContent = avArr; bAv.style.display = avArr > 0 ? '' : 'none'; }
       if (bInc) { bInc.textContent = incArr; bInc.style.display = incArr > 0 ? '' : 'none'; }
     }
+    try {
+      let ots = await db.ordenes_trabajo.toArray();
+      if (alm) ots = ots.filter(o => (o.almacen||'').trim() === alm);
+      const nOt = ots.filter(o => o.estado !== 'Cerrada').length;
+      const bOt = document.getElementById('badge-ordenes');
+      if (bOt) { bOt.textContent = nOt; bOt.style.display = nOt > 0 ? '' : 'none'; }
+    } catch (_) {}
+    try {
+      const pend = await PreventivoService.getPendientes(alm || '');
+      const bP = document.getElementById('badge-preventivos');
+      if (bP) { bP.textContent = pend.length; bP.style.display = pend.length > 0 ? '' : 'none'; }
+    } catch (_) {}
+    NavGroups.refreshDots();
   },
 
   switchUser() {
@@ -9051,13 +9310,77 @@ CREATE POLICY "fotos_storage_all" ON storage.objects
 -- BLOQUE E: Nueva columna zona_limpia en averias
 -- Indica si el mecánico dejó la zona limpia y revisada al cerrar.
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;`;
+ALTER TABLE averias ADD COLUMN IF NOT EXISTS zona_limpia BOOLEAN DEFAULT false;
+
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE F (v8.0): Preventivos, gamas y órdenes de trabajo
+-- ──────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS planes (
+  id                   TEXT PRIMARY KEY,
+  nombre               TEXT NOT NULL,
+  descripcion          TEXT DEFAULT '',
+  criticidad           TEXT DEFAULT 'Baja',
+  frecuencia_tipo      TEXT DEFAULT 'meses',
+  frecuencia_valor     INTEGER DEFAULT 1,
+  tareas               JSONB DEFAULT '[]',
+  tiempo_estimado      NUMERIC DEFAULT 0,
+  materiales_previstos JSONB DEFAULT '[]',
+  activo               BOOLEAN DEFAULT true,
+  almacen              TEXT DEFAULT ''
+);
+ALTER TABLE planes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all" ON planes FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS plan_activos (
+  id            TEXT PRIMARY KEY,
+  plan_id       TEXT NOT NULL,
+  id_activo     TEXT NOT NULL,
+  ultima_fecha  DATE,
+  proxima_fecha DATE,
+  activo        BOOLEAN DEFAULT true
+);
+ALTER TABLE plan_activos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all" ON plan_activos FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS ordenes_trabajo (
+  id             TEXT PRIMARY KEY,
+  origen         TEXT DEFAULT 'MANUAL',
+  origen_id      TEXT DEFAULT '',
+  plan_id        TEXT DEFAULT '',
+  id_activo      TEXT DEFAULT '',
+  almacen        TEXT DEFAULT '',
+  zona           TEXT DEFAULT '',
+  linea          TEXT DEFAULT '',
+  equipo         TEXT DEFAULT '',
+  titulo         TEXT DEFAULT '',
+  descripcion    TEXT DEFAULT '',
+  tipo           TEXT DEFAULT 'Preventivo',
+  criticidad     TEXT DEFAULT 'Baja',
+  estado         TEXT DEFAULT 'Pendiente',
+  tecnico        TEXT DEFAULT '',
+  fecha_emision  DATE,
+  fecha_prevista DATE,
+  fecha_inicio   DATE,
+  fecha_fin      DATE,
+  checklist      JSONB DEFAULT '[]',
+  solucion       TEXT DEFAULT '',
+  materiales     TEXT DEFAULT '',
+  coste          NUMERIC DEFAULT 0,
+  horas          NUMERIC DEFAULT 0,
+  parte_id       TEXT DEFAULT '',
+  zona_limpia    BOOLEAN DEFAULT true
+);
+ALTER TABLE ordenes_trabajo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all" ON ordenes_trabajo FOR ALL USING (true) WITH CHECK (true);
+
+-- Vincular partes de trabajo a las OTs (análogo a averia_id)
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS ot_id TEXT DEFAULT '';`;
     Modal.open('SQL de configuración — tablas, RLS y Stock atómico', `
       <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
         ⚠️ <strong>Versión 3 del SQL de setup.</strong><br>
         Incluye RLS en tablas principales (seguridad) y función atómica de stock.<br>
         Si ya tienes la tabla partes_trabajo, ejecuta los ALTER TABLE del final del Bloque C para añadir las columnas opcionales.<br>
-        Si ya ejecutaste la versión anterior, ejecuta solo el Bloque E (nueva columna zona_limpia).
+        Si ya ejecutaste la versión anterior, ejecuta el Bloque E (zona_limpia) y el Bloque F (preventivos, gamas y órdenes de trabajo — v8.0).
       </div>
       <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Copia y ejecuta en <strong>Supabase → SQL Editor → New query</strong>. Recarga después.</p>
       <textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical">${sql}</textarea>`,
@@ -10264,6 +10587,807 @@ const PartesAnalisisPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PREVENTIVO SERVICE — motor de generación de OTs preventivas
+// ═══════════════════════════════════════════════════════════════════
+const PreventivoService = {
+  _addPeriod(dateStr, tipo, valor) {
+    const base = dateStr || new Date().toISOString().slice(0,10);
+    const d = new Date(base + 'T00:00:00');
+    const n = parseInt(valor) || 0;
+    if (tipo === 'dias')    d.setDate(d.getDate() + n);
+    if (tipo === 'semanas') d.setDate(d.getDate() + n * 7);
+    if (tipo === 'meses')   d.setMonth(d.getMonth() + n);
+    return d.toISOString().slice(0,10);
+  },
+  calcProxima(pa, plan) {
+    return this._addPeriod(pa.ultima_fecha, plan.frecuencia_tipo, plan.frecuencia_valor);
+  },
+  // Preventivos VENCIDOS pendientes de aprobación (NO crean OT todavía).
+  // Se calculan al vuelo: plan_activos con proxima_fecha <= hoy y sin OT
+  // ya emitida para ese ciclo. Filtrable por almacén. Devuelve la lista
+  // enriquecida con plan y activo para la pantalla de aprobación.
+  async getPendientes(almacen) {
+    try {
+      const [planes, asignaciones, activos, ots] = await Promise.all([
+        db.planes.toArray(), db.plan_activos.toArray(),
+        db.activos.toArray(), db.ordenes_trabajo.toArray(),
+      ]);
+      if (!asignaciones.length) return [];
+      const planMap = Object.fromEntries(planes.map(p => [p.id, p]));
+      const actMap  = Object.fromEntries(activos.map(a => [a.id_activo, a]));
+      const hoy = new Date().toISOString().slice(0,10);
+      const fAlm = almacen ? normalizeAlmacen(almacen) : '';
+      const pend = [];
+      for (const pa of asignaciones) {
+        if (pa.activo === false) continue;
+        const plan = planMap[pa.plan_id];
+        if (!plan || plan.activo === false) continue;
+        const prox = pa.proxima_fecha || this.calcProxima(pa, plan);
+        if (prox > hoy) continue;
+        const dup = ots.some(o => o.origen === 'PREVENTIVO' && o.origen_id === pa.id && o.fecha_prevista === prox);
+        if (dup) continue;
+        const act = actMap[pa.id_activo] || {};
+        const alm = act.almacen || plan.almacen || '';
+        if (fAlm && normalizeAlmacen(alm) !== fAlm) continue;
+        const dias = Math.round((new Date(hoy) - new Date(prox)) / 86400000);
+        pend.push({ pa_id: pa.id, plan, act, almacen: alm, prox, dias });
+      }
+      pend.sort((a,b) => (a.prox||'').localeCompare(b.prox||''));
+      return pend;
+    } catch (e) { console.warn('[getPendientes]', e.message); return []; }
+  },
+
+  // Crea OTs SOLO para los plan_activos seleccionados (aprobados por el
+  // encargado). Devuelve nº de OTs creadas.
+  async generarOTsDe(paIds) {
+    const sel = new Set(paIds || []);
+    if (!sel.size) return 0;
+    try {
+      const [planes, asignaciones, activos, ots] = await Promise.all([
+        db.planes.toArray(), db.plan_activos.toArray(),
+        db.activos.toArray(), db.ordenes_trabajo.toArray(),
+      ]);
+      const planMap = Object.fromEntries(planes.map(p => [p.id, p]));
+      const actMap  = Object.fromEntries(activos.map(a => [a.id_activo, a]));
+      const hoy = new Date().toISOString().slice(0,10);
+      const ymd = hoy.replace(/-/g,'');
+      const usedIds = new Set(ots.map(o => o.id));
+      const mkId = () => {
+        let n = 1, id;
+        do { id = `OT-${ymd}-${String(n++).padStart(3,'0')}`; } while (usedIds.has(id));
+        usedIds.add(id); return id;
+      };
+      let creadas = 0;
+      for (const pa of asignaciones) {
+        if (!sel.has(pa.id)) continue;
+        const plan = planMap[pa.plan_id];
+        if (!plan) continue;
+        const prox = pa.proxima_fecha || this.calcProxima(pa, plan);
+        const dup = ots.some(o => o.origen === 'PREVENTIVO' && o.origen_id === pa.id && o.fecha_prevista === prox);
+        if (dup) continue;
+        const act = actMap[pa.id_activo] || {};
+        const ot = {
+          id: mkId(), origen: 'PREVENTIVO', origen_id: pa.id, plan_id: plan.id,
+          id_activo: pa.id_activo,
+          almacen: act.almacen || plan.almacen || '', zona: act.zona || '',
+          linea: act.linea || '', equipo: act.equipo || '',
+          titulo: plan.nombre || 'Preventivo', descripcion: plan.descripcion || '',
+          tipo: 'Preventivo', criticidad: plan.criticidad || 'Baja',
+          estado: 'Pendiente', tecnico: '',
+          fecha_emision: hoy, fecha_prevista: prox, fecha_inicio: null, fecha_fin: null,
+          checklist: (plan.tareas || []).map(x => ({ ...x, hecho: false, valor: '' })),
+          solucion: '', materiales: '', coste: 0, horas: 0, parte_id: '', zona_limpia: true,
+        };
+        await db.ordenes_trabajo.put(ot);
+        ots.push(ot);
+        creadas++;
+      }
+      return creadas;
+    } catch (e) { console.warn('[generarOTsDe]', e.message); return 0; }
+  },
+
+  // Posponer un preventivo un ciclo (sin crear OT): avanza proxima_fecha.
+  async posponer(paId) {
+    const pa = await db.plan_activos.get(paId);
+    if (!pa) return;
+    const plan = await db.planes.get(pa.plan_id);
+    const base = pa.proxima_fecha || new Date().toISOString().slice(0,10);
+    const nueva = plan ? this._addPeriod(base, plan.frecuencia_tipo, plan.frecuencia_valor) : base;
+    await db.plan_activos.put({ ...pa, proxima_fecha: nueva });
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: PLANES / GAMAS DE PREVENTIVO
+// ═══════════════════════════════════════════════════════════════════
+const PlanesPage = {
+  _planes: [],
+  _asig: [],
+
+  _frecLabel(p) {
+    const u = { dias: 'días', semanas: 'semanas', meses: 'meses' }[p.frecuencia_tipo] || p.frecuencia_tipo;
+    return `Cada ${p.frecuencia_valor} ${u}`;
+  },
+
+  async render() {
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Planes / Gamas</h1><p class="page-subtitle" id="plan-count">Cargando…</p></div>
+      <button class="btn btn-primary" onclick="PlanesPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo plan
+      </button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table-clickable">
+          <thead><tr>
+            <th>Plan</th><th>Frecuencia</th><th>Criticidad</th><th>Tareas</th><th>Activos</th><th>Estado</th>
+          </tr></thead>
+          <tbody id="plan-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+
+    [this._planes, this._asig] = await Promise.all([db.planes.toArray(), db.plan_activos.toArray()]);
+    this._planes.sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+    this._renderTable();
+    document.getElementById('plan-count').textContent = `${this._planes.length} planes de mantenimiento`;
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('plan-tbody');
+    if (!tbody) return;
+    if (this._planes.length === 0) { tbody.innerHTML = `<tr><td colspan="6">${UI.empty('Sin planes', 'Crea tu primer plan de preventivo')}</td></tr>`; return; }
+    tbody.innerHTML = this._planes.map(p => {
+      const nAsig = this._asig.filter(a => a.plan_id === p.id).length;
+      return `<tr onclick="PlanesPage.openDetail('${UI.esc(p.id)}')">
+        <td><strong>${UI.esc(p.nombre||'—')}</strong></td>
+        <td style="white-space:nowrap">${this._frecLabel(p)}</td>
+        <td>${UI.criticidadBadge(p.criticidad)}</td>
+        <td>${(p.tareas||[]).length}</td>
+        <td>${nAsig}</td>
+        <td>${p.activo === false ? '<span class="badge badge-gray">Pausado</span>' : '<span class="badge badge-green">Activo</span>'}</td>
+      </tr>`;
+    }).join('');
+  },
+
+  _formHtml(p = {}) {
+    const tareasTxt = (p.tareas || []).map(x => x.texto).join('\n');
+    const opt = (v, cur) => `<option value="${v}"${cur===v?' selected':''}>`;
+    return `
+      <form class="form-grid">
+        <div class="form-field full">
+          <label>Nombre del plan *</label>
+          <input class="form-input" id="plan-nombre" value="${UI.esc(p.nombre||'')}" placeholder="Ej: Engrase mensual cinta transportadora">
+        </div>
+        <div class="form-field full">
+          <label>Descripción</label>
+          <textarea class="form-input" id="plan-desc" rows="2">${UI.esc(p.descripcion||'')}</textarea>
+        </div>
+        <div class="form-field">
+          <label>Criticidad</label>
+          <select class="form-input" id="plan-crit">
+            ${opt('Alta',p.criticidad)}Alta</option>${opt('Moderada',p.criticidad||'Moderada')}Moderada</option>${opt('Baja',p.criticidad)}Baja</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Repetir cada *</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="number" min="1" id="plan-frec-valor" value="${p.frecuencia_valor||1}" style="width:80px">
+            <select class="form-input" id="plan-frec-tipo">
+              ${opt('dias',p.frecuencia_tipo)}días</option>${opt('semanas',p.frecuencia_tipo)}semanas</option>${opt('meses',p.frecuencia_tipo||'meses')}meses</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Tiempo estimado (h)</label>
+          <input class="form-input" type="number" step="0.5" min="0" id="plan-tiempo" value="${p.tiempo_estimado||''}">
+        </div>
+        <div class="form-field">
+          <label>Estado</label>
+          <select class="form-input" id="plan-activo">
+            <option value="true"${p.activo!==false?' selected':''}>Activo</option>
+            <option value="false"${p.activo===false?' selected':''}>Pausado</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Tareas / checklist (una por línea)</label>
+          <textarea class="form-input" id="plan-tareas" rows="6" placeholder="Revisar tensión de la cinta&#10;Engrasar rodamientos&#10;Comprobar sensores">${UI.esc(tareasTxt)}</textarea>
+        </div>
+      </form>`;
+  },
+
+  openNew() {
+    Modal.open('Nuevo plan de preventivo', this._formHtml(),
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="PlanesPage._save()">Guardar</button>`);
+  },
+
+  async openEdit(id) {
+    const p = await db.planes.get(id);
+    if (!p) return;
+    Modal.open('Editar plan', this._formHtml(p),
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="PlanesPage._save('${UI.esc(id)}')">Guardar</button>`);
+  },
+
+  async _save(id) {
+    const nombre = document.getElementById('plan-nombre').value.trim();
+    if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+    const tareas = document.getElementById('plan-tareas').value.split('\n')
+      .map(s => s.trim()).filter(Boolean)
+      .map((texto, i) => ({ orden: i+1, texto, tipo: 'check', obligatorio: true }));
+    let planId = id;
+    if (!planId) {
+      const all = await db.planes.toArray();
+      const max = all.reduce((m,p) => Math.max(m, parseInt(String(p.id).replace(/\D/g,'')) || 0), 0);
+      planId = `PLAN-${String(max+1).padStart(3,'0')}`;
+    }
+    const prev = id ? (await db.planes.get(id)) : {};
+    await db.planes.put({
+      ...prev, id: planId, nombre,
+      descripcion: document.getElementById('plan-desc').value.trim(),
+      criticidad: document.getElementById('plan-crit').value,
+      frecuencia_tipo: document.getElementById('plan-frec-tipo').value,
+      frecuencia_valor: parseInt(document.getElementById('plan-frec-valor').value) || 1,
+      tiempo_estimado: parseFloat(document.getElementById('plan-tiempo').value) || 0,
+      materiales_previstos: prev.materiales_previstos || [],
+      tareas,
+      activo: document.getElementById('plan-activo').value === 'true',
+      almacen: prev.almacen || '',
+    });
+    Modal.close();
+    toast(`Plan ${planId} guardado ✓`, 'success');
+    await PlanesPage.render();
+  },
+
+  async openDetail(id) {
+    const p = await db.planes.get(id);
+    if (!p) return;
+    const asig = (await db.plan_activos.toArray()).filter(a => a.plan_id === id);
+    const tareas = (p.tareas || []).map(x => `<li>${UI.esc(x.texto)}</li>`).join('') || '<li style="color:var(--gray-muted)">Sin tareas</li>';
+    const filasAsig = asig.length ? asig.map(a => `
+      <tr>
+        <td>${UI.esc(a.id_activo)}</td>
+        <td style="white-space:nowrap">${a.proxima_fecha ? UI.formatDate(a.proxima_fecha) : '—'}</td>
+        <td>${a.ultima_fecha ? UI.formatDate(a.ultima_fecha) : 'Nunca'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="PlanesPage._desasignar('${UI.esc(a.id)}','${UI.esc(id)}')">Quitar</button></td>
+      </tr>`).join('') : `<tr><td colspan="4" style="color:var(--gray-muted)">Sin activos asignados</td></tr>`;
+    Modal.open(UI.esc(p.nombre), `
+      <div class="detail-grid">
+        <div class="detail-field"><label>Frecuencia</label><p>${this._frecLabel(p)}</p></div>
+        <div class="detail-field"><label>Criticidad</label><p>${UI.criticidadBadge(p.criticidad)}</p></div>
+        <div class="detail-field"><label>Tiempo estimado</label><p>${p.tiempo_estimado||0} h</p></div>
+        <div class="detail-field"><label>Estado</label><p>${p.activo===false?'Pausado':'Activo'}</p></div>
+        ${p.descripcion ? `<div class="detail-field full"><label>Descripción</label><p>${UI.esc(p.descripcion)}</p></div>` : ''}
+      </div>
+      <div style="margin-top:14px"><label style="font-size:12px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px">Checklist</label>
+        <ul style="margin:6px 0 0;padding-left:20px;font-size:13px">${tareas}</ul>
+      </div>
+      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+        <label style="font-size:12px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px">Activos asignados</label>
+        <button class="btn btn-secondary btn-sm" onclick="PlanesPage.openAsignar('${UI.esc(id)}')">+ Asignar activo</button>
+      </div>
+      <div class="table-wrap" style="margin-top:8px">
+        <table><thead><tr><th>Activo</th><th>Próxima</th><th>Última</th><th></th></tr></thead>
+        <tbody>${filasAsig}</tbody></table>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       <button class="btn btn-danger" onclick="PlanesPage._delete('${UI.esc(id)}')">Eliminar</button>
+       <button class="btn btn-primary" onclick="PlanesPage.openEdit('${UI.esc(id)}')">Editar</button>`);
+  },
+
+  async _delete(id) {
+    if (!confirm('¿Eliminar el plan y todas sus asignaciones? No borra las OTs ya generadas.')) return;
+    const asig = (await db.plan_activos.toArray()).filter(a => a.plan_id === id);
+    for (const a of asig) await db.plan_activos.delete(a.id);
+    await db.planes.delete(id);
+    Modal.close();
+    toast('Plan eliminado', 'success');
+    await PlanesPage.render();
+  },
+
+  async openAsignar(planId) {
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const today = new Date().toISOString().slice(0,10);
+    Modal.open('Asignar activo al plan', `
+      <form class="form-grid">
+        <div class="form-field"><label>Almacén *</label>
+          <select class="form-input" id="pa-almacen"><option value="">Seleccionar…</option>${almacenes.map(a=>`<option>${a}</option>`).join('')}</select>
+        </div>
+        <div class="form-field"><label>Zona</label><select class="form-input" id="pa-zona" disabled><option value="">Selecciona almacén</option></select></div>
+        <div class="form-field"><label>Línea</label><select class="form-input" id="pa-linea" disabled><option value="">Selecciona zona</option></select></div>
+        <div class="form-field"><label>Equipo *</label><select class="form-input" id="pa-equipo" disabled><option value="">Selecciona línea</option></select></div>
+        <div class="form-field"><label>Primera ejecución (próxima fecha)</label><input class="form-input" type="date" id="pa-fecha" value="${today}"></div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="PlanesPage.openDetail('${UI.esc(planId)}')">Volver</button>
+       <button class="btn btn-primary" onclick="PlanesPage._saveAsignar('${UI.esc(planId)}')">Asignar</button>`);
+    const almEl = document.getElementById('pa-almacen');
+    const zonaEl = document.getElementById('pa-zona');
+    const lineaEl = document.getElementById('pa-linea');
+    const equipEl = document.getElementById('pa-equipo');
+    almEl.addEventListener('change', async () => {
+      zonaEl.innerHTML = '<option value="">Seleccionar zona…</option>';
+      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!almEl.value) { zonaEl.disabled = true; return; }
+      const zs = await DataService.getZonasByAlmacen(almEl.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona…</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
+      zonaEl.disabled = false;
+    });
+    zonaEl.addEventListener('change', async () => {
+      lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>';
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!zonaEl.value) { lineaEl.disabled = true; return; }
+      const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
+      lineaEl.disabled = false;
+    });
+    lineaEl.addEventListener('change', async () => {
+      equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>';
+      if (!lineaEl.value) { equipEl.disabled = true; return; }
+      const eq = await DataService.getEquiposByAlmacenZonaLinea(almEl.value, zonaEl.value, lineaEl.value);
+      equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+      equipEl.disabled = false;
+    });
+  },
+
+  async _saveAsignar(planId) {
+    const idActivo = document.getElementById('pa-equipo').value;
+    if (!idActivo) { toast('Selecciona el equipo', 'error'); return; }
+    const fecha = document.getElementById('pa-fecha').value || new Date().toISOString().slice(0,10);
+    await db.plan_activos.put({
+      id: `${planId}_${idActivo}`, plan_id: planId, id_activo: idActivo,
+      ultima_fecha: null, proxima_fecha: fecha, activo: true,
+    });
+    toast('Activo asignado ✓ — el preventivo aparecerá en "Preventivos pendientes" al vencer', 'success');
+    await PlanesPage.openDetail(planId);
+  },
+
+  async _desasignar(id, planId) {
+    if (!confirm('¿Quitar este activo del plan?')) return;
+    await db.plan_activos.delete(id);
+    toast('Activo retirado del plan', 'success');
+    await PlanesPage.openDetail(planId);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: ÓRDENES DE TRABAJO
+// ═══════════════════════════════════════════════════════════════════
+const OrdenesPage = {
+  _data: [],
+  _filtered: [],
+
+  _estadoBadge(e) {
+    const m = { Pendiente:'orange', Asignada:'blue', 'En curso':'blue', Cerrada:'green' };
+    return `<span class="badge badge-${m[e]||'gray'}">${UI.esc(e||'—')}</span>`;
+  },
+  _origenBadge(o) {
+    const m = { PREVENTIVO:'blue', INCIDENCIA:'orange', MANUAL:'gray' };
+    return `<span class="badge badge-${m[o]||'gray'}">${UI.esc(o||'—')}</span>`;
+  },
+
+  async render() {
+    const almacen = getAlmacenFilter();
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Órdenes de trabajo</h1><p class="page-subtitle" id="ot-count">Cargando…</p></div>
+      <button class="btn btn-primary" onclick="OrdenesPage.openNew()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva OT
+      </button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
+        <input type="search" class="search-box" id="ot-search" placeholder="Buscar por equipo o título…">
+        <select class="filter-select" id="ot-f-estado">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option><option>Asignada</option><option>En curso</option><option>Cerrada</option>
+        </select>
+        <select class="filter-select" id="ot-f-origen">
+          <option value="">Todos los orígenes</option>
+          <option value="PREVENTIVO">Preventivo</option><option value="INCIDENCIA">Incidencia</option><option value="MANUAL">Manual</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="ot-f-vencidas"> Solo vencidas</label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table-clickable">
+          <thead><tr>
+            <th>Prevista</th><th>Almacén</th><th>Equipo</th><th>Título</th><th>Tipo</th><th>Origen</th><th>Estado</th><th>Técnico</th>
+          </tr></thead>
+          <tbody id="ot-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+
+    this._data = await db.ordenes_trabajo.toArray();
+    if (almacen) this._data = this._data.filter(o => normalizeAlmacen(o.almacen) === normalizeAlmacen(almacen));
+    this._data.sort((a,b) => (a.fecha_prevista||'').localeCompare(b.fecha_prevista||''));
+    this._filtered = [...this._data];
+    this._renderTable();
+    this._updateCount();
+    ['ot-search','ot-f-estado','ot-f-origen','ot-f-vencidas'].forEach(id => {
+      const el = document.getElementById(id);
+      el?.addEventListener('input', () => this._applyFilters());
+      el?.addEventListener('change', () => this._applyFilters());
+    });
+  },
+
+  _updateCount() {
+    const hoy = new Date().toISOString().slice(0,10);
+    const abiertas = this._data.filter(o => o.estado !== 'Cerrada').length;
+    const vencidas = this._data.filter(o => o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy).length;
+    const el = document.getElementById('ot-count');
+    if (el) el.textContent = `${this._data.length} OTs — ${abiertas} abiertas${vencidas ? ` · ${vencidas} vencidas` : ''}`;
+  },
+
+  _applyFilters() {
+    const s = (document.getElementById('ot-search')?.value || '').toLowerCase();
+    const est = document.getElementById('ot-f-estado')?.value || '';
+    const ori = document.getElementById('ot-f-origen')?.value || '';
+    const venc = document.getElementById('ot-f-vencidas')?.checked;
+    const hoy = new Date().toISOString().slice(0,10);
+    this._filtered = this._data.filter(o =>
+      (!est || o.estado === est) &&
+      (!ori || o.origen === ori) &&
+      (!venc || (o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy)) &&
+      (!s || (o.titulo||'').toLowerCase().includes(s) || (o.equipo||'').toLowerCase().includes(s))
+    );
+    this._renderTable();
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('ot-tbody');
+    if (!tbody) return;
+    if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Sin órdenes de trabajo', 'Ajusta los filtros o crea una OT')}</td></tr>`; return; }
+    const hoy = new Date().toISOString().slice(0,10);
+    tbody.innerHTML = this._filtered.map(o => {
+      const vencida = o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy;
+      return `<tr onclick="OrdenesPage.openDetail('${UI.esc(o.id)}')">
+        <td style="white-space:nowrap${vencida?';color:var(--red);font-weight:600':''}">${o.fecha_prevista ? UI.formatDate(o.fecha_prevista) : '—'}</td>
+        <td>${UI.esc(o.almacen||'—')}</td>
+        <td>${UI.esc(o.equipo||'—')}</td>
+        <td class="col-truncate" style="max-width:220px">${UI.esc(o.titulo||'—')}</td>
+        <td><span class="badge badge-${o.tipo==='Preventivo'?'blue':'red'}">${UI.esc(o.tipo||'—')}</span></td>
+        <td>${this._origenBadge(o.origen)}</td>
+        <td>${this._estadoBadge(o.estado)}</td>
+        <td>${UI.esc(o.tecnico||'—')}</td>
+      </tr>`;
+    }).join('');
+  },
+
+  async openDetail(id) {
+    const o = await db.ordenes_trabajo.get(id);
+    if (!o) return;
+    const chk = (o.checklist||[]).length
+      ? (o.checklist||[]).map(x => `<li>${x.hecho ? '✅' : '⬜'} ${UI.esc(x.texto)}</li>`).join('')
+      : '<li style="color:var(--gray-muted)">Sin checklist</li>';
+    const abierta = o.estado !== 'Cerrada';
+    Modal.open(`OT ${UI.esc(o.id)}`, `
+      <div class="detail-grid">
+        <div class="detail-field"><label>Estado</label><p>${this._estadoBadge(o.estado)}</p></div>
+        <div class="detail-field"><label>Tipo / Origen</label><p><span class="badge badge-${o.tipo==='Preventivo'?'blue':'red'}">${UI.esc(o.tipo)}</span> ${this._origenBadge(o.origen)}</p></div>
+        <div class="detail-field"><label>Fecha prevista</label><p>${o.fecha_prevista?UI.formatDate(o.fecha_prevista):'—'}</p></div>
+        <div class="detail-field"><label>Criticidad</label><p>${UI.criticidadBadge(o.criticidad)}</p></div>
+        <div class="detail-field"><label>Almacén</label><p>${UI.esc(o.almacen||'—')}</p></div>
+        <div class="detail-field"><label>Zona / Línea</label><p>${UI.esc(o.zona||'—')}${o.linea?' · L'+UI.esc(o.linea):''}</p></div>
+        <div class="detail-field"><label>Equipo</label><p>${UI.esc(o.equipo||'—')}</p></div>
+        <div class="detail-field"><label>Técnico</label><p>${UI.esc(o.tecnico||'—')}</p></div>
+        ${o.descripcion?`<div class="detail-field full"><label>Descripción</label><p>${UI.esc(o.descripcion)}</p></div>`:''}
+        ${o.solucion?`<div class="detail-field full"><label>Trabajo realizado</label><p>${UI.esc(o.solucion)}</p></div>`:''}
+        ${o.materiales?`<div class="detail-field full"><label>Materiales</label><p>${UI.esc(o.materiales)}</p></div>`:''}
+        ${o.fecha_fin?`<div class="detail-field"><label>Cerrada</label><p>${UI.formatDate(o.fecha_fin)} · ${o.horas||0} h</p></div>`:''}
+      </div>
+      <div style="margin-top:14px"><label style="font-size:12px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px">Checklist</label>
+        <ul style="margin:6px 0 0;padding-left:20px;font-size:13px">${chk}</ul>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cerrar</button>
+       ${abierta ? `<button class="btn btn-primary" style="background:var(--green)" onclick="OrdenesPage.openClose('${UI.esc(id)}')">✓ Ejecutar y cerrar</button>` : ''}`);
+  },
+
+  async openNew() {
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    const tecnicos = await DataService.getTecnicos(true);
+    const today = new Date().toISOString().slice(0,10);
+    Modal.open('Nueva orden de trabajo', `
+      <form class="form-grid">
+        <div class="form-field"><label>Almacén *</label>
+          <select class="form-input" id="ot-almacen"><option value="">Seleccionar…</option>${almacenes.map(a=>`<option>${a}</option>`).join('')}</select>
+        </div>
+        <div class="form-field"><label>Zona</label><select class="form-input" id="ot-zona" disabled><option value="">Selecciona almacén</option></select></div>
+        <div class="form-field"><label>Línea</label><select class="form-input" id="ot-linea" disabled><option value="">Selecciona zona</option></select></div>
+        <div class="form-field"><label>Equipo</label><select class="form-input" id="ot-equipo" disabled><option value="">Selecciona línea</option></select></div>
+        <div class="form-field full"><label>Título *</label><input class="form-input" id="ot-titulo" placeholder="Ej: Revisión trimestral compresor"></div>
+        <div class="form-field full"><label>Descripción</label><textarea class="form-input" id="ot-desc" rows="2"></textarea></div>
+        <div class="form-field"><label>Tipo</label><select class="form-input" id="ot-tipo"><option>Preventivo</option><option>Correctivo</option></select></div>
+        <div class="form-field"><label>Criticidad</label><select class="form-input" id="ot-crit"><option>Alta</option><option selected>Moderada</option><option>Baja</option></select></div>
+        <div class="form-field"><label>Técnico</label><select class="form-input" id="ot-tecnico"><option value="">Sin asignar</option>${tecnicos.map(t=>`<option>${UI.esc(t.nombre)}</option>`).join('')}</select></div>
+        <div class="form-field"><label>Fecha prevista</label><input class="form-input" type="date" id="ot-fecha" value="${today}"></div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" onclick="OrdenesPage._saveNew()">Crear OT</button>`);
+    const almEl = document.getElementById('ot-almacen');
+    const zonaEl = document.getElementById('ot-zona');
+    const lineaEl = document.getElementById('ot-linea');
+    const equipEl = document.getElementById('ot-equipo');
+    almEl.addEventListener('change', async () => {
+      zonaEl.innerHTML = '<option value="">Seleccionar zona…</option>';
+      lineaEl.innerHTML = '<option value="">Selecciona zona</option>'; lineaEl.disabled = true;
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!almEl.value) { zonaEl.disabled = true; return; }
+      const zs = await DataService.getZonasByAlmacen(almEl.value);
+      zonaEl.innerHTML = '<option value="">Seleccionar zona…</option>' + zs.map(z=>`<option>${UI.esc(z)}</option>`).join('');
+      zonaEl.disabled = false;
+    });
+    zonaEl.addEventListener('change', async () => {
+      lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>';
+      equipEl.innerHTML = '<option value="">Selecciona línea</option>'; equipEl.disabled = true;
+      if (!zonaEl.value) { lineaEl.disabled = true; return; }
+      const ls = await DataService.getLineasByAlmacenZona(almEl.value, zonaEl.value);
+      lineaEl.innerHTML = '<option value="">Seleccionar línea…</option>' + ls.map(l=>`<option>${UI.esc(l)}</option>`).join('');
+      lineaEl.disabled = false;
+    });
+    lineaEl.addEventListener('change', async () => {
+      equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>';
+      if (!lineaEl.value) { equipEl.disabled = true; return; }
+      const eq = await DataService.getEquiposByAlmacenZonaLinea(almEl.value, zonaEl.value, lineaEl.value);
+      equipEl.innerHTML = '<option value="">Seleccionar equipo…</option>' + eq.map(e=>`<option value="${UI.esc(e.id_activo)}">${UI.esc(e.equipo)}</option>`).join('');
+      equipEl.disabled = false;
+    });
+  },
+
+  async _saveNew() {
+    const almacen = document.getElementById('ot-almacen').value;
+    const titulo = document.getElementById('ot-titulo').value.trim();
+    if (!almacen) { toast('Selecciona el almacén', 'error'); return; }
+    if (!titulo) { toast('El título es obligatorio', 'error'); return; }
+    const equipoEl = document.getElementById('ot-equipo');
+    const idActivo = equipoEl.value;
+    const equipo = idActivo ? (equipoEl.options[equipoEl.selectedIndex]?.text || '') : '';
+    const id = await OrdenesPage._nextId();
+    const hoy = new Date().toISOString().slice(0,10);
+    const tecnico = document.getElementById('ot-tecnico').value;
+    await db.ordenes_trabajo.put({
+      id, origen: 'MANUAL', origen_id: '', plan_id: '',
+      id_activo: idActivo,
+      almacen, zona: document.getElementById('ot-zona').value || '',
+      linea: document.getElementById('ot-linea').value || '', equipo,
+      titulo, descripcion: document.getElementById('ot-desc').value.trim(),
+      tipo: document.getElementById('ot-tipo').value,
+      criticidad: document.getElementById('ot-crit').value,
+      estado: tecnico ? 'Asignada' : 'Pendiente', tecnico,
+      fecha_emision: hoy, fecha_prevista: document.getElementById('ot-fecha').value || hoy,
+      fecha_inicio: null, fecha_fin: null,
+      checklist: [], solucion: '', materiales: '', coste: 0, horas: 0, parte_id: '', zona_limpia: true,
+    });
+    Modal.close();
+    toast(`OT ${id} creada ✓`, 'success');
+    App.updateBadges();
+    await OrdenesPage.render();
+  },
+
+  async _nextId() {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const all = await db.ordenes_trabajo.toArray();
+    const used = new Set(all.map(o => o.id));
+    let n = 1, id;
+    do { id = `OT-${ymd}-${String(n++).padStart(3,'0')}`; } while (used.has(id));
+    return id;
+  },
+
+  async openClose(id) {
+    const o = await db.ordenes_trabajo.get(id);
+    if (!o) return;
+    let tecnicos = await DataService.getTecnicos(true);
+    if (o.almacen) {
+      const f = normalizeAlmacen(o.almacen);
+      const filt = tecnicos.filter(t => normalizeAlmacen(t.almacen) === f);
+      if (filt.length) tecnicos = filt;   // si no hay del centro, deja todos
+    }
+    // Preseleccionar al usuario logueado (o el técnico ya asignado)
+    const _user = UserService.getUser();
+    const selTec = _user?.nombre || o.tecnico || '';
+    if (selTec && !tecnicos.some(t => t.nombre === selTec)) tecnicos = [{ nombre: selTec }, ...tecnicos];
+    const today = new Date().toISOString().slice(0,10);
+    const chk = (o.checklist||[]).map((x,i) =>
+      `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0">
+        <input type="checkbox" class="ot-chk" data-i="${i}" ${x.hecho?'checked':''}> ${UI.esc(x.texto)}
+      </label>`).join('') || '<p style="color:var(--gray-muted);font-size:13px">Esta OT no tiene checklist.</p>';
+    Modal.open(`Ejecutar OT ${UI.esc(o.id)}`, `
+      <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;border-left:3px solid var(--green)">
+        <strong>${UI.esc(o.titulo)}</strong> · ${UI.esc(o.equipo||o.almacen)}
+      </div>
+      <div style="margin-bottom:12px">${chk}</div>
+      <form class="form-grid">
+        <div class="form-field"><label>Técnico *</label>
+          <select class="form-input" id="otc-tecnico"><option value="">Seleccionar…</option>${tecnicos.map(t=>`<option${t.nombre===selTec?' selected':''}>${UI.esc(t.nombre)}</option>`).join('')}</select>
+        </div>
+        <div class="form-field"><label>Horas *</label><input class="form-input" type="number" step="0.25" min="0" id="otc-horas" value="${o.tiempo_estimado||''}"></div>
+        <div class="form-field full"><label>Trabajo realizado</label><textarea class="form-input" id="otc-sol" rows="2"></textarea></div>
+        <div class="form-field full"><label>Materiales utilizados</label><textarea class="form-input" id="otc-mat" rows="2" placeholder="Descripción libre de materiales"></textarea></div>
+        <div class="form-field"><label>Fecha ejecución</label><input class="form-input" type="date" id="otc-fecha" value="${today}"></div>
+        <div class="form-field"><label>¿Zona limpia?</label><select class="form-input" id="otc-limpia"><option value="true" selected>Sí</option><option value="false">No</option></select></div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">Cancelar</button>
+       <button class="btn btn-primary" style="background:var(--green)" onclick="OrdenesPage._saveClose('${UI.esc(id)}')">✓ Cerrar OT</button>`);
+  },
+
+  async _saveClose(id) {
+    const o = await db.ordenes_trabajo.get(id);
+    if (!o) return;
+    const tecnico = document.getElementById('otc-tecnico').value;
+    const horas = parseFloat(document.getElementById('otc-horas').value) || 0;
+    if (!tecnico) { toast('Selecciona el técnico', 'error'); return; }
+    const fechaFin = document.getElementById('otc-fecha').value || new Date().toISOString().slice(0,10);
+    const solucion = document.getElementById('otc-sol').value.trim();
+    const materiales = document.getElementById('otc-mat').value.trim();
+    const limpia = document.getElementById('otc-limpia').value === 'true';
+    // Marcar checklist según checkboxes
+    const checklist = (o.checklist||[]).map((x,i) => {
+      const cb = document.querySelector(`.ot-chk[data-i="${i}"]`);
+      return { ...x, hecho: cb ? cb.checked : x.hecho };
+    });
+
+    // Crear parte de trabajo ligado a la OT
+    let parteId = o.parte_id || '';
+    try {
+      parteId = `PT-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+      await DataService.savePartes([{
+        id: parteId, averia_id: '', ot_id: o.id, tecnico, fecha: fechaFin, horas,
+        notas: solucion || o.titulo || '', activo_id: o.id_activo || '',
+        equipo: o.equipo || '', almacen: o.almacen || '', materiales,
+      }]);
+    } catch (e) { console.warn('[OT parte]', e.message); parteId = o.parte_id || ''; }
+
+    await db.ordenes_trabajo.put({
+      ...o, estado: 'Cerrada', tecnico, horas, solucion, materiales,
+      fecha_fin: fechaFin, fecha_inicio: o.fecha_inicio || fechaFin,
+      checklist, parte_id: parteId, zona_limpia: limpia,
+    });
+
+    // Si es preventivo, reprogramar el plan_activos
+    if (o.origen === 'PREVENTIVO' && o.origen_id) {
+      try {
+        const pa = await db.plan_activos.get(o.origen_id);
+        if (pa) {
+          const plan = await db.planes.get(pa.plan_id);
+          const nueva = plan ? PreventivoService._addPeriod(fechaFin, plan.frecuencia_tipo, plan.frecuencia_valor) : null;
+          await db.plan_activos.put({ ...pa, ultima_fecha: fechaFin, proxima_fecha: nueva });
+        }
+      } catch (e) { console.warn('[OT reprogramar]', e.message); }
+    }
+    // Si viene de incidencia, marcarla cerrada
+    if (o.origen === 'INCIDENCIA' && o.origen_id) {
+      try {
+        const inc = await db.incidencias.get(o.origen_id);
+        if (inc) await db.incidencias.put({ ...inc, estado: 'Cerrada', solucion: solucion || inc.solucion, fecha_resolucion: fechaFin });
+      } catch (e) { console.warn('[OT incidencia]', e.message); }
+    }
+
+    Modal.close();
+    toast(`OT ${id} cerrada ✓`, 'success');
+    App.updateBadges();
+    await OrdenesPage.render();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: PREVENTIVOS PENDIENTES (aprobación → OTs)
+// ═══════════════════════════════════════════════════════════════════
+const PreventivosPage = {
+  _pend: [],
+
+  async render() {
+    const lockedAlm = UserService.getEffectiveAlmacen() || '';
+    const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
+    document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h1>Preventivos pendientes</h1><p class="page-subtitle" id="prev-count">Cargando…</p></div>
+      <button class="btn btn-primary" id="prev-generar" onclick="PreventivosPage._generar()">✓ Generar OTs seleccionadas</button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap;align-items:center">
+        <select class="filter-select" id="prev-f-frec">
+          <option value="">Todas las frecuencias</option>
+          <option value="Mensual">Mensual</option>
+          <option value="Anual">Anual</option>
+        </select>
+        ${lockedAlm ? '' : `<select class="filter-select" id="prev-f-almacen">
+          <option value="">Todos los centros</option>
+          ${almacenes.map(a=>`<option>${a}</option>`).join('')}
+        </select>`}
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="prev-all"> Seleccionar todos</label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:34px"></th><th>Plan</th><th>Frec.</th><th>Equipo / activo</th><th>Almacén</th><th>Vencía</th><th>Retraso</th><th></th>
+          </tr></thead>
+          <tbody id="prev-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+
+    document.getElementById('prev-f-frec')?.addEventListener('change', () => this._load());
+    document.getElementById('prev-f-almacen')?.addEventListener('change', () => this._load());
+    document.getElementById('prev-all').addEventListener('change', e => {
+      document.querySelectorAll('.prev-chk').forEach(c => { c.checked = e.target.checked; });
+    });
+    await this._load();
+  },
+
+  _frecCat(plan) {
+    const v = +plan.frecuencia_valor;
+    if (plan.frecuencia_tipo === 'meses' && v === 1)  return 'Mensual';
+    if (plan.frecuencia_tipo === 'meses' && v === 12) return 'Anual';
+    return `Cada ${plan.frecuencia_valor} ${plan.frecuencia_tipo}`;
+  },
+
+  async _load() {
+    const lockedAlm = UserService.getEffectiveAlmacen() || '';
+    const almacen = lockedAlm || (document.getElementById('prev-f-almacen')?.value || '');
+    let pend = await PreventivoService.getPendientes(almacen);
+    const frec = document.getElementById('prev-f-frec')?.value || '';
+    if (frec) pend = pend.filter(p => this._frecCat(p.plan) === frec);
+    this._pend = pend;
+    this._renderTable();
+    const el = document.getElementById('prev-count');
+    if (el) el.textContent = `${this._pend.length} preventivo(s) vencido(s) pendiente(s) de aprobación`;
+    const btn = document.getElementById('prev-generar');
+    if (btn) btn.disabled = this._pend.length === 0;
+  },
+
+  _renderTable() {
+    const tbody = document.getElementById('prev-tbody');
+    if (!tbody) return;
+    if (this._pend.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Nada pendiente', 'No hay preventivos vencidos sin OT en este centro')}</td></tr>`; return; }
+    tbody.innerHTML = this._pend.map((p, i) => {
+      const retraso = p.dias <= 0 ? 'Hoy' : `hace ${p.dias} día${p.dias>1?'s':''}`;
+      const fc = PreventivosPage._frecCat(p.plan);
+      return `<tr>
+        <td><input type="checkbox" class="prev-chk" data-idx="${i}"></td>
+        <td><strong>${UI.esc(p.plan.nombre||'—')}</strong></td>
+        <td><span class="badge badge-${fc==='Anual'?'blue':'gray'}">${UI.esc(fc)}</span></td>
+        <td>${UI.esc(p.act.equipo||p.pa_id||'—')}</td>
+        <td>${UI.esc(p.almacen||'—')}</td>
+        <td style="white-space:nowrap">${p.prox?UI.formatDate(p.prox):'—'}</td>
+        <td style="color:${p.dias>0?'var(--red)':'var(--gray-muted)'};white-space:nowrap">${retraso}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="PreventivosPage._posponer(${i})" title="Saltar este ciclo">Posponer</button></td>
+      </tr>`;
+    }).join('');
+  },
+
+  async _generar() {
+    const ids = [...document.querySelectorAll('.prev-chk:checked')]
+      .map(c => this._pend[parseInt(c.dataset.idx)]?.pa_id).filter(Boolean);
+    if (!ids.length) { toast('Selecciona al menos un preventivo', 'error'); return; }
+    if (!confirm(`¿Generar ${ids.length} orden(es) de trabajo? Los técnicos las verán en Órdenes de trabajo.`)) return;
+    const n = await PreventivoService.generarOTsDe(ids);
+    toast(`${n} OT${n!==1?'s':''} generada${n!==1?'s':''} ✓`, 'success');
+    App.updateBadges();
+    await this._load();
+    const all = document.getElementById('prev-all'); if (all) all.checked = false;
+  },
+
+  async _posponer(i) {
+    const p = this._pend[i];
+    if (!p) return;
+    if (!confirm(`¿Posponer "${p.plan.nombre}" al próximo ciclo sin generar OT?`)) return;
+    await PreventivoService.posponer(p.pa_id);
+    toast('Preventivo pospuesto', 'success');
+    App.updateBadges();
+    await this._load();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
 Router.register('dashboard',       async () => DashboardPage.render());
@@ -10275,6 +11399,9 @@ Router.register('inventario',      async () => InventarioPage.render());
 Router.register('movimientos',     async () => MovimientosPage.render());
 Router.register('partes',          async () => PartesPage.render());
 Router.register('inspecciones',    async () => InspeccionesPage.render());
+Router.register('planes',          async () => PlanesPage.render());
+Router.register('preventivos',     async () => PreventivosPage.render());
+Router.register('ordenes',         async () => OrdenesPage.render());
 Router.register('config',          async () => ConfigPage.render());
 
 // ═══════════════════════════════════════════════════════════════════
