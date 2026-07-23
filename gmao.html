@@ -733,7 +733,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.5</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.7</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -6197,6 +6197,7 @@ const IncidenciasPage = {
           <option>Miramar</option><option>Xeresa</option><option>Murcia</option><option>Alcacer</option><option>Algemesi</option>
         </select>
         <select class="filter-select" id="inc-f-estado">
+          <option value="__abiertas" selected>${t('opt_abierta')}s</option>
           <option value="">${t('todos_estados')}</option>
           <option value="Abierta">${t('opt_abierta')}</option><option value="En curso">${t('opt_en_curso')}</option><option value="Cerrada">${t('opt_cerrada')}</option>
         </select>
@@ -6226,8 +6227,7 @@ const IncidenciasPage = {
     }
 
     this._data = await DataService.getIncidencias(almacen ? { almacen } : {});
-    this._filtered = [...this._data];
-    this._renderTable();
+    this._applyFilters();
     const abiertas = this._data.filter(i => i.estado === 'Abierta' || i.estado === 'En curso').length;
     document.getElementById('inc-count').textContent = `${this._data.length} ${t('nav_incidencias')} — ${abiertas} ${t('activas')}`;
 
@@ -6244,7 +6244,7 @@ const IncidenciasPage = {
     const tipo    = document.getElementById('inc-f-tipo')?.value || '';
     this._filtered = this._data.filter(i =>
       (!almacen || i.almacen === almacen) &&
-      (!estado  || i.estado === estado) &&
+      ((estado === '__abiertas') ? i.estado !== 'Cerrada' : (!estado || i.estado === estado)) &&
       (!tipo    || i.tipo === tipo) &&
       (!search  || (i.descripcion||'').toLowerCase().includes(search) ||
                    (i.equipo||'').toLowerCase().includes(search) ||
@@ -7282,7 +7282,7 @@ const InventarioPage = {
       const _n = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
       // Columnas: ID(0), Cód(1), Nombre(2), Producto(3), Tam(4), Tam2(5), Tam3(6), Tam4(7),
       //           Tipo(8), Familia(9), Almacén(10), Uds(11), Precio(12), UdMedida(13)
-      const imported = rows.slice(1).filter(r => r[1]).map(r => ({
+      const imported = rows.slice(1).filter(r => String(r[1]??'').trim() || String(r[3]??'').trim() || String(r[2]??'').trim()).map(r => ({
         id:            _s(r[0]),
         cod_producto:  _s(r[1]),
         nombre:        _s(r[2]),
@@ -7317,7 +7317,7 @@ const InventarioPage = {
         importedKeys.add(key);
         const ex = exMap.get(key);
         if (!ex) {
-          changes.push({ id: imp.cod_producto, type:'new', fields:[], record: { ...imp, id: key } });
+          changes.push({ id: imp.cod_producto || imp.producto || '(nuevo)', type:'new', fields:[], record: { ...imp, id: key } });
         } else {
           const prod = prodByCod.get(imp.cod_producto) || {};
           const fields = [];
@@ -7352,11 +7352,34 @@ const InventarioPage = {
           toast('Guardando...', 'info');
           const allProds = await db.productos.toArray();
           const prodMap = new Map(allProds.map(p => [p.cod_producto, p]));
+          const invCods = new Set(existentes.map(i => i.cod_producto).filter(Boolean));
+          // Siguiente código libre P#### considerando catálogo E inventario
+          const _nums = [...prodMap.keys(), ...invCods]
+            .map(c => { const m = String(c||'').match(/^[Pp](\d+)$/); return m ? parseInt(m[1]) : 0; });
+          let _nextNum = _nums.length ? Math.max(..._nums) : 0;
+          const _nextCod = () => { _nextNum++; return 'P' + String(_nextNum).padStart(Math.max(3, String(_nextNum).length), '0'); };
 
-          // NO se crean artículos nuevos en el catálogo al importar inventario.
-          // Solo se actualiza el catálogo de productos que YA existen; las líneas de
-          // inventario sin producto en catálogo se actualizan igualmente (tipo/familia
-          // quedan en el snapshot de inventario, que la vista usa como respaldo).
+          // Crear SOLO artículos verdaderamente nuevos: sin código, o con un código
+          // que no existe ni en inventario ni en catálogo. Los que ya existen (aunque
+          // falten en el catálogo) solo se actualizan — no se recrean.
+          const nuevos = [];
+          let maxProdId = allProds.reduce((m, p) => Math.max(m, p.id || 0), 0);
+          for (const rec of toUpsert) {
+            const cod = String(rec.cod_producto || '').trim();
+            const esNuevo = !cod || (!prodMap.has(cod) && !invCods.has(cod));
+            if (!esNuevo) continue;
+            const codigo = cod || _nextCod();
+            rec.cod_producto = codigo;
+            rec.id = `${codigo}_${normalizeAlmacen(rec.almacen)}`;
+            const { tamano, tamano2, tamano3, tamano4 } = rec;
+            const np = { id: ++maxProdId, cod_producto: codigo,
+              nombre: rec.nombre || rec.producto || '', producto: rec.producto || rec.nombre || '',
+              tipo: rec.tipo || '', familia: rec.familia || '',
+              tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'', precio: 0 };
+            await db.productos.put(np); prodMap.set(codigo, np); nuevos.push(codigo);
+          }
+          if (nuevos.length) toast(`${nuevos.length} artículo(s) nuevo(s) creado(s): ${nuevos.slice(0,6).join(', ')}${nuevos.length>6?'…':''}`, 'info');
+
           const invRecs = [];
           const prodRecs = [];
           for (const rec of toUpsert) {
@@ -11048,6 +11071,7 @@ const OrdenesPage = {
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
         <input type="search" class="search-box" id="ot-search" placeholder="Buscar por equipo o título…">
         <select class="filter-select" id="ot-f-estado">
+          <option value="__abiertas" selected>Pendientes (sin cerrar)</option>
           <option value="">Todos los estados</option>
           <option>Pendiente</option><option>Asignada</option><option>En curso</option><option>Cerrada</option>
         </select>
@@ -11072,8 +11096,7 @@ const OrdenesPage = {
     this._data = await db.ordenes_trabajo.toArray();
     if (almacen) this._data = this._data.filter(o => normalizeAlmacen(o.almacen) === normalizeAlmacen(almacen));
     this._data.sort((a,b) => (a.fecha_prevista||'').localeCompare(b.fecha_prevista||''));
-    this._filtered = [...this._data];
-    this._renderTable();
+    this._applyFilters();
     this._updateCount();
     ['ot-search','ot-f-estado','ot-f-origen','ot-f-vencidas'].forEach(id => {
       const el = document.getElementById(id);
@@ -11097,7 +11120,7 @@ const OrdenesPage = {
     const venc = document.getElementById('ot-f-vencidas')?.checked;
     const hoy = new Date().toISOString().slice(0,10);
     this._filtered = this._data.filter(o =>
-      (!est || o.estado === est) &&
+      ((est === '__abiertas') ? o.estado !== 'Cerrada' : (!est || o.estado === est)) &&
       (!ori || o.origen === ori) &&
       (!venc || (o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy)) &&
       (!s || (o.titulo||'').toLowerCase().includes(s) || (o.equipo||'').toLowerCase().includes(s))
