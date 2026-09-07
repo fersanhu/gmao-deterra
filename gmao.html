@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 :root {
   --green:       #275D3A;
   --green-dark:  #1e4a2c;
@@ -19,22 +20,24 @@
   --orange-bg:   #fff4ee;
   --yellow-bg:   #fffbea;
   --yellow:      #b8860b;
-  --blue:        #1565c0;
-  --blue-bg:     #e3f2fd;
+  --blue:        #799F51;
+  --blue-bg:     #eef3ea;
   --gray-text:   #464646;
   --gray-muted:  #888;
   --gray-light:  #f0f0f0;
   --surface:     #ffffff;
-  --bg:          #F2F4F3;
-  --border:      #e0e0e0;
+  --bg:          #F6F6F6;
+  --border:      #DADADA;
   --sidebar-w:   230px;
   --topbar-h:    58px;
-  --radius:      10px;
-  --shadow:      0 1px 3px rgba(0,0,0,0.09), 0 1px 2px rgba(0,0,0,0.05);
+  --radius:      4px;
+  --shadow:      none;
   --shadow-md:   0 4px 12px rgba(0,0,0,0.10);
+  --font-brand:  'MADE CARVING','Poppins','Segoe UI',Arial,sans-serif;
+  --tricolor:    linear-gradient(90deg,#275D3A 0 78%,#E87146 78% 89%,#C20019 89% 100%);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--gray-text);background:var(--bg)}
+html,body{height:100%;font-family:var(--font-brand);font-size:14px;color:var(--gray-text);background:var(--bg)}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
 input,select,textarea{font-family:inherit;font-size:14px}
@@ -222,7 +225,7 @@ ul{list-style:none}
 #content{flex:1;overflow-y:auto;padding:28px;background:var(--bg)}
 
 /* ── CARDS ── */
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:24px}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .card-title{font-size:15px;font-weight:600}
 
@@ -321,7 +324,7 @@ ul{list-style:none}
 /* ── TABLES ── */
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-muted);padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--bg)}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#fff;padding:10px 14px;text-align:left;border-bottom:none;white-space:nowrap;background:var(--green)}
 td{padding:11px 14px;border-bottom:1px solid var(--gray-light);font-size:13px;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#f9fbfa}
@@ -529,6 +532,13 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
 .heatmap-cell:hover{transform:scale(1.08);z-index:1;box-shadow:0 3px 10px rgba(0,0,0,.18)}
 .heatmap-cell.zero{background:var(--gray-light);color:var(--border);cursor:default}
 .heatmap-cell.zero:hover{transform:none;box-shadow:none}
+/* -- Marca Deterra: banda tricolor y detalles corporativos -- */
+#topbar{border-bottom:none;position:relative}
+#topbar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--tricolor)}
+.sidebar-logo{position:relative}
+.sidebar-logo::after{content:'';position:absolute;left:20px;right:20px;bottom:0;height:3px;border-radius:2px;background:var(--tricolor)}
+th:first-child{border-top-left-radius:var(--radius)}
+th:last-child{border-top-right-radius:var(--radius)}
 </style>
 </head>
 <body>
@@ -733,7 +743,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v8.8</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.1</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -2567,10 +2577,10 @@ const DashboardPage = {
     // Paleta por almacén
     const PALETA = {
       'Miramar':  { bg:'rgba(39,93,58,0.85)',  border:'#275D3A' },
-      'Xeresa':   { bg:'rgba(21,101,192,0.85)', border:'#1565c0' },
+      'Xeresa':   { bg:'rgba(182,191,0,0.85)',  border:'#B6BF00' },
       'Alcacer':  { bg:'rgba(232,113,70,0.85)', border:'#E87146' },
       'Murcia':   { bg:'rgba(194,0,25,0.85)',   border:'#C20019' },
-      'Algemesi': { bg:'rgba(123,31,162,0.85)', border:'#7B1FA2' },
+      'Algemesi': { bg:'rgba(135,32,70,0.85)',  border:'#872046' },
       '_total':   { bg:'rgba(39,93,58,0.85)',   border:'#275D3A' },
     };
     const ALM_ORDER = ['Miramar','Xeresa','Alcacer','Murcia','Algemesi'];
@@ -5554,8 +5564,12 @@ const AveriasPage = {
       let _ptList = AveriasPage._partesNuevos.length > 0
         ? AveriasPage._partesNuevos
         : [{ averia_id: id, tecnico: tecnicoPrincipal || '', fecha: fechaInicio, horas: 0, notas: '' }];
+      const _matPTn = (AveriasPage._repuestosNuevos && AveriasPage._repuestosNuevos.length)
+        ? JSON.stringify(AveriasPage._repuestosNuevos.map(r => ({ cod_producto: r.cod_producto, nombre: r.nombre, cantidad: r.cantidad })))
+        : '';
       const partes = _ptList.map((p, i) => ({
-        ...p, id: p.id || `pt_${id}_${i}_${Date.now()}`, averia_id: id
+        ...p, id: p.id || `pt_${id}_${i}_${Date.now()}`, averia_id: id,
+        materiales: p.materiales || (i === 0 ? _matPTn : '')
       }));
       await DataService.savePartes(partes);
     } catch(e) {
@@ -6126,11 +6140,15 @@ const AveriasPage = {
       }
       // Borrar partes anteriores y guardar los nuevos con la duración correcta
       await DataService.deletePartesByAveria(id);
+      const _matPT = AveriasPage._repuestosSeleccionados.length
+        ? JSON.stringify(AveriasPage._repuestosSeleccionados.map(r => ({ cod_producto: r.cod_producto, nombre: r.nombre, cantidad: r.cantidad })))
+        : '';
       const partes = _ptClose.map((p, i) => ({
         ...p,
         id: `pt_${id}_${i}_${Date.now()}`,
         averia_id: id,
-        horas: p.horas || _durPartes   // asegurar que todos tienen la duración real
+        horas: p.horas || _durPartes,   // asegurar que todos tienen la duración real
+        materiales: p.materiales || (i === 0 ? _matPT : '')
       }));
       await DataService.savePartes(partes);
     } catch(e) {
@@ -9575,6 +9593,8 @@ ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS ot_id TEXT DEFAULT '';`;
           const mats = JSON.parse(r.materiales);
           if (mats.length) matsHtml = mats.map(m => `<span style="display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;margin:1px">${UI.esc(m.nombre)} ×${m.cantidad}</span>`).join('');
         } catch(_) { matsHtml = UI.esc(r.materiales); }
+      } else if (r._av && r._av.materiales) {
+        matsHtml = UI.esc(r._av.materiales);
       }
       // Avería link
       const avLink = r.averia_id
