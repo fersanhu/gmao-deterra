@@ -743,7 +743,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.2</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -6208,10 +6208,17 @@ const IncidenciasPage = {
     document.getElementById('content').innerHTML = `
     <div class="page-header">
       <div><h1>${t('nav_incidencias')}</h1><p class="page-subtitle" id="inc-count">${t('cargando')}</p></div>
-      <button class="btn btn-primary" onclick="IncidenciasPage.openNew()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        ${t('btn_nueva_inc')}
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="ConfigPage.exportIncidencias()">${t('btn_excel')}</button>
+        ${UserService.isAdmin() ? `
+        <button class="btn btn-secondary" onclick="document.getElementById('inc-import-input').click()">${t('btn_importar')}</button>
+        <input type="file" id="inc-import-input" accept=".xlsx,.xls" style="display:none"
+          onchange="ConfigPage._doImportIncidencias(this.files[0]).then(()=>this.value='')">` : ''}
+        <button class="btn btn-primary" onclick="IncidenciasPage.openNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ${t('btn_nueva_inc')}
+        </button>
+      </div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="toolbar" style="margin-bottom:0;flex-wrap:wrap">
@@ -8662,6 +8669,82 @@ const ConfigPage = {
           for (const rec of toDelete) await db.averias.delete(rec.id);
           const parts = [toUpsert.length && `${toUpsert.length} actualizada${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminada${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
           toast(`${parts} ✓`, 'success');
+        } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
+      });
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
+  },
+
+  async exportIncidencias() {
+    toast('Generando Excel...', 'info');
+    const incidencias = await db.incidencias.toArray();
+    incidencias.sort((a, b) => (a.fecha_registro || '').localeCompare(b.fecha_registro || ''));
+    const cols = ['id','id_activo','almacen','zona','linea','equipo','tipo','prioridad','estado',
+                  'descripcion','reportado_por','fecha_registro','hora_registro','fecha_resolucion',
+                  'responsable','solucion','observaciones'];
+    const headers = ['ID','Activo','Almacén','Zona','Línea','Equipo','Tipo','Prioridad','Estado',
+                     'Descripción','Reportado por','Fecha registro','Hora registro','Fecha resolución',
+                     'Responsable','Solución','Observaciones'];
+    const rows = incidencias.map(inc => cols.map(c => inc[c] ?? ''));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Incidencias');
+    XLSX.writeFile(wb, `GMAO_Incidencias_${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast(`${incidencias.length} incidencias exportadas`, 'success');
+  },
+
+  async _doImportIncidencias(file) {
+    if (!UserService.isAdmin()) { toast('Solo los administradores pueden importar', 'error'); return; }
+    const LABELS = {
+      id:'ID', id_activo:'Activo', almacen:'Almacén', zona:'Zona', linea:'Línea', equipo:'Equipo',
+      tipo:'Tipo', prioridad:'Prioridad', estado:'Estado', descripcion:'Descripción',
+      reportado_por:'Reportado por', fecha_registro:'Fecha registro', hora_registro:'Hora registro',
+      fecha_resolucion:'Fecha resolución', responsable:'Responsable', solucion:'Solución', observaciones:'Observaciones'
+    };
+    try {
+      toast('Leyendo Excel...', 'info');
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type:'array', raw:false });
+      const sheet = wb.Sheets['Incidencias'];
+      if (!sheet) throw new Error('No se encontró la pestaña «Incidencias»');
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+      if (rows.length < 2) throw new Error('Excel sin datos');
+      const [, ...dataRows] = rows;
+      const imported = dataRows.filter(r => r[0]).map(r => ({
+        id: String(r[0]).trim(), id_activo: r[1], almacen: normalizeAlmacen(r[2]), zona: r[3], linea: r[4], equipo: r[5],
+        tipo: r[6], prioridad: r[7], estado: r[8] || 'Abierta', descripcion: r[9], reportado_por: r[10],
+        fecha_registro: r[11], hora_registro: r[12], fecha_resolucion: r[13], responsable: r[14],
+        solucion: r[15], observaciones: r[16]
+      }));
+      const existentes = await db.incidencias.toArray();
+      const exMap = new Map(existentes.map(a => [String(a.id), a]));
+      const changes = [];
+      const importedIds = new Set(imported.map(i => String(i.id)));
+      for (const imp of imported) {
+        const ex = exMap.get(imp.id);
+        if (!ex) {
+          changes.push({ id: imp.id, type:'new', fields:[], record: imp });
+        } else {
+          const fields = Object.keys(LABELS).filter(k => k !== 'id').reduce((acc, k) => {
+            const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
+            if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
+            return acc;
+          }, []);
+          if (fields.length) changes.push({ id: imp.id, type:'modified', fields, record: { ...ex, ...imp } });
+        }
+      }
+      for (const ex of existentes) {
+        if (!importedIds.has(String(ex.id)))
+          changes.push({ id: ex.id, type:'deleted', fields:[], record: ex });
+      }
+      if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
+      _showImportDiff('Validar cambios — Incidencias', changes, LABELS, async (toUpsert, toDelete) => {
+        try {
+          for (const rec of toUpsert) await db.incidencias.put(rec);
+          for (const rec of toDelete) await db.incidencias.delete(rec.id);
+          const parts = [toUpsert.length && `${toUpsert.length} actualizada${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminada${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
+          toast(`${parts} ✓`, 'success');
+          App.updateBadges();
+          if (typeof IncidenciasPage !== 'undefined') IncidenciasPage.render();
         } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
       });
     } catch(e) { toast('Error: ' + e.message, 'error'); }
