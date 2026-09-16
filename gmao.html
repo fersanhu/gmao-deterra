@@ -788,7 +788,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.5</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -11795,44 +11795,72 @@ const CAEPage = {
   },
 
   // ── Construye la estructura centro → empresa → trabajador desde el Excel
+  // Un trabajador solo esta OK si sus propios documentos Y los de su empresa
+  // en esa coordinacion estan en regla: si la empresa no tiene la
+  // documentacion valida, ninguno de sus trabajadores puede acceder.
   procesar(rows) {
     const OKEST = { 'Aceptado': 1, 'Anulado/No aplica': 1, 'No aplica': 1 };
     const centros = {};
-    const docsEmp = {};
     for (const r of rows) {
       const centro = this._centroDe(r['Código coordinación'], r['Coordinación']);
       const empresa = this._limpia(r['Empresa externa de la coordinación']);
+      const coord = String(r['Coordinación'] || '').trim();
       const principal = this._limpia(r['Empresa principal']);
       const trabRaw = r['Empleado'];
       const ok = !!OKEST[String(r['Estado'] || '').trim()];
+      const tipo = String(r['Tipo de documento'] || '').trim();
       if (!centros[centro]) centros[centro] = {};
-      if (!centros[centro][empresa]) centros[centro][empresa] = { trab: {}, principal: {}, docsKO: 0 };
+      if (!centros[centro][empresa]) centros[centro][empresa] = { coords: {}, principal: {} };
       const E = centros[centro][empresa];
       if (principal) E.principal[principal] = 1;
-      if (!trabRaw || !String(trabRaw).trim()) { if (!ok) E.docsKO++; continue; }
+      if (!E.coords[coord]) E.coords[coord] = { empKO: 0, empDocs: [], trab: {} };
+      const C = E.coords[coord];
+      if (!trabRaw || !String(trabRaw).trim()) {
+        if (!ok) { C.empKO++; if (tipo && C.empDocs.length < 8 && C.empDocs.indexOf(tipo) < 0) C.empDocs.push(tipo); }
+        continue;
+      }
       const nom = this._nombreTrab(trabRaw);
-      if (!E.trab[nom]) E.trab[nom] = { tot: 0, ko: 0, docs: [] };
-      const T = E.trab[nom];
-      T.tot++;
-      if (!ok) { T.ko++; const td = String(r['Tipo de documento'] || '').trim();
-                 if (td && T.docs.length < 8 && T.docs.indexOf(td) < 0) T.docs.push(td); }
+      if (!C.trab[nom]) C.trab[nom] = { ko: 0, docs: [] };
+      const T = C.trab[nom];
+      if (!ok) { T.ko++; if (tipo && T.docs.length < 8 && T.docs.indexOf(tipo) < 0) T.docs.push(tipo); }
     }
+
     const out = { centros: {}, dt: [] };
     const dtIdx = {};
     const dtId = s => { if (dtIdx[s] === undefined) { dtIdx[s] = out.dt.length; out.dt.push(s); } return dtIdx[s]; };
+
     Object.keys(centros).sort().forEach(c => {
       const emps = Object.keys(centros[c]).sort().map(n => {
         const E = centros[c][n];
-        const trabajadores = Object.keys(E.trab).sort().map(nm => ({
-          n: nm, e: E.trab[nm].ko === 0 ? 'OK' : 'KO', f: E.trab[nm].ko,
-          d: E.trab[nm].docs.map(dtId)
-        }));
+        const acc = {};
+        let empKOTotal = 0;
+        const empDocs = [];
+        Object.keys(E.coords).forEach(cd => {
+          const C = E.coords[cd];
+          empKOTotal += C.empKO;
+          C.empDocs.forEach(dd => { if (empDocs.indexOf(dd) < 0) empDocs.push(dd); });
+          Object.keys(C.trab).forEach(nm => {
+            if (!acc[nm]) acc[nm] = { propio: 0, empresa: 0, docs: [] };
+            const A = acc[nm];
+            A.propio += C.trab[nm].ko;
+            A.empresa += C.empKO;
+            C.trab[nm].docs.forEach(dd => { if (A.docs.indexOf(dd) < 0 && A.docs.length < 8) A.docs.push(dd); });
+          });
+        });
+        const trabajadores = Object.keys(acc).sort().map(nm => {
+          const A = acc[nm];
+          const bien = A.propio === 0 && A.empresa === 0;
+          return { n: nm, e: bien ? 'OK' : 'KO', f: A.propio,
+                   m: A.propio > 0 ? (A.empresa > 0 ? 'ambos' : 'propio') : (A.empresa > 0 ? 'empresa' : ''),
+                   d: A.docs.map(dtId) };
+        });
         return {
           nombre: n,
           principal: Object.keys(E.principal).sort(),
           ok: trabajadores.filter(t => t.e === 'OK').length,
           ko: trabajadores.filter(t => t.e === 'KO').length,
-          docsEmpresaKO: E.docsKO,
+          docsEmpresaKO: empKOTotal,
+          docsEmpresa: empDocs.map(dtId),
           excluida: CAEPage._EXCLUIDAS.indexOf(n) >= 0,
           trabajadores
         };
@@ -11850,10 +11878,11 @@ const CAEPage = {
 
   _rehidratar(d) {
     const dt = d.dt || [];
-    Object.keys(d.centros).forEach(c => d.centros[c].empresas.forEach(e =>
-      e.trabajadores.forEach(t => {
-        t.d = (t.d || []).map(x => (typeof x === 'number' ? (dt[x] || '') : x)).filter(Boolean);
-      })));
+    const nmd = x => (typeof x === 'number' ? (dt[x] || '') : x);
+    Object.keys(d.centros).forEach(c => d.centros[c].empresas.forEach(e => {
+      e.docsEmpresa = (e.docsEmpresa || []).map(nmd).filter(Boolean);
+      e.trabajadores.forEach(t => { t.d = (t.d || []).map(nmd).filter(Boolean); });
+    }));
     return d;
   },
 
@@ -11991,7 +12020,7 @@ const CAEPage = {
         '<label class="cae-sw"><input type="checkbox" id="cae-ex"' + (this._verExcl ? ' checked' : '') + '> Incluir excluidas</label>' +
       '</div>' +
       '<div id="cae-lista"></div>' +
-      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">OK = todos los documentos del trabajador en «Aceptado» o «Anulado/No aplica». Fuente: exportación SmartOSH CAE › Documentos' +
+      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">OK = los documentos del trabajador <b>y los de su empresa</b> están en «Aceptado» o «Anulado/No aplica». Si la empresa no está en regla, sus trabajadores figuran KO. Fuente: exportación SmartOSH CAE › Documentos' +
       (this._data.filas ? ' (' + this._data.filas.toLocaleString('es-ES') + ' filas)' : '') + '.</p>';
 
     const q = document.getElementById('cae-q');
@@ -12024,9 +12053,17 @@ const CAEPage = {
       let tr = e.trabajadores;
       if (this._soloKO) tr = tr.filter(t => t.e === 'KO');
       if (q && e.nombre.toLowerCase().indexOf(q) < 0) tr = tr.filter(t => t.n.toLowerCase().indexOf(q) >= 0);
-      const filas = tr.map(t =>
-        '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + (t.e === 'OK' ? 'ok' : 'ko') + '">' + t.e + '</span></td>' +
-        '<td class="cae-falta">' + (t.e === 'OK' ? '—' : (this._esc(t.d.join(' · ')) || (t.f + ' documento(s)'))) + '</td></tr>').join('');
+      const MOT = { propio: 'Documentación propia', empresa: 'Documentación de la empresa', ambos: 'Propia + empresa' };
+      const filas = tr.map(t => {
+        let det = '—';
+        if (t.e === 'KO') {
+          det = (t.m === 'empresa') ? 'Sus documentos están en regla; falla la empresa'
+                                    : (this._esc(t.d.join(' · ')) || (t.f + ' documento(s)'));
+        }
+        return '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + (t.e === 'OK' ? 'ok' : 'ko') + '">' + t.e + '</span></td>' +
+          '<td class="cae-falta">' + (t.e === 'OK' ? '—' : this._esc(MOT[t.m] || '')) + '</td>' +
+          '<td class="cae-falta">' + det + '</td></tr>';
+      }).join('');
       return '<div class="cae-emp">' +
         '<button class="cae-emph" aria-expanded="false" onclick="CAEPage._toggle(this)">' +
           '<span class="cae-nom"><span class="cae-caret">›</span> ' + this._esc(e.nombre) +
@@ -12036,8 +12073,9 @@ const CAEPage = {
             '<span class="cae-num"><b class="o">' + e.ok + '</b> / <b class="k">' + e.ko + '</b></span></span>' +
         '</button>' +
         '<div class="cae-det" hidden>' +
-          (e.docsEmpresaKO ? '<p class="cae-docsemp">⚠ ' + e.docsEmpresaKO + ' documento(s) de la propia empresa sin aceptar</p>' : '') +
-          (filas ? '<table class="cae-tabla"><thead><tr><th>Trabajador</th><th>Estado</th><th>Documentos pendientes</th></tr></thead><tbody>' + filas + '</tbody></table>'
+          (e.docsEmpresaKO ? '<p class="cae-docsemp">⚠ La empresa tiene ' + e.docsEmpresaKO + ' documento(s) sin aceptar, así que <b>ninguno de sus trabajadores puede acceder</b>' +
+             ((e.docsEmpresa && e.docsEmpresa.length) ? ': ' + this._esc(e.docsEmpresa.join(' · ')) : '') + '</p>' : '') +
+          (filas ? '<table class="cae-tabla"><thead><tr><th>Trabajador</th><th>Estado</th><th>Motivo</th><th>Documentos pendientes</th></tr></thead><tbody>' + filas + '</tbody></table>'
                  : '<p class="cae-falta">Sin trabajadores que mostrar con este filtro.</p>') +
         '</div></div>';
     }).join('');
