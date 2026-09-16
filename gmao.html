@@ -539,6 +539,47 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
 .sidebar-logo::after{content:'';position:absolute;left:20px;right:20px;bottom:0;height:3px;border-radius:2px;background:var(--tricolor)}
 th:first-child{border-top-left-radius:var(--radius)}
 th:last-child{border-top-right-radius:var(--radius)}
+
+/* ── CAE · empresas externas ───────────────────────────────────────── */
+.cae-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.cae-tab{border:1px solid var(--border,#ddd);background:#fff;color:inherit;padding:7px 12px;border-radius:4px;cursor:pointer;font:inherit;font-size:13px;display:flex;gap:7px;align-items:center}
+.cae-tab:hover{border-color:#275D3A}
+.cae-tab.active{background:#275D3A;border-color:#275D3A;color:#fff}
+.cae-tab b{font-variant-numeric:tabular-nums}
+.cae-tab span{font-size:11px;opacity:.7;font-variant-numeric:tabular-nums}
+.cae-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.cae-kpi{background:#fff;border:1px solid var(--border,#ddd);border-radius:6px;padding:11px 13px}
+.cae-kpi .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.cae-kpi .l{font-size:10px;color:var(--gray-muted,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.cae-kpi.ok .v{color:#275D3A}.cae-kpi.ko .v{color:#C20019}
+.cae-filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.cae-filtros input[type=search],.cae-filtros select{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border,#ddd);border-radius:4px;background:#fff}
+.cae-filtros input[type=search]{flex:1 1 220px;min-width:0}
+.cae-sw{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--gray-muted,#777);cursor:pointer;user-select:none}
+.cae-emp{background:#fff;border:1px solid var(--border,#ddd);border-radius:6px;margin-bottom:6px;overflow:hidden}
+.cae-emph{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 13px;cursor:pointer;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left}
+.cae-emph:hover{background:#f7f8f7}
+.cae-nom{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.cae-pr{font-size:11px;color:var(--gray-muted,#888);font-weight:400}
+.cae-excl{font-size:10px;text-transform:uppercase;letter-spacing:.04em;border:1px solid #E87146;color:#E87146;padding:1px 5px;border-radius:3px}
+.cae-cifras{display:flex;align-items:center;gap:10px}
+.cae-bar{width:100px;height:7px;background:#FBE3E5;border-radius:4px;overflow:hidden;display:block}
+.cae-bar i{background:#275D3A;display:block;height:100%}
+.cae-num{font-variant-numeric:tabular-nums;font-size:13px;min-width:66px;text-align:right}
+.cae-num .o{color:#275D3A}.cae-num .k{color:#C20019}
+.cae-caret{color:var(--gray-muted,#999);display:inline-block;transition:transform .15s}
+.cae-emph[aria-expanded="true"] .cae-caret{transform:rotate(90deg)}
+.cae-det{border-top:1px solid var(--border,#eee);padding:10px 13px 13px}
+.cae-docsemp{font-size:12px;color:#E87146;margin:0 0 8px}
+.cae-tabla{width:100%;border-collapse:collapse;font-size:13px}
+.cae-tabla th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-muted,#888);padding:4px 8px 4px 0;border-bottom:1px solid var(--border,#eee)}
+.cae-tabla td{padding:5px 8px 5px 0;border-bottom:1px solid var(--border,#f0f0f0);vertical-align:top}
+.cae-tabla tr:last-child td{border-bottom:0}
+.cae-chip{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:3px}
+.cae-chip.ok{background:#E3EEE6;color:#1d4a2d}
+.cae-chip.ko{background:#FBE3E5;color:#9c0014}
+.cae-falta{color:var(--gray-muted,#888);font-size:12px}
+@media(max-width:560px){.cae-emph{grid-template-columns:1fr}.cae-cifras{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -635,6 +676,10 @@ th:last-child{border-top-right-radius:var(--radius)}
           <div class="nav-item" data-route="dashboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
+          </div>
+          <div class="nav-item" data-route="cae">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg>
+            <span class="nav-label">CAE Externas</span>
           </div>
           <div class="nav-item" data-route="partes-analisis">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -743,7 +788,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.3</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.4</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1347,6 +1392,7 @@ const db = {
   planes:          makeTable('planes',          'id'),
   plan_activos:    makeTable('plan_activos',    'id'),
   ordenes_trabajo: makeTable('ordenes_trabajo', 'id'),
+  cae_datos:       makeTable('cae_datos',       'clave'),
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -2465,7 +2511,7 @@ const Router = {
     });
     NavGroups.openFor(base);
     NavGroups.refreshDots();
-    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', planes:'Planes / Gamas', preventivos:'Preventivos pendientes', ordenes:'Órdenes de trabajo', partes:'Partes de trabajo', config:'Configuración' };
+    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', planes:'Planes / Gamas', preventivos:'Preventivos pendientes', ordenes:'Órdenes de trabajo', partes:'Partes de trabajo', cae:'CAE · Empresas externas', config:'Configuración' };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -9196,7 +9242,7 @@ const App = {
       el.style.display = UserService.canManageConfig() ? '' : 'none';
     });
     // Rutas restringidas a Admin/Responsable
-    ['dashboard','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones','planes','preventivos'].forEach(route => {
+    ['dashboard','cae','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones','planes','preventivos'].forEach(route => {
       document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
         el.style.display = isPriv ? '' : 'none';
       });
@@ -9559,7 +9605,21 @@ ALTER TABLE ordenes_trabajo ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "anon_all" ON ordenes_trabajo FOR ALL USING (true) WITH CHECK (true);
 
 -- Vincular partes de trabajo a las OTs (análogo a averia_id)
-ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS ot_id TEXT DEFAULT '';`;
+ALTER TABLE partes_trabajo ADD COLUMN IF NOT EXISTS ot_id TEXT DEFAULT '';
+
+-- ──────────────────────────────────────────────────────────────────────
+-- BLOQUE G (v9.4): CAE — snapshot del Excel de Coordinación de Actividades
+-- Empresariales (SmartOSH). Se guarda troceado como texto: clave = 'snapshot'
+-- (cabecera) y 'snapshot_0..N' (trozos). No hay conexión directa: se importa
+-- el Excel desde la propia app (página «CAE Externas»).
+-- ──────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cae_datos (
+  clave        TEXT PRIMARY KEY,
+  valor        TEXT,
+  actualizado  TEXT
+);
+ALTER TABLE cae_datos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all" ON cae_datos FOR ALL USING (true) WITH CHECK (true);`;
     Modal.open('SQL de configuración — tablas, RLS y Stock atómico', `
       <div style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:10px;line-height:1.5">
         ⚠️ <strong>Versión 3 del SQL de setup.</strong><br>
@@ -11695,7 +11755,303 @@ Router.register('inspecciones',    async () => InspeccionesPage.render());
 Router.register('planes',          async () => PlanesPage.render());
 Router.register('preventivos',     async () => PreventivosPage.render());
 Router.register('ordenes',         async () => OrdenesPage.render());
+// ═══════════════════════════════════════════════════════════════════
+// CAE — Control de documentación de empresas externas (SmartOSH)
+// ═══════════════════════════════════════════════════════════════════
+const CAEPage = {
+  _data: null,
+  _fecha: null,
+  _sel: null,
+  _q: '',
+  _principal: '',
+  _soloKO: false,
+  _verExcl: true,
+
+  // Código de coordinación → centro (proyecto de coordinación de SmartOSH)
+  _CODMAP: {"2025.0011":"Algemesi","2025.0014":"Xeresa","2025.0015":"Algemesi","2025.0016":"Xeresa","2025.0017":"Algemesi","2025.0018":"Algemesi","2025.0019":"Xeresa","2025.0021":"Xeresa","2025.0022":"Miramar","2025.0023":"Alcacer","2025.0044":"Xeresa","2025.0050":"Xeresa","2025.0051":"Xeresa","2025.0053":"Xeresa","2025.0055":"Xeresa","2025.0060":"Alcacer","2025.0061":"Miramar","2025.0062":"Algemesi","2025.0063":"Xeresa","2025.0064":"Xeresa","2025.0065":"Xeresa","2025.0066":"Alcacer","2025.0067":"Alcacer","2025.0068":"Xeresa","2025.0069":"Alcacer","2025.0070":"Miramar","2025.0071":"Algemesi","2025.0072":"Murcia","2025.0073":"Miramar","2025.0074":"Xeresa","2025.0075":"Miramar","2025.0076":"Miramar","2025.0077":"Xeresa","2025.0078":"Miramar","2025.0079":"Murcia","2025.0080":"Miramar","2025.0081":"Xeresa","2025.0082":"Algemesi","2025.0083":"Alcacer","2025.0084":"Miramar","2025.0085":"Xeresa","2025.0086":"Xeresa","2025.0087":"Miramar","2025.0088":"Miramar","2025.0089":"Alcacer","2025.0090":"Xeresa","2025.0091":"Alcacer","2025.0092":"Xeresa","2025.0093":"Murcia","2025.0094":"Miramar","2025.0095":"Algemesi","2026.0001":"Xeresa","2026.0007":"Xeresa","2026.0008":"Algemesi","2026.0009":"Xeresa","2026.0010":"Algemesi","2026.0011":"Xeresa","2026.0012":"Murcia","2026.0013":"Alcacer","2026.0014":"Xeresa","2026.0015":"Algemesi","2026.0016":"Algemesi","2026.0017":"Algemesi","2026.0002":"Alcacer","2026.0003":"Murcia","2026.0004":"Miramar","2026.0005":"Algemesi","CUBIERTAS XERESA":"Xeresa","SENTIT COMU BENIFAIRO":"Benifairo","ANTICIMEX XERESA":"Xeresa","COMUNICAT XERESA":"Xeresa","GENERAL - TALLERES OLIVER GROUP - VERSOL ALCACER":"Alcacer","CMSA. XERESA":"Xeresa","INSTALACION DESFIBRILADOR MIRAMAR":"Miramar","ALAPONT.XERESA":"Xeresa","DAMARC MIRAMAR":"Miramar","3K XERESA":"Xeresa","2025.0042":"Miramar","2025.0040":"Xeresa","2025.0037":"Xeresa","SAFTMATIC XERESA":"Xeresa","2025.0035":"Xeresa","VIMACO":"Xeresa","TECNOVILL ALCASSER":"Alcacer","AGROFRESH.ALCASSER":"Alcacer","HERNAIZ.XERESA":"Xeresa","CANON MIRAMAR":"Miramar","CANON XERESA":"Xeresa","DECCO. MIRAMAR":"Miramar","DECCO XERESA":"Xeresa","DECCO.ALCACER":"Alcacer","DM.XERESA":"Xeresa","HERNAIZ.MIRAMAR":"Miramar","RODA.XERESA":"Xeresa","TEIKA MIRAMAR 2":"Miramar","TEIKA MIRAMAR 3":"Miramar","TEIKA VENDING XERESA":"Xeresa","TEIKA XERESA 3":"Xeresa","RODA IBERICA. ALCASSER":"Alcacer","GASTRES ALGEMESI":"Algemesi","VAINFRET. MIRAMAR":"Miramar","2025.0008":"Algemesi","2025.0007":"Miramar","2025.0006":"Alcacer","2025.0005":"Xeresa","SOTECCO.XERESA":"Xeresa","2025.0002":"Alcacer","2025.0004":"Algemesi","2025.0003":"Miramar","2025.0001":"Xeresa","PRAMINSA MIRAMAR":"Miramar","2025.0057":"Alcacer","2025.0058":"Miramar","2025.0059":"Algemesi","DIMATEC.ALGEMESI":"Algemesi","MORATAL. MIRAMAR":"Miramar","SERMATEC. ALCASER":"Alcacer","SOTHIS LOS RAMOS":"Los Ramos","SOTHIS MIRAMAR":"Miramar","SOTHIS XERESA":"Xeresa","SERMATEC.XERESA":"Xeresa","2024.0010":"Alcacer","JARDINERIA XERESA":"Xeresa","TECNODELSA MIRAMAR":"Miramar","SERMANTEC. MIRAMAR":"Miramar","TEULARET.XERESA":"Xeresa","ALGEMESI.SERMATEC":"Algemesi","2024.0009":"Xeresa","LIMPIEZA 3K ALGEMESI":"Algemesi","DDD. ALGEMESI":"Algemesi","MFT.ALCACER":"Alcacer","PRAMINSA. ALCASER":"Alcacer","AUNER.XERESA":"Xeresa","EUROLEVANTE.MURCIA":"Los Ramos","DESCONTAMINACION XERESA":"Xeresa","INSTELSA.MIRAMA":"Miramar","VALLDILLUM.ALCASSER":"Alcacer","ALMA":"Xeresa","CIAGRI.ALCASSER":"Alcacer","TALLERES RIBES.ALCACER":"Alcacer","3K ALCASSER":"Alcacer","3K MIRAMAR":"Miramar","VALFIRE.ALCASSER":"Alcacer","EUROLEVANTE.MIRAMAR":"Miramar","CIAGRI. ALGEMESI":"Algemesi","COMERCIAL ROLDAN.MIRAMAR":"Miramar","COMERCIAL ROLDAN.XERESA":"Xeresa","TECNOVILL.ALGEMESI":"Algemesi","VALLDIGLLUM.MIRAMAR":"Miramar","OLEOMATIC.MIRAMAR":"Miramar","DECCO.ALGEMESI":"Algemesi","GIRO. MIRAMARA":"Miramar","GIRO.MURCIA":"Los Ramos","GIRO.ALCASSER":"Alcacer","GIRO.XERESA":"Xeresa","OLEOMATIC.XERESA":"Xeresa","VALFIRE.ALGEMESI":"Algemesi","TECNOVILL.XERESA":"Xeresa","TECNOFRUTA.XERESA":"Xeresa","YAFRI.XERESA":"Xeresa","MORATAL XERESA":"Xeresa","TRABAJOS MRT VERSOL ALCASSER":"Alcacer","EUROLEVANTE. ALGEMESI":"Algemesi","EUROLEVANTE.XERESA":"Xeresa","MORATAL.VERSOL":"Alcacer"},
+
+  _EXCLUIDAS: ['ANTICIMEX 3D SANIDAD AMBIENTAL,S.A.','CARTONAJES BERNABEU, S.A.U','GRUPO 3K MEDITERRANEA, S.L.','QUALITY CONTROL SPAIN, S.L.U.'],
+
+  _SITIOS: [['XERESA','Xeresa'],['MIRAMAR','Miramar'],['MIRAMR','Miramar'],['ALGEMES','Algemesi'],
+            ['ALCASSER','Alcacer'],['ALCACER','Alcacer'],['ALCECER','Alcacer'],['MURCIA','Murcia'],
+            ['LOS RAMOS','Los Ramos'],['BENIFAIR','Benifairo']],
+
+  _centroDe(cod, nombreCoord) {
+    const c = this._CODMAP[String(cod || '').trim()];
+    if (c) return c;
+    const u = String(nombreCoord || '').toUpperCase();
+    for (const [k, v] of this._SITIOS) if (u.indexOf(k) >= 0) return v;
+    return 'Sin centro asignado';
+  },
+
+  _limpia(s) {
+    s = String(s == null ? '' : s).trim();
+    const i = s.indexOf(' - ');
+    return (i > 0 && i <= 12) ? s.slice(i + 3).trim() : s;
+  },
+
+  _nombreTrab(s) {
+    return String(s == null ? '' : s).replace(/^[^-]{5,12}-\s*/, '').trim();
+  },
+
+  // ── Construye la estructura centro → empresa → trabajador desde el Excel
+  procesar(rows) {
+    const OKEST = { 'Aceptado': 1, 'Anulado/No aplica': 1, 'No aplica': 1 };
+    const centros = {};
+    const docsEmp = {};
+    for (const r of rows) {
+      const centro = this._centroDe(r['Código coordinación'], r['Coordinación']);
+      const empresa = this._limpia(r['Empresa externa de la coordinación']);
+      const principal = this._limpia(r['Empresa principal']);
+      const trabRaw = r['Empleado'];
+      const ok = !!OKEST[String(r['Estado'] || '').trim()];
+      if (!centros[centro]) centros[centro] = {};
+      if (!centros[centro][empresa]) centros[centro][empresa] = { trab: {}, principal: {}, docsKO: 0 };
+      const E = centros[centro][empresa];
+      if (principal) E.principal[principal] = 1;
+      if (!trabRaw || !String(trabRaw).trim()) { if (!ok) E.docsKO++; continue; }
+      const nom = this._nombreTrab(trabRaw);
+      if (!E.trab[nom]) E.trab[nom] = { tot: 0, ko: 0, docs: [] };
+      const T = E.trab[nom];
+      T.tot++;
+      if (!ok) { T.ko++; const td = String(r['Tipo de documento'] || '').trim();
+                 if (td && T.docs.length < 8 && T.docs.indexOf(td) < 0) T.docs.push(td); }
+    }
+    const out = { centros: {}, dt: [] };
+    const dtIdx = {};
+    const dtId = s => { if (dtIdx[s] === undefined) { dtIdx[s] = out.dt.length; out.dt.push(s); } return dtIdx[s]; };
+    Object.keys(centros).sort().forEach(c => {
+      const emps = Object.keys(centros[c]).sort().map(n => {
+        const E = centros[c][n];
+        const trabajadores = Object.keys(E.trab).sort().map(nm => ({
+          n: nm, e: E.trab[nm].ko === 0 ? 'OK' : 'KO', f: E.trab[nm].ko,
+          d: E.trab[nm].docs.map(dtId)
+        }));
+        return {
+          nombre: n,
+          principal: Object.keys(E.principal).sort(),
+          ok: trabajadores.filter(t => t.e === 'OK').length,
+          ko: trabajadores.filter(t => t.e === 'KO').length,
+          docsEmpresaKO: E.docsKO,
+          excluida: CAEPage._EXCLUIDAS.indexOf(n) >= 0,
+          trabajadores
+        };
+      });
+      out.centros[c] = { empresas: emps,
+        ok: emps.reduce((a, e) => a + e.ok, 0),
+        ko: emps.reduce((a, e) => a + e.ko, 0) };
+    });
+    return out;
+  },
+
+  // El snapshot se guarda como texto JSON (la columna metadata.value puede ser
+  // de tipo texto) y troceado, porque una sola fila de 300+ KB no pasa.
+  _CHUNK: 120000,
+
+  _rehidratar(d) {
+    const dt = d.dt || [];
+    Object.keys(d.centros).forEach(c => d.centros[c].empresas.forEach(e =>
+      e.trabajadores.forEach(t => {
+        t.d = (t.d || []).map(x => (typeof x === 'number' ? (dt[x] || '') : x)).filter(Boolean);
+      })));
+    return d;
+  },
+
+  async _cargar() {
+    try {
+      const head = await db.cae_datos.get('snapshot');
+      if (!head || !head.valor) return;
+      const cab = JSON.parse(head.valor);
+      const trozos = [];
+      for (let i = 0; i < cab.chunks; i++) {
+        const p = await db.cae_datos.get('snapshot_' + i);
+        trozos.push(p && p.valor != null ? String(p.valor) : '');
+      }
+      this._data = this._rehidratar(JSON.parse(trozos.join('')));
+      this._fecha = head.actualizado || null;
+    } catch (e) { console.warn('[CAE] carga', e); }
+  },
+
+  async _guardar(data) {
+    const txt = JSON.stringify(data);
+    const n = Math.ceil(txt.length / this._CHUNK);
+    const ahora = new Date().toISOString();
+    let oldN = 0;
+    try { const h = await db.cae_datos.get('snapshot'); if (h && h.valor) oldN = JSON.parse(h.valor).chunks || 0; } catch (e) {}
+    for (let i = 0; i < n; i++) {
+      await db.cae_datos.put({ clave: 'snapshot_' + i,
+        valor: txt.slice(i * this._CHUNK, (i + 1) * this._CHUNK), actualizado: ahora });
+    }
+    // Limpia trozos sobrantes de una importación anterior más grande
+    const hasta = Math.max(oldN, n + 12);
+    for (let i = n; i < hasta; i++) { try { await db.cae_datos.delete('snapshot_' + i); } catch (e) {} }
+    await db.cae_datos.put({ clave: 'snapshot',
+      valor: JSON.stringify({ chunks: n, filas: data.filas || 0, fichero: data.fichero || '' }),
+      actualizado: ahora });
+  },
+
+  async importar(file) {
+    if (!file) return;
+    const prog = document.getElementById('cae-prog');
+    if (prog) prog.textContent = 'Leyendo Excel…';
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', raw: false });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows.length) throw new Error('El fichero no tiene filas');
+      const cols = Object.keys(rows[0]);
+      const need = ['Estado', 'Empresa externa de la coordinación', 'Empleado', 'Coordinación'];
+      const falta = need.filter(c => cols.indexOf(c) < 0);
+      if (falta.length) throw new Error('Faltan columnas: ' + falta.join(', ') + '. ¿Es la exportación de CAE › Documentos?');
+      if (prog) prog.textContent = 'Procesando ' + rows.length.toLocaleString('es-ES') + ' documentos…';
+      const data = this.procesar(rows);
+      data.filas = rows.length;
+      data.fichero = file.name;
+      if (prog) prog.textContent = 'Guardando en Supabase…';
+      await this._guardar(data);
+      this._data = this._rehidratar(JSON.parse(JSON.stringify(data)));
+      this._fecha = new Date().toISOString();
+      this._sel = null;
+      toast('CAE actualizado: ' + rows.length.toLocaleString('es-ES') + ' documentos', 'success');
+      this.render();
+    } catch (e) {
+      console.error('[CAE] importación', e);
+      const msg = String(e && e.message ? e.message : e).slice(0, 180);
+      if (prog) prog.innerHTML = '<span style="color:#C20019">No se pudo importar: ' + this._esc(msg) + '</span>';
+      toast('No se pudo importar el Excel', 'error', 4000);
+    }
+  },
+
+  _fechaTxt() {
+    if (!this._fecha) return 'sin datos importados';
+    const d = new Date(this._fecha);
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+           ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  },
+
+  _esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); },
+
+  _visibles() {
+    if (!this._data || !this._sel) return [];
+    const q = this._q.trim().toLowerCase();
+    return (this._data.centros[this._sel] ? this._data.centros[this._sel].empresas : []).filter(e => {
+      if (!this._verExcl && e.excluida) return false;
+      if (this._principal && e.principal.indexOf(this._principal) < 0) return false;
+      if (this._soloKO && e.ko === 0 && e.docsEmpresaKO === 0) return false;
+      if (q && e.nombre.toLowerCase().indexOf(q) < 0 && !e.trabajadores.some(t => t.n.toLowerCase().indexOf(q) >= 0)) return false;
+      return true;
+    });
+  },
+
+  async render() {
+    const main = document.getElementById('content');
+    if (!main) return;
+    if (!UserService.isAdmin() && !UserService.isResponsable()) {
+      main.innerHTML = '<div class="page-header"><h1>CAE</h1></div><p style="color:var(--gray-muted);padding:20px">Acceso restringido.</p>';
+      return;
+    }
+    if (!this._data) await this._cargar();
+    const centros = this._data ? Object.keys(this._data.centros) : [];
+    if (!this._sel || centros.indexOf(this._sel) < 0) this._sel = centros.indexOf('Xeresa') >= 0 ? 'Xeresa' : centros[0];
+
+    const cab = '<div class="page-header"><h1>CAE · Empresas externas</h1>' +
+      '<div class="page-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+      '<span style="font-size:12px;color:var(--gray-muted)">Actualizado: <b>' + this._fechaTxt() + '</b></span>' +
+      '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'cae-file\').click()">⬆ Importar Excel</button>' +
+      '<input type="file" id="cae-file" accept=".xlsx,.xls" style="display:none" onchange="CAEPage.importar(this.files[0])">' +
+      '</div></div><div id="cae-prog" style="font-size:12px;color:var(--gray-muted);margin-bottom:8px"></div>';
+
+    if (!this._data) {
+      main.innerHTML = cab +
+        '<div class="card" style="padding:28px;text-align:center">' +
+        '<p style="margin:0 0 6px;font-weight:600">Todavía no hay datos de CAE</p>' +
+        '<p style="margin:0;color:var(--gray-muted);font-size:13px">En SmartOSH: <b>CAE › Documentos</b> → quitar el filtro de ámbito → <b>Exportar a Excel</b>. Después súbelo con el botón «Importar Excel».</p>' +
+        '</div>';
+      return;
+    }
+
+    const prins = {};
+    centros.forEach(c => this._data.centros[c].empresas.forEach(e => e.principal.forEach(p => prins[p] = 1)));
+    const tabs = centros.map(c => {
+      const v = this._data.centros[c];
+      return '<button class="cae-tab' + (c === this._sel ? ' active' : '') + '" onclick="CAEPage._ir(\'' + this._esc(c).replace(/'/g, "\\'") + '\')">' +
+        this._esc(c) + ' <b>' + (v.ok + v.ko) + '</b><span>' + v.ok + ' ok · ' + v.ko + ' ko</span></button>';
+    }).join('');
+
+    main.innerHTML = cab +
+      '<div class="cae-tabs">' + tabs + '</div>' +
+      '<div id="cae-kpis" class="cae-kpis"></div>' +
+      '<div class="cae-filtros">' +
+        '<input type="search" id="cae-q" placeholder="Buscar empresa externa o trabajador…" value="' + this._esc(this._q) + '">' +
+        '<select id="cae-prin"><option value="">Todas las empresas principales</option>' +
+          Object.keys(prins).sort().map(p => '<option value="' + this._esc(p) + '"' + (p === this._principal ? ' selected' : '') + '>' + this._esc(p) + '</option>').join('') +
+        '</select>' +
+        '<label class="cae-sw"><input type="checkbox" id="cae-ko"' + (this._soloKO ? ' checked' : '') + '> Solo pendientes</label>' +
+        '<label class="cae-sw"><input type="checkbox" id="cae-ex"' + (this._verExcl ? ' checked' : '') + '> Incluir excluidas</label>' +
+      '</div>' +
+      '<div id="cae-lista"></div>' +
+      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">OK = todos los documentos del trabajador en «Aceptado» o «Anulado/No aplica». Fuente: exportación SmartOSH CAE › Documentos' +
+      (this._data.filas ? ' (' + this._data.filas.toLocaleString('es-ES') + ' filas)' : '') + '.</p>';
+
+    const q = document.getElementById('cae-q');
+    q.addEventListener('input', () => { this._q = q.value; this._pintar(); });
+    document.getElementById('cae-prin').addEventListener('change', e => { this._principal = e.target.value; this._pintar(); });
+    document.getElementById('cae-ko').addEventListener('change', e => { this._soloKO = e.target.checked; this._pintar(); });
+    document.getElementById('cae-ex').addEventListener('change', e => { this._verExcl = e.target.checked; this._pintar(); });
+    this._pintar();
+  },
+
+  _ir(c) { this._sel = c; this.render(); },
+
+  _pintar() {
+    const es = this._visibles();
+    const ok = es.reduce((a, e) => a + e.ok, 0), ko = es.reduce((a, e) => a + e.ko, 0);
+    const dko = es.reduce((a, e) => a + e.docsEmpresaKO, 0);
+    const pct = (ok + ko) ? Math.round(ok * 100 / (ok + ko)) : 0;
+    document.getElementById('cae-kpis').innerHTML =
+      '<div class="cae-kpi"><div class="v">' + es.length + '</div><div class="l">Empresas externas</div></div>' +
+      '<div class="cae-kpi ok"><div class="v">' + ok + '</div><div class="l">Trabajadores en regla</div></div>' +
+      '<div class="cae-kpi ko"><div class="v">' + ko + '</div><div class="l">Con docs pendientes</div></div>' +
+      '<div class="cae-kpi"><div class="v">' + pct + '%</div><div class="l">Cumplimiento</div></div>' +
+      '<div class="cae-kpi"><div class="v">' + dko + '</div><div class="l">Docs de empresa pendientes</div></div>';
+
+    const cont = document.getElementById('cae-lista');
+    if (!es.length) { cont.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:var(--gray-muted)">Ninguna empresa cumple el filtro en este centro.</div>'; return; }
+    const q = this._q.trim().toLowerCase();
+    cont.innerHTML = es.map((e, i) => {
+      const tot = e.ok + e.ko, w = tot ? Math.round(e.ok * 100 / tot) : 0;
+      let tr = e.trabajadores;
+      if (this._soloKO) tr = tr.filter(t => t.e === 'KO');
+      if (q && e.nombre.toLowerCase().indexOf(q) < 0) tr = tr.filter(t => t.n.toLowerCase().indexOf(q) >= 0);
+      const filas = tr.map(t =>
+        '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + (t.e === 'OK' ? 'ok' : 'ko') + '">' + t.e + '</span></td>' +
+        '<td class="cae-falta">' + (t.e === 'OK' ? '—' : (this._esc(t.d.join(' · ')) || (t.f + ' documento(s)'))) + '</td></tr>').join('');
+      return '<div class="cae-emp">' +
+        '<button class="cae-emph" aria-expanded="false" onclick="CAEPage._toggle(this)">' +
+          '<span class="cae-nom"><span class="cae-caret">›</span> ' + this._esc(e.nombre) +
+            (e.excluida ? '<span class="cae-excl">excluida</span>' : '') +
+            '<span class="cae-pr">' + this._esc(e.principal.join(' · ')) + '</span></span>' +
+          '<span class="cae-cifras"><span class="cae-bar"><i style="width:' + w + '%"></i></span>' +
+            '<span class="cae-num"><b class="o">' + e.ok + '</b> / <b class="k">' + e.ko + '</b></span></span>' +
+        '</button>' +
+        '<div class="cae-det" hidden>' +
+          (e.docsEmpresaKO ? '<p class="cae-docsemp">⚠ ' + e.docsEmpresaKO + ' documento(s) de la propia empresa sin aceptar</p>' : '') +
+          (filas ? '<table class="cae-tabla"><thead><tr><th>Trabajador</th><th>Estado</th><th>Documentos pendientes</th></tr></thead><tbody>' + filas + '</tbody></table>'
+                 : '<p class="cae-falta">Sin trabajadores que mostrar con este filtro.</p>') +
+        '</div></div>';
+    }).join('');
+  },
+
+  _toggle(btn) {
+    const det = btn.nextElementSibling, ab = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!ab));
+    det.hidden = ab;
+  },
+};
+
 Router.register('config',          async () => ConfigPage.render());
+Router.register('cae',             async () => CAEPage.render());
 
 // ═══════════════════════════════════════════════════════════════════
 // SIDEBAR MÓVIL
