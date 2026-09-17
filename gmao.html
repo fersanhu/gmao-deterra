@@ -551,7 +551,7 @@ th:last-child{border-top-right-radius:var(--radius)}
 .cae-kpi{background:#fff;border:1px solid var(--border,#ddd);border-radius:6px;padding:11px 13px}
 .cae-kpi .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .cae-kpi .l{font-size:10px;color:var(--gray-muted,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-.cae-kpi.ok .v{color:#275D3A}.cae-kpi.ko .v{color:#C20019}
+.cae-kpi.ok .v{color:#275D3A}.cae-kpi.ko .v{color:#C20019}.cae-kpi.rev .v{color:#E87146}
 .cae-filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .cae-filtros input[type=search],.cae-filtros select{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border,#ddd);border-radius:4px;background:#fff}
 .cae-filtros input[type=search]{flex:1 1 220px;min-width:0}
@@ -565,12 +565,13 @@ th:last-child{border-top-right-radius:var(--radius)}
 .cae-cifras{display:flex;align-items:center;gap:10px}
 .cae-bar{width:100px;height:7px;background:#FBE3E5;border-radius:4px;overflow:hidden;display:block}
 .cae-bar i{background:#275D3A;display:block;height:100%}
+.cae-bar.rev{background:#FBE7D8}
 .cae-num{font-variant-numeric:tabular-nums;font-size:13px;min-width:66px;text-align:right}
-.cae-num .o{color:#275D3A}.cae-num .k{color:#C20019}
+.cae-num .o{color:#275D3A}.cae-num .k{color:#C20019}.cae-num .r{color:#E87146}
 .cae-caret{color:var(--gray-muted,#999);display:inline-block;transition:transform .15s}
 .cae-emph[aria-expanded="true"] .cae-caret{transform:rotate(90deg)}
 .cae-det{border-top:1px solid var(--border,#eee);padding:10px 13px 13px}
-.cae-docsemp{font-size:12px;color:#E87146;margin:0 0 8px}
+.cae-docsemp{font-size:12px;color:#C20019;margin:0 0 8px}.cae-docsemp.cae-rev{color:#E87146}
 .cae-tabla{width:100%;border-collapse:collapse;font-size:13px}
 .cae-tabla th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-muted,#888);padding:4px 8px 4px 0;border-bottom:1px solid var(--border,#eee)}
 .cae-tabla td{padding:5px 8px 5px 0;border-bottom:1px solid var(--border,#f0f0f0);vertical-align:top}
@@ -578,6 +579,9 @@ th:last-child{border-top-right-radius:var(--radius)}
 .cae-chip{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:3px}
 .cae-chip.ok{background:#E3EEE6;color:#1d4a2d}
 .cae-chip.ko{background:#FBE3E5;color:#9c0014}
+.cae-chip.rev{background:#FBE7D8;color:#9a4a12}
+.cae-leyenda{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 12px;font-size:12px;color:var(--gray-muted,#666)}
+.cae-leyenda>span{display:inline-flex;align-items:center;gap:6px}
 .cae-falta{color:var(--gray-muted,#888);font-size:12px}
 @media(max-width:560px){.cae-emph{grid-template-columns:1fr}.cae-cifras{justify-content:flex-start}}
 </style>
@@ -788,7 +792,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.6</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.7</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -11808,21 +11812,22 @@ const CAEPage = {
       const principal = this._limpia(r['Empresa principal']);
       const trabRaw = r['Empleado'];
       const ok = !!OKEST[String(r['Estado'] || '').trim()];
+      const esRev = !ok && /pendiente|aportad/i.test(String(r['Estado'] || ''));
       const tipo = String(r['Tipo de documento'] || '').trim();
       if (!centros[centro]) centros[centro] = {};
       if (!centros[centro][empresa]) centros[centro][empresa] = { coords: {}, principal: {} };
       const E = centros[centro][empresa];
       if (principal) E.principal[principal] = 1;
-      if (!E.coords[coord]) E.coords[coord] = { empKO: 0, empDocs: [], trab: {} };
+      if (!E.coords[coord]) E.coords[coord] = { empKO: 0, empRev: 0, empDocs: [], trab: {} };
       const C = E.coords[coord];
       if (!trabRaw || !String(trabRaw).trim()) {
-        if (!ok) { C.empKO++; if (tipo && C.empDocs.length < 8 && C.empDocs.indexOf(tipo) < 0) C.empDocs.push(tipo); }
+        if (!ok) { C.empKO++; if (esRev) C.empRev++; if (tipo && C.empDocs.length < 8 && C.empDocs.indexOf(tipo) < 0) C.empDocs.push(tipo); }
         continue;
       }
       const nom = this._nombreTrab(trabRaw);
-      if (!C.trab[nom]) C.trab[nom] = { ko: 0, docs: [] };
+      if (!C.trab[nom]) C.trab[nom] = { ko: 0, rev: 0, docs: [] };
       const T = C.trab[nom];
-      if (!ok) { T.ko++; if (tipo && T.docs.length < 8 && T.docs.indexOf(tipo) < 0) T.docs.push(tipo); }
+      if (!ok) { T.ko++; if (esRev) T.rev++; if (tipo && T.docs.length < 8 && T.docs.indexOf(tipo) < 0) T.docs.push(tipo); }
     }
 
     const out = { centros: {}, dt: [] };
@@ -11833,24 +11838,26 @@ const CAEPage = {
       const emps = Object.keys(centros[c]).sort().map(n => {
         const E = centros[c][n];
         const acc = {};
-        let empKOTotal = 0;
+        let empKOTotal = 0, empRevTotal = 0;
         const empDocs = [];
         Object.keys(E.coords).forEach(cd => {
           const C = E.coords[cd];
-          empKOTotal += C.empKO;
+          empKOTotal += C.empKO; empRevTotal += C.empRev;
           C.empDocs.forEach(dd => { if (empDocs.indexOf(dd) < 0) empDocs.push(dd); });
           Object.keys(C.trab).forEach(nm => {
-            if (!acc[nm]) acc[nm] = { propio: 0, empresa: 0, docs: [] };
+            if (!acc[nm]) acc[nm] = { propio: 0, propioRev: 0, empresa: 0, empresaRev: 0, docs: [] };
             const A = acc[nm];
-            A.propio += C.trab[nm].ko;
-            A.empresa += C.empKO;
+            A.propio += C.trab[nm].ko; A.propioRev += C.trab[nm].rev;
+            A.empresa += C.empKO; A.empresaRev += C.empRev;
             C.trab[nm].docs.forEach(dd => { if (A.docs.indexOf(dd) < 0 && A.docs.length < 8) A.docs.push(dd); });
           });
         });
         const trabajadores = Object.keys(acc).sort().map(nm => {
           const A = acc[nm];
-          const bien = A.propio === 0 && A.empresa === 0;
-          return { n: nm, e: bien ? 'OK' : 'KO', f: A.propio,
+          const totKO = A.propio + A.empresa;
+          const pedidos = (A.propio - A.propioRev) + (A.empresa - A.empresaRev);
+          const est = totKO === 0 ? 'OK' : (pedidos > 0 ? 'KO' : 'REV');
+          return { n: nm, e: est, f: A.propio,
                    m: A.propio > 0 ? (A.empresa > 0 ? 'ambos' : 'propio') : (A.empresa > 0 ? 'empresa' : ''),
                    d: A.docs.map(dtId) };
         });
@@ -11858,8 +11865,10 @@ const CAEPage = {
           nombre: n,
           principal: Object.keys(E.principal).sort(),
           ok: trabajadores.filter(t => t.e === 'OK').length,
-          ko: trabajadores.filter(t => t.e === 'KO').length,
+          ko: trabajadores.filter(t => t.e !== 'OK').length,
+          rev: trabajadores.filter(t => t.e === 'REV').length,
           docsEmpresaKO: empKOTotal,
+          docsEmpresaRev: empRevTotal,
           docsEmpresa: empDocs.map(dtId),
           excluida: CAEPage._EXCLUIDAS.indexOf(n) >= 0,
           trabajadores
@@ -11881,6 +11890,7 @@ const CAEPage = {
     const nmd = x => (typeof x === 'number' ? (dt[x] || '') : x);
     Object.keys(d.centros).forEach(c => d.centros[c].empresas.forEach(e => {
       e.excluida = CAEPage._EXCLUIDAS.indexOf(e.nombre) >= 0;
+      e.rev = e.rev || 0; e.docsEmpresaRev = e.docsEmpresaRev || 0;
       e.docsEmpresa = (e.docsEmpresa || []).map(nmd).filter(Boolean);
       e.trabajadores.forEach(t => { t.d = (t.d || []).map(nmd).filter(Boolean); });
     }));
@@ -12020,8 +12030,13 @@ const CAEPage = {
         '<label class="cae-sw"><input type="checkbox" id="cae-ko"' + (this._soloKO ? ' checked' : '') + '> Solo pendientes</label>' +
         '<label class="cae-sw"><input type="checkbox" id="cae-ex"' + (this._verExcl ? ' checked' : '') + '> Incluir excluidas</label>' +
       '</div>' +
+      '<div class="cae-leyenda">' +
+        '<span><span class="cae-chip ok">OK</span> Trabajador y empresa con todo aceptado.</span>' +
+        '<span><span class="cae-chip rev">REVISIÓN</span> Documentación aportada, pendiente de que <b>Deterra</b> la revise/acepte.</span>' +
+        '<span><span class="cae-chip ko">KO</span> Documentación solicitada y aún <b>sin aportar por la empresa externa</b>.</span>' +
+      '</div>' +
       '<div id="cae-lista"></div>' +
-      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">OK = los documentos del trabajador <b>y los de su empresa</b> están en «Aceptado» o «Anulado/No aplica». Si la empresa no está en regla, sus trabajadores figuran KO. Fuente: exportación SmartOSH CAE › Documentos' +
+      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">OK = los documentos del trabajador <b>y los de su empresa</b> están en «Aceptado» o «Anulado/No aplica». <b>KO</b> = falta documentación por aportar (responsabilidad de la empresa externa). <b>REVISIÓN</b> = documentación ya aportada, pendiente de que la revisemos/aceptemos. Fuente: exportación SmartOSH CAE › Documentos' +
       (this._data.filas ? ' (' + this._data.filas.toLocaleString('es-ES') + ' filas)' : '') + '.</p>';
 
     const q = document.getElementById('cae-q');
@@ -12036,13 +12051,15 @@ const CAEPage = {
 
   _pintar() {
     const es = this._visibles();
-    const ok = es.reduce((a, e) => a + e.ok, 0), ko = es.reduce((a, e) => a + e.ko, 0);
+    const ok = es.reduce((a, e) => a + e.ok, 0), ko = es.reduce((a, e) => a + e.ko, 0), rev = es.reduce((a, e) => a + (e.rev || 0), 0);
+    const koRed = ko - rev;
     const dko = es.reduce((a, e) => a + e.docsEmpresaKO, 0);
     const pct = (ok + ko) ? Math.round(ok * 100 / (ok + ko)) : 0;
     document.getElementById('cae-kpis').innerHTML =
       '<div class="cae-kpi"><div class="v">' + es.length + '</div><div class="l">Empresas externas</div></div>' +
       '<div class="cae-kpi ok"><div class="v">' + ok + '</div><div class="l">Trabajadores en regla</div></div>' +
-      '<div class="cae-kpi ko"><div class="v">' + ko + '</div><div class="l">Con docs pendientes</div></div>' +
+      '<div class="cae-kpi ko"><div class="v">' + koRed + '</div><div class="l">Falta aportar (empresa)</div></div>' +
+      '<div class="cae-kpi rev"><div class="v">' + rev + '</div><div class="l">Pdte. de revisar (Deterra)</div></div>' +
       '<div class="cae-kpi"><div class="v">' + pct + '%</div><div class="l">Cumplimiento</div></div>' +
       '<div class="cae-kpi"><div class="v">' + dko + '</div><div class="l">Docs de empresa pendientes</div></div>';
 
@@ -12051,18 +12068,27 @@ const CAEPage = {
     const q = this._q.trim().toLowerCase();
     cont.innerHTML = es.map((e, i) => {
       const tot = e.ok + e.ko, w = tot ? Math.round(e.ok * 100 / tot) : 0;
+      const koRed = e.ko - (e.rev || 0), pendCls = koRed > 0 ? 'k' : 'r', barRev = (e.ko && koRed === 0) ? ' rev' : '';
       let tr = e.trabajadores;
-      if (this._soloKO) tr = tr.filter(t => t.e === 'KO');
+      if (this._soloKO) tr = tr.filter(t => t.e !== 'OK');
       if (q && e.nombre.toLowerCase().indexOf(q) < 0) tr = tr.filter(t => t.n.toLowerCase().indexOf(q) >= 0);
       const MOT = { propio: 'Documentación propia', empresa: 'Documentación de la empresa', ambos: 'Propia + empresa' };
       const filas = tr.map(t => {
         let det = '—';
-        if (t.e === 'KO') {
-          det = (t.m === 'empresa') ? 'Sus documentos están en regla; falla la empresa'
-                                    : (this._esc(t.d.join(' · ')) || (t.f + ' documento(s)'));
+        if (t.e !== 'OK') {
+          if (t.m === 'empresa') {
+            det = t.e === 'REV' ? 'Docs propios en regla; la empresa tiene documentación por revisar'
+                                : 'Sus documentos están en regla; falla la empresa';
+          } else {
+            det = this._esc(t.d.join(' · ')) || (t.f + ' documento(s)');
+          }
         }
-        return '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + (t.e === 'OK' ? 'ok' : 'ko') + '">' + t.e + '</span></td>' +
-          '<td class="cae-falta">' + (t.e === 'OK' ? '—' : this._esc(MOT[t.m] || '')) + '</td>' +
+        const chipCls = t.e === 'OK' ? 'ok' : (t.e === 'REV' ? 'rev' : 'ko');
+        const chipTxt = t.e === 'REV' ? 'REVISIÓN' : t.e;
+        const mot = t.e === 'OK' ? '—'
+                  : (t.e === 'REV' ? 'Aportado, pendiente de revisión' : this._esc(MOT[t.m] || ''));
+        return '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + chipCls + '">' + chipTxt + '</span></td>' +
+          '<td class="cae-falta">' + mot + '</td>' +
           '<td class="cae-falta">' + det + '</td></tr>';
       }).join('');
       return '<div class="cae-emp">' +
@@ -12070,12 +12096,16 @@ const CAEPage = {
           '<span class="cae-nom"><span class="cae-caret">›</span> ' + this._esc(e.nombre) +
             (e.excluida ? '<span class="cae-excl">excluida</span>' : '') +
             '<span class="cae-pr">' + this._esc(e.principal.join(' · ')) + '</span></span>' +
-          '<span class="cae-cifras"><span class="cae-bar"><i style="width:' + w + '%"></i></span>' +
-            '<span class="cae-num"><b class="o">' + e.ok + '</b> / <b class="k">' + e.ko + '</b></span></span>' +
+          '<span class="cae-cifras"><span class="cae-bar' + barRev + '"><i style="width:' + w + '%"></i></span>' +
+            '<span class="cae-num"><b class="o">' + e.ok + '</b> / <b class="' + pendCls + '">' + e.ko + '</b></span></span>' +
         '</button>' +
         '<div class="cae-det" hidden>' +
-          (e.docsEmpresaKO ? '<p class="cae-docsemp">⚠ La empresa tiene ' + e.docsEmpresaKO + ' documento(s) sin aceptar, así que <b>ninguno de sus trabajadores puede acceder</b>' +
-             ((e.docsEmpresa && e.docsEmpresa.length) ? ': ' + this._esc(e.docsEmpresa.join(' · ')) : '') + '</p>' : '') +
+          (e.docsEmpresaKO ? (function(){
+            var ped = e.docsEmpresaKO - (e.docsEmpresaRev || 0);
+            var lst = (e.docsEmpresa && e.docsEmpresa.length) ? ': ' + CAEPage._esc(e.docsEmpresa.join(' · ')) : '';
+            if (ped > 0) return '<p class="cae-docsemp">⚠ La empresa tiene ' + ped + ' documento(s) <b>sin aportar</b>, así que <b>ninguno de sus trabajadores puede acceder</b>' + lst + '</p>';
+            return '<p class="cae-docsemp cae-rev">🕒 La empresa ha aportado ' + e.docsEmpresaKO + ' documento(s), <b>pendientes de que Deterra los revise/acepte</b>' + lst + '</p>';
+          })() : '') +
           (filas ? '<table class="cae-tabla"><thead><tr><th>Trabajador</th><th>Estado</th><th>Motivo</th><th>Documentos pendientes</th></tr></thead><tbody>' + filas + '</tbody></table>'
                  : '<p class="cae-falta">Sin trabajadores que mostrar con este filtro.</p>') +
         '</div></div>';
