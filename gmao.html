@@ -792,7 +792,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.7</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.8</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -11805,30 +11805,66 @@ const CAEPage = {
   procesar(rows) {
     const OKEST = { 'Aceptado': 1, 'Anulado/No aplica': 1, 'No aplica': 1 };
     const centros = {};
+    // Acumula por TIPO de documento dentro de cada coordinacion: por cada tipo
+    // guardamos si tiene alguna copia aceptada (ok), alguna aportada/pendiente
+    // de revisar (rev) y alguna solicitada (ped). La decision se toma luego.
     for (const r of rows) {
       const centro = this._centroDe(r['Código coordinación'], r['Coordinación']);
       const empresa = this._limpia(r['Empresa externa de la coordinación']);
       const coord = String(r['Coordinación'] || '').trim();
       const principal = this._limpia(r['Empresa principal']);
       const trabRaw = r['Empleado'];
-      const ok = !!OKEST[String(r['Estado'] || '').trim()];
-      const esRev = !ok && /pendiente|aportad/i.test(String(r['Estado'] || ''));
-      const tipo = String(r['Tipo de documento'] || '').trim();
+      const estado = String(r['Estado'] || '').trim();
+      const ok = !!OKEST[estado];
+      const esRev = !ok && /aportad|pendiente de (aceptar|revis|firm|valid)/i.test(estado);
+      const tkey = (String(r['Tipo de documento'] || '').trim()) || '(documento)';
       if (!centros[centro]) centros[centro] = {};
       if (!centros[centro][empresa]) centros[centro][empresa] = { coords: {}, principal: {} };
       const E = centros[centro][empresa];
       if (principal) E.principal[principal] = 1;
-      if (!E.coords[coord]) E.coords[coord] = { empKO: 0, empRev: 0, empDocs: [], trab: {} };
+      if (!E.coords[coord]) E.coords[coord] = { empTipos: {}, trab: {} };
       const C = E.coords[coord];
+      let bag;
       if (!trabRaw || !String(trabRaw).trim()) {
-        if (!ok) { C.empKO++; if (esRev) C.empRev++; if (tipo && C.empDocs.length < 8 && C.empDocs.indexOf(tipo) < 0) C.empDocs.push(tipo); }
-        continue;
+        bag = C.empTipos;
+      } else {
+        const nom = this._nombreTrab(trabRaw);
+        if (!C.trab[nom]) C.trab[nom] = { tipos: {} };
+        bag = C.trab[nom].tipos;
       }
-      const nom = this._nombreTrab(trabRaw);
-      if (!C.trab[nom]) C.trab[nom] = { ko: 0, rev: 0, docs: [] };
-      const T = C.trab[nom];
-      if (!ok) { T.ko++; if (esRev) T.rev++; if (tipo && T.docs.length < 8 && T.docs.indexOf(tipo) < 0) T.docs.push(tipo); }
+      if (!bag[tkey]) bag[tkey] = { ok: false, rev: false, ped: false };
+      const D = bag[tkey];
+      if (ok) D.ok = true; else if (esRev) D.rev = true; else D.ped = true;
     }
+
+    // Reduccion por TIPO: un tipo cuenta como pendiente SOLO si no tiene ninguna
+    // copia aceptada (asi una copia mensual "Solicitado" no bloquea si ya hay
+    // otra copia del mismo tipo "Aceptada", igual que SmartOSH da el acceso).
+    // Del pendiente: REV (naranja) si solo esta aportado/pdte de revisar; rojo
+    // en cuanto haya una copia solo solicitada.
+    const _red = tipos => {
+      let ko = 0, rev = 0; const docs = [];
+      for (const t in tipos) {
+        const D = tipos[t];
+        if (D.ok) continue;
+        ko++;
+        if (D.rev && !D.ped) rev++;
+        if (docs.length < 8 && docs.indexOf(t) < 0) docs.push(t);
+      }
+      return { ko, rev, docs };
+    };
+    Object.keys(centros).forEach(cn => Object.keys(centros[cn]).forEach(en => {
+      const E = centros[cn][en];
+      Object.keys(E.coords).forEach(cd => {
+        const C = E.coords[cd];
+        const er = _red(C.empTipos);
+        C.empKO = er.ko; C.empRev = er.rev; C.empDocs = er.docs;
+        Object.keys(C.trab).forEach(nm => {
+          const wr = _red(C.trab[nm].tipos);
+          C.trab[nm].ko = wr.ko; C.trab[nm].rev = wr.rev; C.trab[nm].docs = wr.docs;
+        });
+      });
+    }));
 
     const out = { centros: {}, dt: [] };
     const dtIdx = {};
