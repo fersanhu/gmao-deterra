@@ -482,6 +482,11 @@ select.form-input{cursor:pointer}
 /* ── CONFIG PAGE ── */
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.config-grid{grid-template-columns:1fr}}
+.cfg-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.cfg-tab{border:1px solid var(--border,#ddd);background:#fff;color:inherit;padding:8px 14px;border-radius:4px;cursor:pointer;font:inherit;font-size:13px;font-weight:600;display:flex;gap:7px;align-items:center}
+.cfg-tab:hover{border-color:#275D3A}
+.cfg-tab.active{background:#275D3A;border-color:#275D3A;color:#fff}
+.cfg-panel[hidden]{display:none}
 
 /* ── RESUMEN POR ALMACÉN ── */
 .almacen-bar{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-light)}
@@ -792,7 +797,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.9</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.10</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -8130,137 +8135,17 @@ const ConfigPage = {
     <div class="page-header">
       <div><h1>${t('nav_config')}</h1><p class="page-subtitle">Gestión de datos y usuarios del sistema</p></div>
     </div>
-    <div class="config-grid">
 
-      <!-- Base de datos -->
+    <div class="cfg-tabs">
+      <button class="cfg-tab active" data-cfgtab="tecnicos" onclick="ConfigPage._tab('tecnicos')">👤 Técnicos</button>
+      ${canAdmin ? `<button class="cfg-tab" data-cfgtab="datos" onclick="ConfigPage._tab('datos')">📊 Datos</button>
+      <button class="cfg-tab" data-cfgtab="integ" onclick="ConfigPage._tab('integ')">🔌 Integraciones</button>
+      <button class="cfg-tab" data-cfgtab="sistema" onclick="ConfigPage._tab('sistema')">⚙️ Sistema</button>` : ''}
+    </div>
+
+    <!-- ══════════ TÉCNICOS ══════════ -->
+    <div class="cfg-panel" data-cfgpanel="tecnicos">
       <div class="card">
-        <div class="card-header"><span class="card-title">📊 Base de datos</span></div>
-        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Exporta todos los datos a JSON o importa un nuevo Excel.</p>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn btn-secondary" onclick="ConfigPage.exportData()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Exportar datos (JSON)
-          </button>
-          <button class="btn btn-secondary" onclick="ConfigPage.triggerImportProductos()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
-            Actualizar catálogo de productos
-          </button>
-          <input type="file" id="import-productos-input" accept=".xlsx,.xls" style="display:none">
-          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Solo lee la pestaña «Productos» — no toca técnicos, averías ni inventario</p>
-          <div style="height:1px;background:var(--border);margin:4px 0"></div>
-          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerReimport()">
-            Reimportar Excel completo (activos + inventario)
-          </button>
-          <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
-          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Actualiza activos, inventario, productos y técnicos del Excel. No toca averías.</p>
-          <div style="height:1px;background:var(--border);margin:4px 0"></div>
-          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.exportAverias()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Exportar registro de averías (Excel)
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerImportAverias()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 3v12"/></svg>
-            Importar averías (Excel)
-          </button>
-          <input type="file" id="import-averias-input" accept=".xlsx,.xls" style="display:none">
-          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Importa el Excel exportado y valida cada cambio antes de guardar</p>
-          <div style="height:1px;background:var(--border);margin:4px 0"></div>
-          <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()" style="margin-top:4px">
-            Borrar todos los datos
-          </button>
-          <div style="height:1px;background:var(--border);margin:8px 0"></div>
-          <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()">
-            ⚙️ SQL para crear tablas (partes_trabajo, fotos)
-          </button>
-          <div style="height:1px;background:var(--border);margin:8px 0"></div>
-          <button class="btn btn-secondary btn-sm" style="border-color:var(--orange);color:var(--orange)" onclick="ConfigPage.repararPartes()">
-            🔧 Reparar partes faltantes
-          </button>
-          <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Crea un parte de trabajo para cada avería que no tenga ninguno.</p>
-        </div>
-      </div>
-
-      <!-- Alertas Telegram -->
-      ${canAdmin ? `<div class="card">
-        <div class="card-header"><span class="card-title">API Inteligencia Artificial</span></div>
-        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
-          Clave de API de Anthropic (Claude) para el análisis automático de PDFs de inspección. Se guarda solo en este dispositivo, nunca en el servidor.
-        </p>
-        <div class="form-field" style="margin:0 0 8px 0">
-          <label>Anthropic API Key</label>
-          <input class="form-input" type="password" id="cfg-anthropic-key"
-            placeholder="sk-ant-..."
-            value="${localStorage.getItem('gmao_anthropic_key')||''}"
-            onchange="localStorage.setItem('gmao_anthropic_key',this.value);toast('API key guardada ✓','success')">
-        </div>
-        <p style="font-size:11px;color:var(--gray-muted);margin:0">
-          Obtén tu clave en <code>console.anthropic.com</code>. Cada dispositivo debe configurarla por separado.
-        </p>
-      </div></div>
-      <div class="card" style="margin-bottom:16px"><div style="padding:16px">
-        <div class="card-header"><span class="card-title">Alertas Telegram</span></div>
-        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
-          El primer inicio de sesión del día a partir de las 6:00h enviará automáticamente un resumen de las averías del día anterior a todos los centros.
-        </p>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="form-field" style="margin:0">
-            <label>Bot Token</label>
-            <input class="form-input" type="password" id="cfg-tg-token"
-              placeholder="123456789:ABC-DEF..."
-              value="${localStorage.getItem('gmao_tg_token')||''}"
-              onchange="localStorage.setItem('gmao_tg_token',this.value)">
-          </div>
-          <div class="form-field" style="margin:0">
-            <label>Chat ID del grupo/canal</label>
-            <input class="form-input" id="cfg-tg-chatid"
-              placeholder="-100123456789"
-              value="${localStorage.getItem('gmao_tg_chatid')||''}"
-              onchange="localStorage.setItem('gmao_tg_chatid',this.value)">
-          </div>
-          <p style="font-size:11px;color:var(--gray-muted);margin:0">
-            Crea el bot con @BotFather en Telegram. El Chat ID lo obtienes añadiendo el bot al grupo y visitando
-            <code>api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>
-          </p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-            <button class="btn btn-secondary btn-sm" onclick="AlertService.sendMessage('✅ Conexión GMAO correcta').then(()=>toast('Mensaje enviado','success')).catch(e=>toast(e.message,'error'))">
-              Probar conexión
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="AlertService._sendResumenDiario().then(()=>toast('Resumen enviado','success')).catch(e=>toast(e.message,'error'))">
-              Enviar resumen de ayer ahora
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="db.metadata.delete('tg_report_date').then(()=>toast('Listo — se enviará en el próximo inicio de sesión','success'))">
-              Forzar reenvío mañana
-            </button>
-          </div>
-        </div>
-      </div>` : ''}
-
-      <!-- Sesión -->
-      ${canAdmin ? `<div class="card">
-        <div class="card-header"><span class="card-title">⏱️ Tiempo de sesión</span></div>
-        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
-          Si la app lleva X horas sin usarse, al volver se pedirá identificación de nuevo.<br>
-          Útil cuando varios mecánicos comparten un dispositivo.
-        </p>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <label style="font-size:13px;font-weight:600">Cerrar sesión tras:</label>
-          <select class="form-input" id="cfg-timeout" style="width:auto"
-            onchange="UserService.setTimeoutHours(parseFloat(this.value)); toast('Configuración de sesión guardada ✓','success')">
-            <option value="2"  ${UserService.getTimeoutHours()===2 ?'selected':''}>2 horas</option>
-            <option value="4"  ${UserService.getTimeoutHours()===4 ?'selected':''}>4 horas</option>
-            <option value="8"  ${UserService.getTimeoutHours()===8 ?'selected':''}>8 horas (por defecto)</option>
-            <option value="12" ${UserService.getTimeoutHours()===12?'selected':''}>12 horas</option>
-            <option value="24" ${UserService.getTimeoutHours()===24?'selected':''}>24 horas</option>
-            <option value="0"  ${UserService.getTimeoutHours()===0 ?'selected':''}>Nunca cerrar sesión</option>
-          </select>
-        </div>
-        <p style="font-size:11px;color:var(--gray-muted);margin-top:10px">
-          ⚠️ El contador se reinicia con cualquier interacción (clic, teclado). Solo cierra la sesión si el dispositivo está inactivo.
-        </p>
-      </div>` : ''}
-
-      <!-- Técnicos -->
-      <div class="card" style="grid-column:1/-1">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <span class="card-title">👤 Técnicos <span id="tec-count">(${tecnicos.length})</span></span>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -8291,8 +8176,161 @@ const ConfigPage = {
           </table>
         </div>
       </div>
+    </div>
 
-    </div>`;
+    ${canAdmin ? `
+    <!-- ══════════ DATOS ══════════ -->
+    <div class="cfg-panel" data-cfgpanel="datos" hidden>
+      <div class="config-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📤 Exportar</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Copias de seguridad y descargas de datos.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-secondary" onclick="ConfigPage.exportData()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Exportar datos (JSON)
+            </button>
+            <button class="btn btn-secondary" onclick="ConfigPage.exportAverias()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Exportar registro de averías (Excel)
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">📥 Importar</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Actualiza datos desde Excel. Las averías nunca se borran.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-secondary" onclick="ConfigPage.triggerImportProductos()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+              Actualizar catálogo de productos
+            </button>
+            <input type="file" id="import-productos-input" accept=".xlsx,.xls" style="display:none">
+            <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Solo lee la pestaña «Productos» — no toca técnicos, averías ni inventario</p>
+            <div style="height:1px;background:var(--border);margin:4px 0"></div>
+            <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerReimport()">
+              Reimportar Excel completo (activos + inventario)
+            </button>
+            <input type="file" id="reimport-input" accept=".xlsx,.xls" style="display:none">
+            <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Actualiza activos, inventario, productos y técnicos del Excel. No toca averías.</p>
+            <div style="height:1px;background:var(--border);margin:4px 0"></div>
+            <button class="btn btn-secondary btn-sm" onclick="ConfigPage.triggerImportAverias()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 3v12"/></svg>
+              Importar averías (Excel)
+            </button>
+            <input type="file" id="import-averias-input" accept=".xlsx,.xls" style="display:none">
+            <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Importa el Excel exportado y valida cada cambio antes de guardar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ INTEGRACIONES ══════════ -->
+    <div class="cfg-panel" data-cfgpanel="integ" hidden>
+      <div class="config-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🤖 API Inteligencia Artificial</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
+            Clave de API de Anthropic (Claude) para el análisis automático de PDFs de inspección. Se guarda solo en este dispositivo, nunca en el servidor.
+          </p>
+          <div class="form-field" style="margin:0 0 8px 0">
+            <label>Anthropic API Key</label>
+            <input class="form-input" type="password" id="cfg-anthropic-key"
+              placeholder="sk-ant-..."
+              value="${localStorage.getItem('gmao_anthropic_key')||''}"
+              onchange="localStorage.setItem('gmao_anthropic_key',this.value);toast('API key guardada ✓','success')">
+          </div>
+          <p style="font-size:11px;color:var(--gray-muted);margin:0">
+            Obtén tu clave en <code>console.anthropic.com</code>. Cada dispositivo debe configurarla por separado.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">✈️ Alertas Telegram</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
+            El primer inicio de sesión del día a partir de las 6:00h enviará automáticamente un resumen de las averías del día anterior a todos los centros.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="form-field" style="margin:0">
+              <label>Bot Token</label>
+              <input class="form-input" type="password" id="cfg-tg-token"
+                placeholder="123456789:ABC-DEF..."
+                value="${localStorage.getItem('gmao_tg_token')||''}"
+                onchange="localStorage.setItem('gmao_tg_token',this.value)">
+            </div>
+            <div class="form-field" style="margin:0">
+              <label>Chat ID del grupo/canal</label>
+              <input class="form-input" id="cfg-tg-chatid"
+                placeholder="-100123456789"
+                value="${localStorage.getItem('gmao_tg_chatid')||''}"
+                onchange="localStorage.setItem('gmao_tg_chatid',this.value)">
+            </div>
+            <p style="font-size:11px;color:var(--gray-muted);margin:0">
+              Crea el bot con @BotFather en Telegram. El Chat ID lo obtienes añadiendo el bot al grupo y visitando
+              <code>api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+              <button class="btn btn-secondary btn-sm" onclick="AlertService.sendMessage('✅ Conexión GMAO correcta').then(()=>toast('Mensaje enviado','success')).catch(e=>toast(e.message,'error'))">
+                Probar conexión
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="AlertService._sendResumenDiario().then(()=>toast('Resumen enviado','success')).catch(e=>toast(e.message,'error'))">
+                Enviar resumen de ayer ahora
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="db.metadata.delete('tg_report_date').then(()=>toast('Listo — se enviará en el próximo inicio de sesión','success'))">
+                Forzar reenvío mañana
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ SISTEMA ══════════ -->
+    <div class="cfg-panel" data-cfgpanel="sistema" hidden>
+      <div class="config-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">⏱️ Tiempo de sesión</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
+            Si la app lleva X horas sin usarse, al volver se pedirá identificación de nuevo.<br>
+            Útil cuando varios mecánicos comparten un dispositivo.
+          </p>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="font-size:13px;font-weight:600">Cerrar sesión tras:</label>
+            <select class="form-input" id="cfg-timeout" style="width:auto"
+              onchange="UserService.setTimeoutHours(parseFloat(this.value)); toast('Configuración de sesión guardada ✓','success')">
+              <option value="2"  ${UserService.getTimeoutHours()===2 ?'selected':''}>2 horas</option>
+              <option value="4"  ${UserService.getTimeoutHours()===4 ?'selected':''}>4 horas</option>
+              <option value="8"  ${UserService.getTimeoutHours()===8 ?'selected':''}>8 horas (por defecto)</option>
+              <option value="12" ${UserService.getTimeoutHours()===12?'selected':''}>12 horas</option>
+              <option value="24" ${UserService.getTimeoutHours()===24?'selected':''}>24 horas</option>
+              <option value="0"  ${UserService.getTimeoutHours()===0 ?'selected':''}>Nunca cerrar sesión</option>
+            </select>
+          </div>
+          <p style="font-size:11px;color:var(--gray-muted);margin-top:10px">
+            ⚠️ El contador se reinicia con cualquier interacción (clic, teclado). Solo cierra la sesión si el dispositivo está inactivo.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">🛠️ Herramientas</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Utilidades técnicas de mantenimiento de la base de datos.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-secondary btn-sm" onclick="PartesPage._showSetupSQL()">
+              ⚙️ SQL para crear tablas (partes_trabajo, fotos)
+            </button>
+            <button class="btn btn-secondary btn-sm" style="border-color:var(--orange);color:var(--orange)" onclick="ConfigPage.repararPartes()">
+              🔧 Reparar partes faltantes
+            </button>
+            <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">Crea un parte de trabajo para cada avería que no tenga ninguno.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--red)">
+        <div class="card-header"><span class="card-title" style="color:var(--red)">⚠️ Zona peligrosa</span></div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">Esta acción borra TODOS los datos de la base y no se puede deshacer.</p>
+        <button class="btn btn-danger btn-sm" onclick="ConfigPage.clearData()">
+          Borrar todos los datos
+        </button>
+      </div>
+    </div>` : ''}
+    `;
 
     // Guardar todos los técnicos para filtrado local sin releer BD
     ConfigPage._allTecnicos = allTecnicos;
@@ -8330,6 +8368,7 @@ const ConfigPage = {
         toast('Error: ' + err.message, 'error');
       }
     });
+    ConfigPage._tab(ConfigPage._lastTab || 'tecnicos');
   },
 
   async _importSoloProductos(file) {
@@ -8420,6 +8459,11 @@ const ConfigPage = {
   async _refreshTecTable() {
     ConfigPage._allTecnicos = await DataService.getTecnicos();
     ConfigPage._filterTecTable();
+  },
+  _tab(name) {
+    ConfigPage._lastTab = name;
+    document.querySelectorAll('.cfg-panel').forEach(p => { p.hidden = p.dataset.cfgpanel !== name; });
+    document.querySelectorAll('.cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.cfgtab === name));
   },
 
   _rolBadge(rol) {
