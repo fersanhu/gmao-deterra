@@ -792,7 +792,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.8</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v9.9</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1776,6 +1776,7 @@ const DataService = {
   async getTecnicos(onlyActive = false) {
     let q = db.tecnicos.toCollection();
     const all = await q.toArray();
+    all.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
     return onlyActive ? all.filter(t => t.activo) : all;
   },
   async getActivos(filters = {}) {
@@ -2513,7 +2514,6 @@ const Router = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
-    NavGroups.openFor(base);
     NavGroups.refreshDots();
     const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', planes:'Planes / Gamas', preventivos:'Preventivos pendientes', ordenes:'Órdenes de trabajo', partes:'Partes de trabajo', cae:'CAE · Empresas externas', config:'Configuración' };
     document.getElementById('topbar-title').textContent = titles[base] || base;
@@ -2537,7 +2537,7 @@ const Router = {
 
 // Grupos plegables del menú lateral (acordeón + persistencia en localStorage)
 const NavGroups = {
-  _KEY: 'gmao_nav_groups',
+  _KEY: 'gmao_nav_groups_v2',
   _state() { try { return JSON.parse(localStorage.getItem(this._KEY) || '{}'); } catch { return {}; } },
   _save(s) { localStorage.setItem(this._KEY, JSON.stringify(s)); },
   toggle(g) {
@@ -2549,7 +2549,7 @@ const NavGroups = {
   restore() {
     const s = this._state();
     document.querySelectorAll('.nav-group').forEach(g => {
-      g.classList.toggle('open', s[g.dataset.group] !== false);  // por defecto abierto
+      g.classList.toggle('open', s[g.dataset.group] === true);  // por defecto contraído
     });
     this.refreshDots();
   },
@@ -4715,6 +4715,7 @@ const AveriasPage = {
       document.getElementById(id)?.addEventListener('input', () => this._applyFilters());
       document.getElementById(id)?.addEventListener('change', () => this._applyFilters());
     });
+    if (this._bootNew) { this._bootNew = false; this.openNew(); }
   },
 
   _applyFilters() {
@@ -8416,6 +8417,11 @@ const ConfigPage = {
     if (countEl) countEl.textContent = `(${filtered.length})`;
   },
 
+  async _refreshTecTable() {
+    ConfigPage._allTecnicos = await DataService.getTecnicos();
+    ConfigPage._filterTecTable();
+  },
+
   _rolBadge(rol) {
     const cls = rol === 'Admin' ? 'badge-red' : rol === 'Responsable' ? 'badge-orange' : 'badge-green';
     return `<span class="badge ${cls}">${UI.esc(rol)}</span>`;
@@ -8455,37 +8461,37 @@ const ConfigPage = {
     </tr>`).join('');
   },
 
-  _tecFormHtml(t = {}) {
+  _tecFormHtml(tec = {}) {
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi','Todos'];
     const roles     = ['Mecanico','Responsable','Admin'];
     return `
       <div class="form-grid">
         <div class="form-field">
           <label>Nombre *</label>
-          <input class="form-input" id="tec-nombre" value="${UI.esc(t.nombre||'')}" placeholder="Nombre completo">
+          <input class="form-input" id="tec-nombre" value="${UI.esc(tec.nombre||'')}" placeholder="Nombre completo">
         </div>
         <div class="form-field">
           <label>Email</label>
-          <input class="form-input" id="tec-email" type="email" value="${UI.esc(t.email||'')}" placeholder="correo@empresa.com">
+          <input class="form-input" id="tec-email" type="email" value="${UI.esc(tec.email||'')}" placeholder="correo@empresa.com">
         </div>
         <div class="form-field">
           <label>Teléfono</label>
-          <input class="form-input" id="tec-telefono" value="${UI.esc(t.telefono||'')}" placeholder="6XX XXX XXX">
+          <input class="form-input" id="tec-telefono" value="${UI.esc(tec.telefono||'')}" placeholder="6XX XXX XXX">
         </div>
         <div class="form-field">
           <label>Rol *</label>
           <select class="form-input" id="tec-rol">
-            ${roles.map(r => `<option${t.rol===r?' selected':''}>${r}</option>`).join('')}
+            ${roles.map(r => `<option${tec.rol===r?' selected':''}>${r}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
           <label>${t('lbl_almacen')} *</label>
           <select class="form-input" id="tec-almacen">
-            ${almacenes.map(a => `<option${(t.almacen||'Miramar')===a?' selected':''}>${a}</option>`).join('')}
+            ${almacenes.map(a => `<option${(tec.almacen||'Miramar')===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-field" style="display:flex;align-items:center;gap:10px;padding-top:22px">
-          <input type="checkbox" id="tec-activo"${t.activo!==false?' checked':''} style="width:16px;height:16px">
+          <input type="checkbox" id="tec-activo"${tec.activo!==false?' checked':''} style="width:16px;height:16px">
           <label for="tec-activo" style="margin:0;cursor:pointer">Activo</label>
         </div>
       </div>`;
@@ -8536,7 +8542,7 @@ const ConfigPage = {
       toast(`${nombre} añadido`, 'success');
     }
     Modal.close();
-    await ConfigPage.render();
+    await ConfigPage._refreshTecTable();
   },
 
   async toggleActivo(id) {
@@ -8544,10 +8550,7 @@ const ConfigPage = {
     if (!t) return;
     await db.tecnicos.put({ ...t, activo: !t.activo });
     toast(`${t.nombre} → ${!t.activo ? 'Activo' : 'Inactivo'}`, 'success');
-    // Redibujar solo la fila
-    const all = await DataService.getTecnicos();
-    const canAdmin = UserService.canManageConfig();
-    document.getElementById('tec-tbody').innerHTML = ConfigPage._tecRows(all, canAdmin);
+    await ConfigPage._refreshTecTable();
   },
 
   async deleteTecnico(id) {
@@ -8556,13 +8559,7 @@ const ConfigPage = {
     if (!confirm(`¿Eliminar a "${t.nombre}"? Esta acción no se puede deshacer.`)) return;
     await db.tecnicos.delete(id);
     toast(`${t.nombre} eliminado`, 'success');
-    const all = await DataService.getTecnicos();
-    const canAdmin = UserService.canManageConfig();
-    document.getElementById('tec-tbody').innerHTML = ConfigPage._tecRows(all, canAdmin);
-    document.querySelector('.card-title')?.closest('.card')
-      ?.querySelector('.card-title')?.textContent;
-    // Actualizar el título del card
-    await ConfigPage.render();
+    await ConfigPage._refreshTecTable();
   },
 
   async managePassword(id) {
@@ -8609,7 +8606,7 @@ const ConfigPage = {
     await db.tecnicos.put({ ...t, password: '' });
     Modal.close();
     toast(`Contraseña de ${t.nombre} eliminada — deberá crear una nueva`, 'success');
-    await ConfigPage.render();
+    await ConfigPage._refreshTecTable();
   },
 
   async _setPassword(id) {
@@ -8623,7 +8620,7 @@ const ConfigPage = {
     await db.tecnicos.put({ ...t, password: pw1 });
     Modal.close();
     toast(`Contraseña de ${t.nombre} actualizada`, 'success');
-    await ConfigPage.render();
+    await ConfigPage._refreshTecTable();
   },
 
   async exportData() {
@@ -8997,8 +8994,8 @@ const UserSelectScreen = {
     App.updateUserUI();
     App.showScreen('screen-app');
     if (!Router._initialized) { Router.init(); Router._initialized = true; }
-    const _home = UserService.isAdmin() ? 'partes' : 'averias';
-    if (_home === 'partes') PartesPage._bootPreset = 'ayer';
+    const _home = (UserService.isAdmin() || UserService.isResponsable()) ? 'dashboard' : 'averias';
+    if (_home === 'averias') AveriasPage._bootNew = true;
     Router.navigate(_home);
     Router.handle();
     App.updateBadges();
@@ -9045,8 +9042,8 @@ const App = {
     this.showScreen('screen-app');
     Router.init();
     Router._initialized = true;
-    const _home = UserService.isAdmin() ? 'partes' : 'averias';
-    if (_home === 'partes') PartesPage._bootPreset = 'ayer';
+    const _home = (UserService.isAdmin() || UserService.isResponsable()) ? 'dashboard' : 'averias';
+    if (_home === 'averias') AveriasPage._bootNew = true;
     Router.navigate(_home);
     await Router.handle();
     this.updateBadges();
