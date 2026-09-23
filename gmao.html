@@ -811,7 +811,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.2</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.3</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -915,6 +915,8 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.3: reseteo de contraseña desde Técnicos ──
+      x_cambiar_o_resetear_la_contrasena:'Cambiar o resetear la contraseña', x_resetear_contrasena_tip:'Resetear la contraseña: el técnico creará una nueva en su próximo acceso', x_resetear_contrasena:'Resetear contraseña', x_resetear_contrasena_explica:'Borra la contraseña actual. La próxima vez que el técnico entre, la app le pedirá crear una nueva.', x_confirm_reset_contrasena:'¿Resetear la contraseña de "{n}"? Deberá crear una nueva en su próximo acceso.', x_confirm_reset_propia:'Vas a resetear TU PROPIA contraseña: al volver a entrar tendrás que crear una nueva. ¿Continuar?', x_contrasena_reseteada:'Contraseña de {n} reseteada: creará una nueva en su próximo acceso', x_este_tecnico_no_tiene_contrasena:'Este técnico no tiene contraseña: la creará al entrar',
       x_sin_averias_abiertas:'Sin averías abiertas', x_total:'Total', x_total_dur:'Total dur.',
       // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
       grp_cuadros:'Cuadros de mando', grp_operativa:'Operativa', grp_preventivo:'Preventivo', grp_activos:'Activos',
@@ -1176,6 +1178,8 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.3: reseteo de contraseña desde Técnicos ──
+      x_cambiar_o_resetear_la_contrasena:'Change or reset the password', x_resetear_contrasena_tip:'Reset the password: the technician will create a new one at next login', x_resetear_contrasena:'Reset password', x_resetear_contrasena_explica:'Clears the current password. The next time the technician logs in, the app will ask them to create a new one.', x_confirm_reset_contrasena:'Reset the password of "{n}"? They will have to create a new one at next login.', x_confirm_reset_propia:'You are about to reset YOUR OWN password: you will have to create a new one when you log in again. Continue?', x_contrasena_reseteada:'Password of {n} reset: they will create a new one at next login', x_este_tecnico_no_tiene_contrasena:'This technician has no password: they will create it at login',
       x_sin_averias_abiertas:'No open breakdowns', x_total:'Total', x_total_dur:'Total dur.',
       // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
       grp_cuadros:'Dashboards', grp_operativa:'Operations', grp_preventivo:'Preventive', grp_activos:'Assets',
@@ -1437,6 +1441,8 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.3: reseteo de contraseña desde Técnicos ──
+      x_cambiar_o_resetear_la_contrasena:'تغيير أو إعادة تعيين كلمة المرور', x_resetear_contrasena_tip:'إعادة تعيين كلمة المرور: سينشئ الفني كلمة جديدة عند الدخول التالي', x_resetear_contrasena:'إعادة تعيين كلمة المرور', x_resetear_contrasena_explica:'يحذف كلمة المرور الحالية. عند الدخول التالي سيطلب التطبيق من الفني إنشاء كلمة جديدة.', x_confirm_reset_contrasena:'إعادة تعيين كلمة مرور "{n}"؟ سيتعين عليه إنشاء كلمة جديدة عند الدخول التالي.', x_confirm_reset_propia:'أنت على وشك إعادة تعيين كلمة مرورك أنت: سيتعين عليك إنشاء كلمة جديدة عند الدخول مجددًا. متابعة؟', x_contrasena_reseteada:'تمت إعادة تعيين كلمة مرور {n}: سينشئ كلمة جديدة عند الدخول التالي', x_este_tecnico_no_tiene_contrasena:'هذا الفني ليس لديه كلمة مرور: سينشئها عند الدخول',
       x_sin_averias_abiertas:'لا توجد أعطال مفتوحة', x_total:'الإجمالي', x_total_dur:'إجمالي المدة',
       // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
       grp_cuadros:'لوحات التحكم', grp_operativa:'العمليات', grp_preventivo:'الصيانة الوقائية', grp_activos:'الأصول',
@@ -9004,14 +9010,15 @@ const ConfigPage = {
       </td>
       <td style="text-align:center">
         ${canAdmin
-          ? `<button class="btn btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" title="${tec.password?t('x_contrasena_establecida'):t('x_sin_contrasena')}" onclick="ConfigPage.managePassword('${UI.esc(tec.id)}')">
-               ${tec.password ? '🔒' : '🔓 ' + t('x_sin_clave')}
+          ? `<button class="btn btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" title="${tec.password?t('x_cambiar_o_resetear_la_contrasena'):t('x_sin_contrasena')}" onclick="ConfigPage.managePassword('${UI.esc(tec.id)}')">
+               ${tec.password ? '🔒 ' + t('x_clave') : '🔓 ' + t('x_sin_clave')}
              </button>`
           : (tec.password ? '🔒' : '🔓')
         }
       </td>
       ${canAdmin ? `<td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-secondary btn-sm" onclick="ConfigPage.editTecnico('${UI.esc(tec.id)}')">✏️</button>
+        <button class="btn btn-secondary btn-sm" title="${t('x_editar_tecnico')}" onclick="ConfigPage.editTecnico('${UI.esc(tec.id)}')">✏️</button>
+        ${tec.password ? `<button class="btn btn-secondary btn-sm" style="margin-left:4px" title="${t('x_resetear_contrasena_tip')}" onclick="ConfigPage._resetPassword('${UI.esc(tec.id)}')">🔄</button>` : ''}
         ${tec.id !== currentId
           ? `<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="ConfigPage.deleteTecnico('${UI.esc(tec.id)}')">🗑</button>`
           : `<button class="btn btn-secondary btn-sm" style="margin-left:4px;opacity:0.35;cursor:default" disabled title="${t('x_no_puedes_eliminarte_a_ti_mismo')}">🗑</button>`
@@ -9139,6 +9146,11 @@ const ConfigPage = {
           <p style="margin-top:6px;font-size:13px;color:var(--orange)">${t('x_sin_contrasena_el_usuario_la_creara_en_s')}</p>`
         }
       </div>
+      ${hasPw ? `
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px">
+        <div style="flex:1;min-width:220px;font-size:12.5px;color:var(--gray-text)"><b>${t('x_resetear_contrasena')}</b><br>${t('x_resetear_contrasena_explica')}</div>
+        <button class="btn btn-danger btn-sm" style="white-space:nowrap" onclick="ConfigPage._resetPassword('${UI.esc(id)}')">${t('x_resetear')}</button>
+      </div>` : ''}
       <div style="height:1px;background:var(--border);margin:14px 0"></div>
       <p style="font-size:12px;font-weight:600;color:var(--gray-text);margin-bottom:10px">${t('x_establecer_nueva_contrasena')}</p>
       <div class="form-grid" style="padding:0">
@@ -9151,20 +9163,23 @@ const ConfigPage = {
           <input class="form-input" id="pw-mgmt-new2" type="password" placeholder="">
         </div>
       </div>`,
-      `${hasPw ? `<button class="btn btn-danger btn-sm" onclick="ConfigPage._resetPassword('${UI.esc(id)}')">${t('x_resetear')}</button>` : ''}
-       <div style="flex:1"></div>
+      `<div style="flex:1"></div>
        <button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ConfigPage._setPassword('${UI.esc(id)}')">${t('x_guardar_contrasena')}</button>`
     );
   },
 
+  // Borra la contraseña del técnico: en su próximo acceso la app le pedirá crear una nueva
+  // (mismo flujo de "primera vez" de la pantalla de acceso). Se puede llamar desde la fila o desde el diálogo.
   async _resetPassword(id) {
-    const t = await db.tecnicos.get(id);
-    if (!t) return;
-    if (!await Modal.confirm(`¿Resetear la contraseña de "${t.nombre}"?\nDeberá crear una nueva en su próximo acceso.`)) return;
-    await db.tecnicos.put({ ...t, password: '' });
-    Modal.close();
-    toast(`Contraseña de ${t.nombre} eliminada — deberá crear una nueva`, 'success');
+    const tec = await db.tecnicos.get(id);
+    if (!tec) return;
+    if (!tec.password) { toast(t('x_este_tecnico_no_tiene_contrasena'), 'info'); return; }
+    if (tec.id === UserService.getUser()?.id && !await Modal.confirm(t('x_confirm_reset_propia'), { title: t('x_resetear_contrasena') })) return;
+    else if (tec.id !== UserService.getUser()?.id && !await Modal.confirm(t('x_confirm_reset_contrasena').replace('{n}', tec.nombre), { title: t('x_resetear_contrasena') })) return;
+    await db.tecnicos.put({ ...tec, password: '' });
+    if (document.getElementById('pw-mgmt-new')) Modal.close();
+    toast(t('x_contrasena_reseteada').replace('{n}', tec.nombre), 'success');
     await ConfigPage._refreshTecTable();
   },
 
