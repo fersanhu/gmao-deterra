@@ -511,7 +511,7 @@ select.form-input{cursor:pointer}
 
 /* ── RTL — ARABIC LAYOUT ── */
 html[dir="rtl"] #sidebar{left:auto;right:0}
-html[dir="rtl"] #main-panel{margin-left:0;margin-right:var(--sidebar-w)}
+html[dir="rtl"] #main-panel{margin-left:0;margin-right:0} /* v10.2: el menú ya ocupa su sitio en el flex; el margen dejaba un hueco de 230 px */
 html[dir="rtl"] .sidebar-user{flex-direction:row-reverse}
 html[dir="rtl"] .nav-item{flex-direction:row-reverse;text-align:right}
 html[dir="rtl"] .sidebar-logo{align-items:flex-end}
@@ -523,8 +523,16 @@ html[dir="rtl"] .users-grid{direction:rtl}
 html[dir="rtl"] .users-header{direction:rtl;text-align:right}
 html[dir="rtl"] .users-header h2,html[dir="rtl"] .users-header p{text-align:center}
 html[dir="rtl"] .topbar-title{text-align:right}
+/* v10.2: en pantallas medianas las tablas anchas pliegan columnas secundarias (marcadas con .col-sec) en vez de desbordar */
+@media (max-width:1500px){
+  .col-sec{display:none}
+  th{padding:9px 9px;letter-spacing:.2px}
+  td{padding:9px 9px;font-size:12.5px}
+  .col-truncate{max-width:150px}
+}
 html[dir="rtl"] table{direction:rtl}
 html[dir="rtl"] th,html[dir="rtl"] td{text-align:right}
+html[dir="rtl"] td{unicode-bidi:plaintext} /* v10.2: fechas e IDs latinos se leen en su orden natural dentro de tablas árabes */
 html[dir="rtl"] .card{text-align:right}
 html[dir="rtl"] .form-field label{text-align:right;display:block}
 html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
@@ -683,7 +691,7 @@ th:last-child{border-top-right-radius:var(--radius)}
       <div class="nav-group" data-group="cuadros">
         <div class="nav-group-header">
           <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span class="nav-group-title">Cuadros de mando</span>
+          <span class="nav-group-title" data-i18n="grp_cuadros">Cuadros de mando</span>
           <span class="nav-group-dot" style="display:none"></span>
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -694,7 +702,7 @@ th:last-child{border-top-right-radius:var(--radius)}
           </div>
           <div class="nav-item" data-route="cae">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg>
-            <span class="nav-label">CAE Externas</span>
+            <span class="nav-label" data-i18n="nav_cae">CAE Externas</span>
           </div>
           <div class="nav-item" data-route="partes-analisis">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -706,7 +714,7 @@ th:last-child{border-top-right-radius:var(--radius)}
       <div class="nav-group" data-group="operativa">
         <div class="nav-group-header">
           <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.7 2.7-2-2 2.7-2.7z"/></svg>
-          <span class="nav-group-title">Operativa</span>
+          <span class="nav-group-title" data-i18n="grp_operativa">Operativa</span>
           <span class="nav-group-dot" style="display:none"></span>
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -723,7 +731,7 @@ th:last-child{border-top-right-radius:var(--radius)}
           </div>
           <div class="nav-item" data-route="ordenes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-            <span class="nav-label">Órdenes de trabajo</span>
+            <span class="nav-label" data-i18n="x_ordenes_de_trabajo">Órdenes de trabajo</span>
             <span class="nav-badge" id="badge-ordenes" style="display:none">0</span>
           </div>
           <div class="nav-item" data-route="partes" id="nav-partes">
@@ -736,19 +744,19 @@ th:last-child{border-top-right-radius:var(--radius)}
       <div class="nav-group" data-group="preventivo">
         <div class="nav-group-header">
           <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
-          <span class="nav-group-title">Preventivo</span>
+          <span class="nav-group-title" data-i18n="grp_preventivo">Preventivo</span>
           <span class="nav-group-dot" style="display:none"></span>
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="nav-group-items">
           <div class="nav-item" data-route="preventivos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M22 12v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-            <span class="nav-label">Preventivos pendientes</span>
+            <span class="nav-label" data-i18n="x_preventivos_pendientes">Preventivos pendientes</span>
             <span class="nav-badge" id="badge-preventivos" style="display:none">0</span>
           </div>
           <div class="nav-item" data-route="planes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
-            <span class="nav-label">Planes / Gamas</span>
+            <span class="nav-label" data-i18n="x_planes_gamas">Planes / Gamas</span>
           </div>
         </div>
       </div>
@@ -756,7 +764,7 @@ th:last-child{border-top-right-radius:var(--radius)}
       <div class="nav-group" data-group="activos">
         <div class="nav-group-header">
           <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          <span class="nav-group-title">Activos</span>
+          <span class="nav-group-title" data-i18n="grp_activos">Activos</span>
           <span class="nav-group-dot" style="display:none"></span>
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -776,7 +784,7 @@ th:last-child{border-top-right-radius:var(--radius)}
       <div class="nav-group" data-group="almacen">
         <div class="nav-group-header">
           <svg class="nav-group-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="5"/><path d="M4 8v11a1 1 0 001 1h14a1 1 0 001-1V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-          <span class="nav-group-title">Almacén</span>
+          <span class="nav-group-title" data-i18n="grp_almacen">Almacén</span>
           <span class="nav-group-dot" style="display:none"></span>
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -803,7 +811,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.1</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.2</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -848,7 +856,7 @@ th:last-child{border-top-right-radius:var(--radius)}
 <div id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title" id="modal-title">Detalle</span>
+      <span class="modal-title" id="modal-title" data-i18n="x_detalle">Detalle</span>
       <button class="modal-close" onclick="Modal.close()">×</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -907,6 +915,42 @@ const I18N = {
 
   _msgs: {
     es: {
+      x_sin_averias_abiertas:'Sin averías abiertas', x_total:'Total', x_total_dur:'Total dur.',
+      // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
+      grp_cuadros:'Cuadros de mando', grp_operativa:'Operativa', grp_preventivo:'Preventivo', grp_activos:'Activos',
+      grp_almacen:'Almacén', nav_cae:'CAE Externas', x_inspecciones_oca:'Inspecciones OCA', x_partes_de_trabajo:'Partes de trabajo',
+      x_detalle:'Detalle', x_mantenimiento_preventivo:'Mantenimiento preventivo', x_ots_preventivas:'OTs preventivas', x_vencidas:'Vencidas',
+      x_cumplimiento:'Cumplimiento', x_preventivo_90d:'Preventivo (90d)', x_mttr_averias:'MTTR averías', x_mtbf_por_activo:'MTBF por activo',
+      x_averias_min:'averías', x_ch_averias_por_zona:'Averías por zona', x_ch_duracion_total_por_zona:'Duración total por zona', x_ch_averias_por_tecnico:'Averías por técnico',
+      x_ch_coste_acumulado_por_almacen:'Coste acumulado por almacén', x_ch_tasa_resolucion_por_almacen:'Tasa de resolución por almacén', x_ch_distribucion_por_duracion:'Distribución por duración', x_ch_mapa_calor:'Mapa de calor — Almacén × Zona',
+      x_ch_horas_por_tecnico:'Horas por técnico', x_ch_horas_por_almacen:'Horas por almacén', x_ch_evolucion_mensual_horas:'Evolución mensual de horas', x_periodo:'Período',
+      x_seleccionar_todos:'Seleccionar todos', x_historial_de_averias:'Historial de averías', x_editar_lc:'Editar', x_alta_masiva_de_activos:'Alta masiva de activos',
+      x_pega_desde_excel:'Pega desde Excel o Google Sheets:', x_pega_instrucciones:'haz clic en la primera celda de la fila donde quieres empezar y pulsa', x_las_columnas_son:'. Las columnas son:', x_columnas_alta_masiva:'Almacén · Zona · Línea · Equipo · Tipo · Estado · Año · Proveedor · Matrícula',
+      x_proveedor:'Proveedor', x_matricula:'Matrícula', x_est_operativo:'Operativo', x_est_parado:'Parado',
+      x_est_en_reparacion:'En reparacion', x_est_baja:'Baja', x_anadir:'Añadir', x_averia:'Avería',
+      x_editar_averia:'Editar avería', x_tav_mecanica:'Mecánica', x_tav_electrica:'Eléctrica', x_tav_neumatica:'Neumática',
+      x_tav_electronica:'Electrónica', x_tav_informatica:'Informatica', x_tav_mal_uso:'Mal uso', x_tav_ajustes_maquina:'Ajustes máquina',
+      x_tav_asistencia_cambio_formato:'Asistencia Cambio Formato', x_tav_seguridad:'Seguridad', x_tav_productividad:'Productividad', x_fin_nota:'La fecha/hora de arriba son del FIN. El inicio se calcula restando la duración.',
+      x_repuestos_utilizados:'Repuestos utilizados', x_otros_materiales_y_coste:'Otros materiales y coste', x_anadir_fotos:'Añadir foto(s)', x_estado_de_la_zona:'Estado de la zona',
+      x_si:'Sí', x_resolver_incidencia:'Resolver incidencia', x_producto_ya_existe:'Este producto ya existe en este sitio', x_reemplazar_unidades:'Reemplazar las unidades existentes',
+      x_sumar_unidades:'Sumar a las unidades existentes', x_editar_producto:'Editar producto', x_inactivo:'Inactivo', x_contrasena_establecida:'Contraseña establecida',
+      x_sin_contrasena:'Sin contraseña', x_editar_tecnico:'Editar técnico', x_contrasena:'Contraseña', x_nuevo_parte:'Nuevo parte de trabajo',
+      x_tin_electrica:'Eléctrica', x_tin_gas:'Gas', x_tin_contra_incendios:'Contra incendios', x_tin_elevadores:'Elevadores',
+      x_tin_legionela:'Legionela', x_tin_presion:'Presión', x_tin_instalacion_frigorifica:'Instalación frigorífica', x_tin_transformador:'Transformador',
+      x_tin_otra:'Otra', x_res_favorable:'Favorable', x_res_condicional:'Condicional', x_res_desfavorable:'Desfavorable',
+      x_inspecciones_min:'inspección(es)', x_ya_tiene_pdf:'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.', x_sube_certificado:'Sube el certificado y los campos se rellenarán automáticamente ✨', x_cada:'Cada',
+      x_u_dia:'día', x_u_dias:'días', x_u_semana:'semana', x_u_semanas:'semanas',
+      x_u_mes:'mes', x_u_meses:'meses', x_planes_de_mantenimiento:'planes de mantenimiento', x_nuevo_plan_preventivo:'Nuevo plan de preventivo',
+      x_editar_plan:'Editar plan', x_asignar_activo_al_plan:'Asignar activo al plan', x_preventivos_pendientes_aprobacion:'preventivo(s) vencido(s) pendiente(s) de aprobación', x_nada_pendiente:'Nada pendiente',
+      x_sin_preventivos_vencidos:'No hay preventivos vencidos sin OT en este centro', x_hace_n_dias:'hace {n} día(s)', x_solo_vencidas:'Solo vencidas', x_ots:'OTs',
+      x_abiertas_min:'abiertas', x_vencidas_min:'vencidas', x_ot:'OT', x_nueva_orden_de_trabajo:'Nueva orden de trabajo',
+      x_ejecutar_ot:'Ejecutar OT', x_sin_datos_importados:'sin datos importados', x_actualizado:'Actualizado:', x_cae_instrucciones:'En SmartOSH: <b>CAE › Documentos</b> → quitar el filtro de ámbito → <b>Exportar a Excel</b>. Después súbelo con el botón «Importar Excel».',
+      x_solo_pendientes:'Solo pendientes', x_incluir_excluidas:'Incluir excluidas', x_leyenda_ok:'Trabajador y empresa con todo aceptado.', x_leyenda_rev:'Documentación aportada, pendiente de que <b>Deterra</b> la revise/acepte.',
+      x_leyenda_ko:'Documentación solicitada y aún <b>sin aportar por la empresa externa</b>.', x_revision_chip:'REVISIÓN', x_kpi_empresas_externas:'Empresas externas', x_kpi_trabajadores_en_regla:'Trabajadores en regla',
+      x_kpi_falta_aportar:'Falta aportar (empresa)', x_kpi_pdte_revisar:'Pdte. de revisar (Deterra)', x_kpi_docs_empresa_pendientes:'Docs de empresa pendientes', x_ninguna_empresa_filtro:'Ninguna empresa cumple el filtro en este centro.',
+      x_mot_propio:'Documentación propia', x_mot_empresa:'Documentación de la empresa', x_mot_ambos:'Propia + empresa', x_det_rev_empresa:'Docs propios en regla; la empresa tiene documentación por revisar',
+      x_det_ko_empresa:'Sus documentos están en regla; falla la empresa', x_documentos_n:'documento(s)', x_aportado_pdte_revision:'Aportado, pendiente de revisión', x_docsemp_ko:'⚠ La empresa tiene {n} documento(s) <b>sin aportar</b>, así que <b>ninguno de sus trabajadores puede acceder</b>',
+      x_docsemp_rev:'🕒 La empresa ha aportado {n} documento(s), <b>pendientes de que Deterra los revise/acepte</b>', x_cae_pie:'<b>OK</b> = los documentos del trabajador <b>y los de su empresa</b> están en «Aceptado» o «Anulado/No aplica». <b>KO</b> = falta documentación por aportar (responsabilidad de la empresa externa). <b>REVISIÓN</b> = documentación ya aportada, pendiente de que la revisemos/aceptemos.', x_cae_fuente:'Fuente: exportación SmartOSH CAE › Documentos', x_filas:'filas',
       // ── v10.0: textos de interfaz internacionalizados ──
       x_fotos:'Fotos',
       x_prio_media:'Media', x_pendientes_sin_cerrar:'Pendientes (sin cerrar)',
@@ -1052,9 +1096,9 @@ const I18N = {
       sel_zona:'Selecciona zona', sel_linea:'Selecciona línea',
       opcional:'opcional', de:'de', centro_label:'Centro', todos_los_centros:'Todos los centros',
       // Botones de acción
-      btn_nueva_averia:'+ Nueva avería', btn_nueva_inc:'+ Nueva incidencia',
+      btn_nueva_averia:'Nueva avería', btn_nueva_inc:'Nueva incidencia',
       btn_nueva_insp:'Nueva inspección', btn_añadir_inv:'+ Añadir al inventario',
-      btn_nuevo_activo:'+ Nuevo activo', btn_alta_masiva:'Alta masiva',
+      btn_nuevo_activo:'Nuevo activo', btn_alta_masiva:'Alta masiva',
       btn_importar:'Importar', btn_excel:'Excel',
       btn_nuevo_parte:'+ Nuevo parte',
       btn_registrar_av:'Registrar avería', btn_registrar_inc:'Registrar incidencia',
@@ -1132,6 +1176,42 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      x_sin_averias_abiertas:'No open breakdowns', x_total:'Total', x_total_dur:'Total dur.',
+      // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
+      grp_cuadros:'Dashboards', grp_operativa:'Operations', grp_preventivo:'Preventive', grp_activos:'Assets',
+      grp_almacen:'Warehouse', nav_cae:'CAE · Contractors', x_inspecciones_oca:'OCA inspections', x_partes_de_trabajo:'Work reports',
+      x_detalle:'Detail', x_mantenimiento_preventivo:'Preventive maintenance', x_ots_preventivas:'Preventive WOs', x_vencidas:'Overdue',
+      x_cumplimiento:'Compliance', x_preventivo_90d:'Preventive (90d)', x_mttr_averias:'MTTR breakdowns', x_mtbf_por_activo:'MTBF per asset',
+      x_averias_min:'breakdowns', x_ch_averias_por_zona:'Breakdowns by zone', x_ch_duracion_total_por_zona:'Total duration by zone', x_ch_averias_por_tecnico:'Breakdowns by technician',
+      x_ch_coste_acumulado_por_almacen:'Cumulative cost by warehouse', x_ch_tasa_resolucion_por_almacen:'Resolution rate by warehouse', x_ch_distribucion_por_duracion:'Distribution by duration', x_ch_mapa_calor:'Heat map — Warehouse × Zone',
+      x_ch_horas_por_tecnico:'Hours by technician', x_ch_horas_por_almacen:'Hours by warehouse', x_ch_evolucion_mensual_horas:'Monthly hours trend', x_periodo:'Period',
+      x_seleccionar_todos:'Select all', x_historial_de_averias:'Breakdown history', x_editar_lc:'Edit', x_alta_masiva_de_activos:'Bulk asset entry',
+      x_pega_desde_excel:'Paste from Excel or Google Sheets:', x_pega_instrucciones:'click the first cell of the row where you want to start and press', x_las_columnas_son:'. The columns are:', x_columnas_alta_masiva:'Warehouse · Zone · Line · Equipment · Type · Status · Year · Supplier · Serial no.',
+      x_proveedor:'Supplier', x_matricula:'Serial no.', x_est_operativo:'Operational', x_est_parado:'Stopped',
+      x_est_en_reparacion:'Under repair', x_est_baja:'Retired', x_anadir:'Add', x_averia:'Breakdown',
+      x_editar_averia:'Edit breakdown', x_tav_mecanica:'Mechanical', x_tav_electrica:'Electrical', x_tav_neumatica:'Pneumatic',
+      x_tav_electronica:'Electronic', x_tav_informatica:'IT', x_tav_mal_uso:'Misuse', x_tav_ajustes_maquina:'Machine adjustments',
+      x_tav_asistencia_cambio_formato:'Format change assistance', x_tav_seguridad:'Safety', x_tav_productividad:'Productivity', x_fin_nota:'The date/time above is the END. The start is calculated by subtracting the duration.',
+      x_repuestos_utilizados:'Spare parts used', x_otros_materiales_y_coste:'Other materials and cost', x_anadir_fotos:'Add photo(s)', x_estado_de_la_zona:'Area condition',
+      x_si:'Yes', x_resolver_incidencia:'Resolve incident', x_producto_ya_existe:'This product already exists at this site', x_reemplazar_unidades:'Replace the existing units',
+      x_sumar_unidades:'Add to the existing units', x_editar_producto:'Edit product', x_inactivo:'Inactive', x_contrasena_establecida:'Password set',
+      x_sin_contrasena:'No password', x_editar_tecnico:'Edit technician', x_contrasena:'Password', x_nuevo_parte:'New work report',
+      x_tin_electrica:'Electrical', x_tin_gas:'Gas', x_tin_contra_incendios:'Fire protection', x_tin_elevadores:'Lifts',
+      x_tin_legionela:'Legionella', x_tin_presion:'Pressure equipment', x_tin_instalacion_frigorifica:'Refrigeration plant', x_tin_transformador:'Transformer',
+      x_tin_otra:'Other', x_res_favorable:'Favourable', x_res_condicional:'Conditional', x_res_desfavorable:'Unfavourable',
+      x_inspecciones_min:'inspection(s)', x_ya_tiene_pdf:'A PDF is already attached. Upload a new one to replace it.', x_sube_certificado:'Upload the certificate and the fields will be filled in automatically ✨', x_cada:'Every',
+      x_u_dia:'day', x_u_dias:'days', x_u_semana:'week', x_u_semanas:'weeks',
+      x_u_mes:'month', x_u_meses:'months', x_planes_de_mantenimiento:'maintenance plans', x_nuevo_plan_preventivo:'New preventive plan',
+      x_editar_plan:'Edit plan', x_asignar_activo_al_plan:'Assign asset to plan', x_preventivos_pendientes_aprobacion:'overdue preventive task(s) awaiting approval', x_nada_pendiente:'Nothing pending',
+      x_sin_preventivos_vencidos:'No overdue preventive tasks without a WO at this site', x_hace_n_dias:'{n} day(s) ago', x_solo_vencidas:'Overdue only', x_ots:'WOs',
+      x_abiertas_min:'open', x_vencidas_min:'overdue', x_ot:'WO', x_nueva_orden_de_trabajo:'New work order',
+      x_ejecutar_ot:'Execute WO', x_sin_datos_importados:'no data imported', x_actualizado:'Updated:', x_cae_instrucciones:'In SmartOSH: <b>CAE › Documentos</b> → remove the scope filter → <b>Exportar a Excel</b>. Then upload the file with the "Import Excel" button.',
+      x_solo_pendientes:'Pending only', x_incluir_excluidas:'Include excluded', x_leyenda_ok:'Worker and company with all documents accepted.', x_leyenda_rev:'Documents submitted, awaiting <b>Deterra</b> review/acceptance.',
+      x_leyenda_ko:'Documents requested and <b>not yet submitted by the contractor</b>.', x_revision_chip:'REVIEW', x_kpi_empresas_externas:'Contractors', x_kpi_trabajadores_en_regla:'Compliant workers',
+      x_kpi_falta_aportar:'Not submitted (contractor)', x_kpi_pdte_revisar:'Pending review (Deterra)', x_kpi_docs_empresa_pendientes:'Company docs pending', x_ninguna_empresa_filtro:'No company matches the filter at this site.',
+      x_mot_propio:'Own documents', x_mot_empresa:'Company documents', x_mot_ambos:'Own + company', x_det_rev_empresa:'Own documents compliant; the company has documents pending review',
+      x_det_ko_empresa:'Own documents compliant; the company is non-compliant', x_documentos_n:'document(s)', x_aportado_pdte_revision:'Submitted, pending review', x_docsemp_ko:'⚠ The company has {n} document(s) <b>not submitted</b>, so <b>none of its workers may access the site</b>',
+      x_docsemp_rev:'🕒 The company has submitted {n} document(s), <b>awaiting Deterra review/acceptance</b>', x_cae_pie:'<b>OK</b> = the worker\'s documents <b>and the company\'s</b> are "Accepted" or "Cancelled/Not applicable". <b>KO</b> = documents still to be submitted (the contractor\'s responsibility). <b>REVIEW</b> = documents already submitted, awaiting our review/acceptance.', x_cae_fuente:'Source: SmartOSH export CAE › Documentos', x_filas:'rows',
       // ── v10.0: textos de interfaz internacionalizados ──
       x_fotos:'Photos',
       x_prio_media:'Medium', x_pendientes_sin_cerrar:'Pending (not closed)',
@@ -1225,8 +1305,8 @@ const I18N = {
       x_otro_2:'Other', x_mecanico:'Mechanic', x_admin:'Admin', x_pendiente:'Pending',
       x_asignada:'Assigned', x_correctivo:'Corrective',
       // Nav
-      nav_dashboard:'Dashboard', nav_analisis:'Work Order Analysis', nav_activos:'Assets',
-      nav_averias:'Breakdowns', nav_incidencias:'Incidents', nav_partes:'Work Orders',
+      nav_dashboard:'Dashboard', nav_analisis:'Work report analysis', nav_activos:'Assets',
+      nav_averias:'Breakdowns', nav_incidencias:'Incidents', nav_partes:'Work reports',
       nav_inventario:'Inventory', nav_movimientos:'Movements',
       nav_inspecciones:'Inspections', nav_config:'Settings',
       // Sidebar / setup
@@ -1277,9 +1357,9 @@ const I18N = {
       sel_zona:'Select zone', sel_linea:'Select line',
       opcional:'optional', de:'of', centro_label:'Center', todos_los_centros:'All centers',
       // Action buttons
-      btn_nueva_averia:'+ New breakdown', btn_nueva_inc:'+ New incident',
+      btn_nueva_averia:'New breakdown', btn_nueva_inc:'New incident',
       btn_nueva_insp:'New inspection', btn_añadir_inv:'+ Add to inventory',
-      btn_nuevo_activo:'+ New asset', btn_alta_masiva:'Bulk add',
+      btn_nuevo_activo:'New asset', btn_alta_masiva:'Bulk add',
       btn_importar:'Import', btn_excel:'Excel',
       btn_nuevo_parte:'+ New work order',
       btn_registrar_av:'Register breakdown', btn_registrar_inc:'Register incident',
@@ -1357,6 +1437,42 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      x_sin_averias_abiertas:'لا توجد أعطال مفتوحة', x_total:'الإجمالي', x_total_dur:'إجمالي المدة',
+      // ── v10.2: menú, barra superior, paneles, formularios y CAE ──
+      grp_cuadros:'لوحات التحكم', grp_operativa:'العمليات', grp_preventivo:'الصيانة الوقائية', grp_activos:'الأصول',
+      grp_almacen:'المستودع', nav_cae:'CAE · الشركات الخارجية', x_inspecciones_oca:'تفتيشات OCA', x_partes_de_trabajo:'تقارير العمل',
+      x_detalle:'التفاصيل', x_mantenimiento_preventivo:'الصيانة الوقائية', x_ots_preventivas:'أوامر عمل وقائية', x_vencidas:'متأخرة',
+      x_cumplimiento:'الالتزام', x_preventivo_90d:'وقائية (90 يومًا)', x_mttr_averias:'MTTR الأعطال', x_mtbf_por_activo:'MTBF لكل أصل',
+      x_averias_min:'أعطال', x_ch_averias_por_zona:'الأعطال حسب المنطقة', x_ch_duracion_total_por_zona:'المدة الإجمالية حسب المنطقة', x_ch_averias_por_tecnico:'الأعطال حسب الفني',
+      x_ch_coste_acumulado_por_almacen:'التكلفة التراكمية حسب المستودع', x_ch_tasa_resolucion_por_almacen:'نسبة الحل حسب المستودع', x_ch_distribucion_por_duracion:'التوزيع حسب المدة', x_ch_mapa_calor:'خريطة حرارية — المستودع × المنطقة',
+      x_ch_horas_por_tecnico:'الساعات حسب الفني', x_ch_horas_por_almacen:'الساعات حسب المستودع', x_ch_evolucion_mensual_horas:'تطور الساعات الشهري', x_periodo:'الفترة',
+      x_seleccionar_todos:'تحديد الكل', x_historial_de_averias:'سجل الأعطال', x_editar_lc:'تعديل', x_alta_masiva_de_activos:'إدخال أصول بالجملة',
+      x_pega_desde_excel:'الصق من Excel أو Google Sheets:', x_pega_instrucciones:'انقر على الخلية الأولى في الصف الذي تريد البدء منه واضغط', x_las_columnas_son:'. الأعمدة هي:', x_columnas_alta_masiva:'المستودع · المنطقة · الخط · المعدة · النوع · الحالة · السنة · المورد · الرقم التسلسلي',
+      x_proveedor:'المورد', x_matricula:'الرقم التسلسلي', x_est_operativo:'يعمل', x_est_parado:'متوقف',
+      x_est_en_reparacion:'قيد الإصلاح', x_est_baja:'مسحوب', x_anadir:'إضافة', x_averia:'عطل',
+      x_editar_averia:'تعديل العطل', x_tav_mecanica:'ميكانيكي', x_tav_electrica:'كهربائي', x_tav_neumatica:'هوائي',
+      x_tav_electronica:'إلكتروني', x_tav_informatica:'معلوماتية', x_tav_mal_uso:'سوء استخدام', x_tav_ajustes_maquina:'ضبط الآلة',
+      x_tav_asistencia_cambio_formato:'مساعدة تغيير الصيغة', x_tav_seguridad:'السلامة', x_tav_productividad:'الإنتاجية', x_fin_nota:'التاريخ/الوقت أعلاه هو وقت الانتهاء. يُحسب وقت البدء بطرح المدة.',
+      x_repuestos_utilizados:'قطع الغيار المستخدمة', x_otros_materiales_y_coste:'مواد أخرى والتكلفة', x_anadir_fotos:'إضافة صور', x_estado_de_la_zona:'حالة المنطقة',
+      x_si:'نعم', x_resolver_incidencia:'حل الحادث', x_producto_ya_existe:'هذا المنتج موجود بالفعل في هذا الموقع', x_reemplazar_unidades:'استبدال الوحدات الحالية',
+      x_sumar_unidades:'الإضافة إلى الوحدات الحالية', x_editar_producto:'تعديل المنتج', x_inactivo:'غير نشط', x_contrasena_establecida:'كلمة المرور محددة',
+      x_sin_contrasena:'بدون كلمة مرور', x_editar_tecnico:'تعديل الفني', x_contrasena:'كلمة المرور', x_nuevo_parte:'تقرير عمل جديد',
+      x_tin_electrica:'كهربائي', x_tin_gas:'غاز', x_tin_contra_incendios:'الحماية من الحرائق', x_tin_elevadores:'المصاعد',
+      x_tin_legionela:'الليجيونيلا', x_tin_presion:'معدات الضغط', x_tin_instalacion_frigorifica:'منشأة التبريد', x_tin_transformador:'المحول',
+      x_tin_otra:'أخرى', x_res_favorable:'مقبول', x_res_condicional:'مشروط', x_res_desfavorable:'غير مقبول',
+      x_inspecciones_min:'تفتيش(ات)', x_ya_tiene_pdf:'يوجد ملف PDF مرفق بالفعل. حمّل ملفًا جديدًا لاستبداله.', x_sube_certificado:'حمّل الشهادة وستُملأ الحقول تلقائيًا ✨', x_cada:'كل',
+      x_u_dia:'يوم', x_u_dias:'أيام', x_u_semana:'أسبوع', x_u_semanas:'أسابيع',
+      x_u_mes:'شهر', x_u_meses:'أشهر', x_planes_de_mantenimiento:'خطط صيانة', x_nuevo_plan_preventivo:'خطة صيانة وقائية جديدة',
+      x_editar_plan:'تعديل الخطة', x_asignar_activo_al_plan:'تعيين أصل للخطة', x_preventivos_pendientes_aprobacion:'صيانة وقائية متأخرة بانتظار الموافقة', x_nada_pendiente:'لا شيء معلق',
+      x_sin_preventivos_vencidos:'لا توجد صيانة وقائية متأخرة بدون أمر عمل في هذا الموقع', x_hace_n_dias:'منذ {n} يوم', x_solo_vencidas:'المتأخرة فقط', x_ots:'أوامر عمل',
+      x_abiertas_min:'مفتوحة', x_vencidas_min:'متأخرة', x_ot:'أمر عمل', x_nueva_orden_de_trabajo:'أمر عمل جديد',
+      x_ejecutar_ot:'تنفيذ أمر العمل', x_sin_datos_importados:'لا توجد بيانات مستوردة', x_actualizado:'آخر تحديث:', x_cae_instrucciones:'في SmartOSH: <b>CAE › Documentos</b> → أزل فلتر النطاق → <b>Exportar a Excel</b>. ثم حمّل الملف بزر «استيراد Excel».',
+      x_solo_pendientes:'المعلقة فقط', x_incluir_excluidas:'تضمين المستثناة', x_leyenda_ok:'العامل والشركة بجميع الوثائق مقبولة.', x_leyenda_rev:'الوثائق مقدَّمة، بانتظار مراجعة/قبول <b>Deterra</b>.',
+      x_leyenda_ko:'وثائق مطلوبة <b>لم تقدمها الشركة الخارجية بعد</b>.', x_revision_chip:'مراجعة', x_kpi_empresas_externas:'الشركات الخارجية', x_kpi_trabajadores_en_regla:'عمال ملتزمون',
+      x_kpi_falta_aportar:'غير مقدَّم (الشركة)', x_kpi_pdte_revisar:'بانتظار المراجعة (Deterra)', x_kpi_docs_empresa_pendientes:'وثائق الشركة المعلقة', x_ninguna_empresa_filtro:'لا توجد شركة تطابق الفلتر في هذا الموقع.',
+      x_mot_propio:'وثائق شخصية', x_mot_empresa:'وثائق الشركة', x_mot_ambos:'شخصية + الشركة', x_det_rev_empresa:'الوثائق الشخصية سليمة؛ لدى الشركة وثائق بانتظار المراجعة',
+      x_det_ko_empresa:'وثائقه سليمة؛ المشكلة في الشركة', x_documentos_n:'وثيقة/وثائق', x_aportado_pdte_revision:'مقدَّم، بانتظار المراجعة', x_docsemp_ko:'⚠ لدى الشركة {n} وثيقة <b>غير مقدَّمة</b>، لذا <b>لا يمكن لأي من عمالها الدخول</b>',
+      x_docsemp_rev:'🕒 قدّمت الشركة {n} وثيقة، <b>بانتظار مراجعة/قبول Deterra</b>', x_cae_pie:'<b>OK</b> = وثائق العامل <b>ووثائق شركته</b> في حالة «مقبول» أو «ملغى/غير مطبق». <b>KO</b> = وثائق لم تُقدَّم بعد (مسؤولية الشركة الخارجية). <b>مراجعة</b> = وثائق مقدَّمة بانتظار مراجعتنا/قبولنا.', x_cae_fuente:'المصدر: تصدير SmartOSH CAE › Documentos', x_filas:'صفوف',
       // ── v10.0: textos de interfaz internacionalizados ──
       x_fotos:'الصور',
       x_prio_media:'متوسطة', x_pendientes_sin_cerrar:'معلقة (غير مغلقة)',
@@ -1450,8 +1566,8 @@ const I18N = {
       x_otro_2:'آخر', x_mecanico:'ميكانيكي', x_admin:'المسؤول', x_pendiente:'معلق',
       x_asignada:'مُعيّن', x_correctivo:'تصحيحي',
       // التنقل
-      nav_dashboard:'لوحة القيادة', nav_analisis:'تحليل أوامر العمل', nav_activos:'الأصول',
-      nav_averias:'الأعطال', nav_incidencias:'الحوادث', nav_partes:'أوامر العمل',
+      nav_dashboard:'لوحة القيادة', nav_analisis:'تحليل تقارير العمل', nav_activos:'الأصول',
+      nav_averias:'الأعطال', nav_incidencias:'الحوادث', nav_partes:'تقارير العمل',
       nav_inventario:'المخزون', nav_movimientos:'الحركات',
       nav_inspecciones:'التفتيشات', nav_config:'الإعدادات',
       // الشريط الجانبي / الإعداد
@@ -1502,9 +1618,9 @@ const I18N = {
       sel_zona:'اختر المنطقة', sel_linea:'اختر الخط',
       opcional:'اختياري', de:'من', centro_label:'المركز', todos_los_centros:'كل المراكز',
       // أزرار الإجراءات
-      btn_nueva_averia:'+ عطل جديد', btn_nueva_inc:'+ حادث جديد',
+      btn_nueva_averia:'عطل جديد', btn_nueva_inc:'حادث جديد',
       btn_nueva_insp:'تفتيش جديد', btn_añadir_inv:'+ إضافة للمخزون',
-      btn_nuevo_activo:'+ أصل جديد', btn_alta_masiva:'إضافة جماعية',
+      btn_nuevo_activo:'أصل جديد', btn_alta_masiva:'إضافة جماعية',
       btn_importar:'استيراد', btn_excel:'Excel',
       btn_nuevo_parte:'+ أمر عمل جديد',
       btn_registrar_av:'تسجيل العطل', btn_registrar_inc:'تسجيل الحادث',
@@ -1585,6 +1701,9 @@ const I18N = {
 };
 // Atajo global
 const t = (key) => I18N.t(key);
+// v10.2: etiqueta traducida de un VALOR fijo (tipo de avería, estado de activo, resultado…):
+// busca la clave prefijo+slug(valor) y, si no existe, devuelve el valor tal cual.
+const tv = (prefix, v) => { const k = prefix + String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); const r = I18N.t(k); return r === k ? String(v == null ? '' : v) : r; };
 
 // ═══════════════════════════════════════════════════════════════════
 // DATABASE — Supabase (cloud)
@@ -2848,7 +2967,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { dashboard:'Dashboard', 'partes-analisis':'Análisis Partes', activos:'Activos', averias:'Averías', incidencias:'Incidencias', inventario:'Inventario', movimientos:'Movimientos', inspecciones:'Inspecciones OCA', planes:'Planes / Gamas', preventivos:'Preventivos pendientes', ordenes:'Órdenes de trabajo', partes:'Partes de trabajo', cae:'CAE · Empresas externas', config:'Configuración' };
+    const titles = { dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -3097,7 +3216,7 @@ const DashboardPage = {
         : base;
       const pal = PALETA[almSel] || PALETA['_total'];
       datasets = [{
-        label: almSel || 'Total',
+        label: almSel || t('x_total'),
         data: countData(avs),
         backgroundColor: chartType === 'line' ? pal.border : pal.bg,
         borderColor: pal.border,
@@ -3113,7 +3232,7 @@ const DashboardPage = {
     // Total período para el badge
     const totalPeriodo = datasets.reduce((s, ds) => s + ds.data.reduce((a, b) => a + b, 0), 0);
     const totEl = document.getElementById('chart-total-badge');
-    if (totEl) totEl.textContent = `${totalPeriodo} averías`;
+    if (totEl) totEl.textContent = `${totalPeriodo} ${t('x_averias_min')}`;
 
     // Construir / actualizar gráfico
     this._avChartBuckets = buckets;
@@ -3242,17 +3361,17 @@ const DashboardPage = {
     return `
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <span class="chart-title" style="margin:0;font-size:15px">🔧 Mantenimiento preventivo</span>
+        <span class="chart-title" style="margin:0;font-size:15px">🔧 ${t('x_mantenimiento_preventivo')}</span>
         <button class="btn btn-secondary btn-sm" onclick="Router.navigate('ordenes')">${t('x_ver_ots')}</button>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        ${tile(prev.length, 'OTs preventivas')}
-        ${tile(abiertas, 'Abiertas')}
-        ${tile(vencidas, 'Vencidas', vencidas ? 'var(--red)' : 'var(--green)')}
-        ${tile(cumplimiento + '%', 'Cumplimiento', cColor)}
-        ${tile(pctPrev + '%', 'Preventivo (90d)')}
-        ${tile(fmtH(mttr), 'MTTR averías')}
-        ${tile(fmtH(mtbf != null ? mtbf * 24 : null), 'MTBF por activo')}
+        ${tile(prev.length, t('x_ots_preventivas'))}
+        ${tile(abiertas, t('opt_abiertas'))}
+        ${tile(vencidas, t('x_vencidas'), vencidas ? 'var(--red)' : 'var(--green)')}
+        ${tile(cumplimiento + '%', t('x_cumplimiento'), cColor)}
+        ${tile(pctPrev + '%', t('x_preventivo_90d'))}
+        ${tile(fmtH(mttr), t('x_mttr_averias'))}
+        ${tile(fmtH(mtbf != null ? mtbf * 24 : null), t('x_mtbf_por_activo'))}
       </div>
     </div>`;
   },
@@ -3397,12 +3516,12 @@ const DashboardPage = {
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div>
-          <span class="chart-title" style="margin:0;font-size:15px">Averías por zona</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_averias_por_zona')}</span>
           <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_que_zonas_concentran_mas_incidencias')}</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div class="pbi-ctrl-group">
-            <span class="pbi-ctrl-label">Ordenar</span>
+            <span class="pbi-ctrl-label">${t('x_ordenar')}</span>
             <select id="zona-orden" class="pbi-select" onchange="DashboardPage._rebuildZonasChart()">
               <option value="desc">${t('x_mayor_menor')}</option>
               <option value="asc">${t('x_menor_mayor')}</option>
@@ -3429,12 +3548,12 @@ const DashboardPage = {
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div>
-          <span class="chart-title" style="margin:0;font-size:15px">Duración total por zona</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_duracion_total_por_zona')}</span>
           <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_tiempo_total_de_resolucion_min')}</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div class="pbi-ctrl-group">
-            <span class="pbi-ctrl-label">Ordenar</span>
+            <span class="pbi-ctrl-label">${t('x_ordenar')}</span>
             <select id="dur-orden" class="pbi-select" onchange="DashboardPage._rebuildDuracionChart()">
               <option value="desc">${t('x_mayor_menor')}</option>
               <option value="asc">${t('x_menor_mayor')}</option>
@@ -3462,12 +3581,12 @@ const DashboardPage = {
       <div class="chart-wrap">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <div>
-            <span class="chart-title" style="margin:0;font-size:15px">Averías por técnico</span>
+            <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_averias_por_tecnico')}</span>
             <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_click_para_filtrar_cruzado')}</span>
           </div>
           <div style="display:flex;gap:8px">
             <div class="pbi-ctrl-group">
-              <span class="pbi-ctrl-label">Ordenar</span>
+              <span class="pbi-ctrl-label">${t('x_ordenar')}</span>
               <select id="tec-orden" class="pbi-select" onchange="DashboardPage._rebuildTecnicosChart()">
                 <option value="desc">${t('x_mayor_menor')}</option>
                 <option value="asc">${t('x_menor_mayor')}</option>
@@ -3488,7 +3607,7 @@ const DashboardPage = {
       </div>
       <div class="chart-wrap">
         <div style="margin-bottom:12px">
-          <span class="chart-title" style="margin:0;font-size:15px">Coste acumulado por almacén</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_coste_acumulado_por_almacen')}</span>
           <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">${t('x_solo_averias_con_coste_registrado')}</span>
         </div>
         <div style="position:relative;height:220px"><canvas id="chart-coste"></canvas></div>
@@ -3498,7 +3617,7 @@ const DashboardPage = {
     <!-- ═══ TASA DE RESOLUCIÓN ═══ -->
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="margin-bottom:12px">
-        <span class="chart-title" style="margin:0;font-size:15px">Tasa de resolución por almacén</span>
+        <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_tasa_resolucion_por_almacen')}</span>
         <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_de_averias_cerradas_sobre_el_total')}</span>
       </div>
       <div style="position:relative;height:180px"><canvas id="chart-resolucion"></canvas></div>
@@ -3517,7 +3636,7 @@ const DashboardPage = {
       </div>
       <div class="chart-wrap">
         <div style="margin-bottom:12px">
-          <span class="chart-title" style="margin:0;font-size:15px">Distribución por duración</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_distribucion_por_duracion')}</span>
           <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">${t('x_no_de_averias_por_rango_horario')}</span>
         </div>
         <div style="position:relative;height:220px"><canvas id="chart-dist-dur"></canvas></div>
@@ -3528,7 +3647,7 @@ const DashboardPage = {
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div>
-          <span class="chart-title" style="margin:0;font-size:15px">Mapa de calor — Almacén × Zona</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_mapa_calor')}</span>
           <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_clic_en_celda_para_ver_listado_filtrado')}</span>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -3760,7 +3879,7 @@ const DashboardPage = {
 
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-    const colHeader = mode === 'duracion' ? 'Total dur.' : 'Total';
+    const colHeader = mode === 'duracion' ? t('x_total_dur') : t('x_total');
 
     let html = `<table class="heatmap-table"><thead><tr><th class="row-header">${t('col_zona')}</th>`;
     for (const alm of ALM_ORDER) html += `<th>${esc(alm)}</th>`;
@@ -4043,7 +4162,7 @@ const DashboardPage = {
           const gf = this._gf || {};
           this._goToAverias({ almacen: gf.almacen||'', estado: gf.estado||'', search: label === '(sin técnico)' ? '' : label });
         },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} averías` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} ${t('x_averias_min')}` } } },
         scales: {
           x: { beginAtZero:true, ticks:{stepSize:1,precision:0,font:{size:11}}, grid:{color:'rgba(0,0,0,0.05)'} },
           y: { grid:{display:false}, ticks:{font:{size:11}} }
@@ -4137,7 +4256,7 @@ const DashboardPage = {
           const gf = this._gf || {};
           this._goToAverias({ almacen: gf.almacen||'', estado: gf.estado||'', search: label === '(sin tipo)' ? '' : label });
         },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} averías` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.x} ${t('x_averias_min')}` } } },
         scales: {
           x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
           y: { grid: { display: false }, ticks: { font: { size: 11 } } }
@@ -4171,7 +4290,7 @@ const DashboardPage = {
       data: { labels: BUCKETS.map(b => b.label), datasets: [{ label: 'Averías', data: counts, backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.y} averías` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => ` ${i.parsed.y} ${t('x_averias_min')}` } } },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
           x: { grid: { display: false }, ticks: { font: { size: 11 } } }
@@ -4254,7 +4373,7 @@ function _showImportDiff(title, changes, labels, onApply) {
       <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:12px">
         <input type="checkbox" id="diff-sel-all" checked
           onchange="document.querySelectorAll('#import-diff-modal .diff-cb').forEach(cb=>cb.checked=this.checked)">
-        Seleccionar todos
+        ${t('x_seleccionar_todos')}
       </label>
       <div style="max-height:420px;overflow-y:auto;padding-right:4px">${items}</div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
@@ -4479,8 +4598,8 @@ const ActivosPage = {
       </div>
       <div style="margin-top:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <strong style="font-size:14px">Historial de averías</strong>
-          ${avAbiertas > 0 ? `<span class="badge badge-red">${avAbiertas} abiertas</span>` : '<span class="badge badge-green">Sin averías abiertas</span>'}
+          <strong style="font-size:14px">${t('x_historial_de_averias')}</strong>
+          ${avAbiertas > 0 ? `<span class="badge badge-red">${avAbiertas} ${t('x_abiertas_min')}</span>` : `<span class="badge badge-green">${t('x_sin_averias_abiertas')}</span>`}
         </div>
         ${averias.length === 0 ? '<p style="font-size:13px;color:var(--gray-muted)">' + t('x_sin_averias_registradas') + '</p>' :
           `<div class="table-wrap"><table>
@@ -4501,15 +4620,15 @@ const ActivosPage = {
 
   // ── ALTA MASIVA ──────────────────────────────────────────────────
   _bulkCols: [
-    { key:'almacen',      label:'Almacén *',     w:'110px' },
-    { key:'zona',         label:'Zona *',         w:'100px' },
-    { key:'linea',        label:'Línea',          w:'70px'  },
-    { key:'equipo',       label:'Equipo *',       w:'160px' },
-    { key:'tipo_maquina', label:'Tipo máquina',   w:'120px' },
-    { key:'estado',       label:'Estado',         w:'110px' },
-    { key:'anio',         label:'Año',            w:'65px'  },
-    { key:'proveedor',    label:'Proveedor',      w:'120px' },
-    { key:'matricula',    label:'Matrícula',      w:'100px' },
+    { key:'almacen',      label:'Almacén *',     lbl:'lbl_almacen',   req:true,  w:'110px' },
+    { key:'zona',         label:'Zona *',         lbl:'lbl_zona',      req:true,  w:'100px' },
+    { key:'linea',        label:'Línea',          lbl:'lbl_linea',     req:false, w:'70px'  },
+    { key:'equipo',       label:'Equipo *',       lbl:'lbl_equipo',    req:true,  w:'160px' },
+    { key:'tipo_maquina', label:'Tipo máquina',   lbl:'col_tipo_maq',  req:false, w:'120px' },
+    { key:'estado',       label:'Estado',         lbl:'lbl_estado',    req:false, w:'110px' },
+    { key:'anio',         label:'Año',            lbl:'col_anio',      req:false, w:'65px'  },
+    { key:'proveedor',    label:'Proveedor',      lbl:'x_proveedor',   req:false, w:'120px' },
+    { key:'matricula',    label:'Matrícula',      lbl:'x_matricula',   req:false, w:'100px' },
   ],
 
   async exportExcel() {
@@ -4626,15 +4745,15 @@ const ActivosPage = {
 
     const initRows = Array.from({length:8}, () => mkRow()).join('');
 
-    Modal.open('Alta masiva de activos', `
+    Modal.open(t('x_alta_masiva_de_activos'), `
       <div style="font-size:12px;color:var(--gray-muted);margin-bottom:10px;line-height:1.5">
-        📋 <strong>Pega desde Excel o Google Sheets:</strong> haz clic en la primera celda de la fila donde quieres empezar y pulsa <kbd style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px">Ctrl+V</kbd>. Las columnas son: <em>Almacén · Zona · Línea · Equipo · Tipo · Estado · Año · Proveedor · Matrícula</em>
+        📋 <strong>${t('x_pega_desde_excel')}</strong> ${t('x_pega_instrucciones')} <kbd style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px">Ctrl+V</kbd>${t('x_las_columnas_son')} <em>${t('x_columnas_alta_masiva')}</em>
       </div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:6px">
         <table style="border-collapse:collapse;width:100%;min-width:900px">
           <thead style="position:sticky;top:0;background:var(--bg-card);z-index:1">
             <tr>
-              ${cols.map(c=>`<th style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--gray-muted);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">${c.label}</th>`).join('')}
+              ${cols.map(c=>`<th style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--gray-muted);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">${t(c.lbl)}${c.req?' *':''}</th>`).join('')}
               <th style="width:24px"></th>
             </tr>
           </thead>
@@ -4766,7 +4885,7 @@ const ActivosPage = {
       '<option value="__nueva">' + t('x_nueva_zona') + '</option>',
     ].join('');
 
-    Modal.open(isEdit ? `Editar — ${activo.equipo}` : 'Nuevo activo', `
+    Modal.open(isEdit ? `${t('x_editar_lc')} — ${activo.equipo}` : t('btn_nuevo_activo'), `
       <form id="activo-form" class="form-grid">
         <input type="hidden" id="f-num" value="${activo?.num||0}">
         <div class="form-field">
@@ -4809,7 +4928,7 @@ const ActivosPage = {
         <div class="form-field">
           <label>${t('lbl_estado')}</label>
           <select class="form-input" id="f-estado">
-            ${estados.map(e=>`<option${activo?.estado===e?' selected':''}>${e}</option>`).join('')}
+            ${estados.map(e=>`<option value="${e}"${activo?.estado===e?' selected':''}>${tv('x_est_', e)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -5007,9 +5126,9 @@ const AveriasPage = {
           <thead><tr id="av-thead">
             <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('x_id')} <span id="av-sort-id"></span></th>
             <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_fecha')} <span id="av-sort-fecha_inicio"></span></th>
-            <th onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_hora')} <span id="av-sort-hora_inicio"></span></th>
+            <th class="col-sec" onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_hora')} <span id="av-sort-hora_inicio"></span></th>
             <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_almacen')} <span id="av-sort-almacen"></span></th>
-            <th onclick="AveriasPage._setSort('linea')"       style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_linea')} <span id="av-sort-linea"></span></th>
+            <th class="col-sec" onclick="AveriasPage._setSort('linea')"       style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_linea')} <span id="av-sort-linea"></span></th>
             <th onclick="AveriasPage._setSort('equipo')"      style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_equipo')} <span id="av-sort-equipo"></span></th>
             <th onclick="AveriasPage._setSort('descripcion')" style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_desc')} <span id="av-sort-descripcion"></span></th>
             <th onclick="AveriasPage._setSort('tecnico')"     style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_tecnico')} <span id="av-sort-tecnico"></span></th>
@@ -5177,9 +5296,9 @@ const AveriasPage = {
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
         <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
         <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
-        <td style="white-space:nowrap;color:var(--gray-muted);font-size:12px">${a.hora_inicio ? a.hora_inicio.slice(0,5) : '—'}</td>
+        <td class="col-sec" style="white-space:nowrap;color:var(--gray-muted);font-size:12px">${a.hora_inicio ? a.hora_inicio.slice(0,5) : '—'}</td>
         <td>${UI.esc(a.almacen||'—')}</td>
-        <td style="color:var(--gray-muted);font-size:12px">${UI.esc(a.linea||'—')}</td>
+        <td class="col-sec" style="color:var(--gray-muted);font-size:12px">${UI.esc(a.linea||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
         <td>${UI.esc(a.tecnico||'—')}</td>
@@ -5234,12 +5353,12 @@ const AveriasPage = {
                          font-size:11px;color:var(--gray-muted);gap:4px;flex-shrink:0">
           <input type="file" accept="image/*" multiple style="display:none"
             onchange="AveriasPage._addFotosInDetail(this,'${UI.esc(id)}')">
-          <span style="font-size:22px">📷</span><span>Añadir</span>
+          <span style="font-size:22px">📷</span><span>${t('x_anadir')}</span>
         </label>` : ''}
       </div>
     </div>`;
 
-    Modal.open(`Avería — ${a.id}`, `
+    Modal.open(`${t('x_averia')} — ${a.id}`, `
       <div class="detail-grid">
         <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.estadoBadge(a.estado)}</p></div>
         <div class="detail-field"><label>${t('lbl_criticidad')}</label><p>${UI.criticidadBadge(a.criticidad)}</p></div>
@@ -5359,7 +5478,7 @@ const AveriasPage = {
     const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
     const tecOpts = '<option value="">' + t('x_sin_asignar') + '</option>' + allTecnicos.map(t => `<option${t.nombre===a.tecnico?' selected':''}>${UI.esc(t.nombre)}</option>`).join('');
 
-    Modal.open('Editar avería', `
+    Modal.open(t('x_editar_averia'), `
       <form id="edit-averia-form" class="form-grid">
         <div class="form-field">
           <label>${t('lbl_almacen')}</label>
@@ -5399,7 +5518,7 @@ const AveriasPage = {
           <label>${t('lbl_tipo')}</label>
           <select class="form-input" id="ea-tipo">
             <option value="">—</option>
-            ${tipos.map(t=>`<option${a.tipo===t?' selected':''}>${UI.esc(t)}</option>`).join('')}
+            ${tipos.map(tp=>`<option value="${UI.esc(tp)}"${a.tipo===tp?' selected':''}>${UI.esc(tv('x_tav_', tp))}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -5441,7 +5560,7 @@ const AveriasPage = {
         <div class="form-field">
           <label>${t('x_zona_limpia_y_revisada')}</label>
           <select class="form-input" id="ea-zona-limpia">
-            <option value="true"${a.zona_limpia !== false ? ' selected':''}>Sí</option>
+            <option value="true"${a.zona_limpia !== false ? ' selected':''}>${t('x_si')}</option>
             <option value="false"${a.zona_limpia === false ? ' selected':''}>No</option>
           </select>
         </div>
@@ -5582,7 +5701,7 @@ const AveriasPage = {
           <label>${t('lbl_tipo_av')}</label>
           <select class="form-input" id="av-tipo">
             <option value="">${t('seleccionar')}</option>
-            ${tipos.map(t=>`<option>${UI.esc(t)}</option>`).join('')}
+            ${tipos.map(tp=>`<option value="${UI.esc(tp)}">${UI.esc(tv('x_tav_', tp))}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -5668,7 +5787,7 @@ const AveriasPage = {
                 <input class="form-input" type="number" id="av-dur-h" min="0" max="999" placeholder="0" style="width:80px"> h
                 <input class="form-input" type="number" id="av-dur-m" min="0" max="59" placeholder="0" style="width:80px"> min
               </div>
-              <small style="color:var(--gray-muted);font-size:11px">La fecha/hora de arriba son del FIN. El inicio se calcula restando la duración.</small>
+              <small style="color:var(--gray-muted);font-size:11px">${t('x_fin_nota')}</small>
             </div>
             <div class="form-field full">
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none" id="av-zona-limpia-label">
@@ -6103,7 +6222,7 @@ const AveriasPage = {
 
         <!-- REPUESTOS USADOS -->
         <div class="form-section">
-          <div class="form-section-label">🔧 Repuestos utilizados</div>
+          <div class="form-section-label">🔧 ${t('x_repuestos_utilizados')}</div>
           ${productos.length === 0 ? `<p style="font-size:12px;color:var(--gray-muted);margin-top:6px">${t('x_sin_stock_disponible_en_este_almacen')}</p>` : `
           <div class="repuestos-row" style="margin-top:6px">
             <div>
@@ -6138,7 +6257,7 @@ const AveriasPage = {
 
         <!-- MATERIALES LIBRES + COSTE -->
         <div class="form-section">
-          <div class="form-section-label">📦 Otros materiales y coste</div>
+          <div class="form-section-label">📦 ${t('x_otros_materiales_y_coste')}</div>
           <div class="form-grid" style="padding:0;margin-top:0">
             <div class="form-field full">
               <label>${t('x_materiales_texto_libre')}</label>
@@ -6154,18 +6273,18 @@ const AveriasPage = {
           <label style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <input type="file" id="cl-foto-input" accept="image/*" multiple style="display:none"
               onchange="AveriasPage._onFotoSelected(this)">
-            <span class="btn btn-secondary btn-sm" style="pointer-events:none">📷 Añadir foto(s)</span>
+            <span class="btn btn-secondary btn-sm" style="pointer-events:none">📷 ${t('x_anadir_fotos')}</span>
           </label>
           <span id="cl-fotos-count" style="font-size:11px;color:var(--gray-muted);margin-left:8px"></span>
         </div>
 
         <!-- ZONA LIMPIA -->
         <div class="form-section">
-          <div class="form-section-label">🧹 Estado de la zona</div>
+          <div class="form-section-label">🧹 ${t('x_estado_de_la_zona')}</div>
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;margin-top:8px;background:var(--bg);border-radius:8px;border:1.5px solid var(--green);user-select:none" id="zona-limpia-label">
             <input type="checkbox" id="cl-zona-limpia" checked style="width:18px;height:18px;accent-color:var(--green);flex-shrink:0"
               onchange="const l=document.getElementById('zona-limpia-label');l.style.borderColor=this.checked?'var(--green)':'var(--red)'">
-            <span style="font-size:13px;font-weight:600">Zona limpia y revisada</span>
+            <span style="font-size:13px;font-weight:600">${t('x_zona_limpia_y_revisada')}</span>
           </label>
         </div>
       </form>`,
@@ -6660,7 +6779,7 @@ const IncidenciasPage = {
         <table class="table-clickable">
           <thead><tr>
             <th>${t('col_fecha')}</th><th>${t('col_almacen')}</th><th>${t('col_zona')}</th><th>${t('col_tipo')}</th>
-            <th>${t('col_desc')}</th><th>${t('col_prioridad')}</th><th>${t('col_estado')}</th><th>${t('col_reportado')}</th>
+            <th>${t('col_desc')}</th><th>${t('col_prioridad')}</th><th>${t('col_estado')}</th><th class="col-sec">${t('col_reportado')}</th>
           </tr></thead>
           <tbody id="inc-tbody"></tbody>
         </table>
@@ -6724,7 +6843,7 @@ const IncidenciasPage = {
         <td class="col-truncate" style="max-width:240px">${UI.esc(i.descripcion||'—')}</td>
         <td>${UI.criticidadBadge(i.prioridad)}</td>
         <td>${UI.estadoBadge(i.estado)}</td>
-        <td>${UI.esc(i.reportado_por||'—')}</td>
+        <td class="col-sec">${UI.esc(i.reportado_por||'—')}</td>
       </tr>`).join('');
   },
 
@@ -6917,7 +7036,7 @@ const IncidenciasPage = {
     if (!i) return;
     const tecnicos = await DataService.getTecnicos(true);
     const today = new Date().toISOString().slice(0,10);
-    Modal.open('Resolver incidencia', `
+    Modal.open(t('x_resolver_incidencia'), `
       <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--orange)">
         <strong>${UI.esc(i.equipo||i.zona||i.almacen)}</strong> · ${UI.esc(i.almacen)} · <span class="badge badge-blue">${UI.esc(i.tipo)}</span><br>
         <span style="color:var(--gray-muted)">${UI.esc(i.descripcion)}</span>
@@ -7343,13 +7462,13 @@ const InventarioPage = {
 
         <!-- Mensaje de duplicado -->
         <div id="inv-dup-msg" style="display:none;grid-column:1/-1;background:#fff8e1;border:1.5px solid var(--orange);border-radius:8px;padding:10px 14px;font-size:13px">
-          <strong>⚠ Este producto ya existe en este sitio</strong>
+          <strong>⚠ ${t('x_producto_ya_existe')}</strong>
           <span id="inv-dup-uds"></span><br>
           <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
-            <input type="radio" name="inv-mode" value="replace" checked> Reemplazar las unidades existentes
+            <input type="radio" name="inv-mode" value="replace" checked> ${t('x_reemplazar_unidades')}
           </label>
           <label style="display:flex;align-items:center;gap:8px;margin-top:4px">
-            <input type="radio" name="inv-mode" value="add"> Sumar a las unidades existentes
+            <input type="radio" name="inv-mode" value="add"> ${t('x_sumar_unidades')}
           </label>
         </div>
 
@@ -7606,7 +7725,7 @@ const InventarioPage = {
           </table>
         </div>`
       : '';
-    Modal.open('Editar producto', `
+    Modal.open(t('x_editar_producto'), `
       <form onsubmit="return false">
         <div class="form-grid">
           <div class="form-field">
@@ -8559,7 +8678,7 @@ const ConfigPage = {
         <div class="table-wrap">
           <table id="tec-table">
             <thead><tr>
-              <th>${t('x_nombre')}</th><th>${t('x_email')}</th><th>${t('x_telefono')}</th>
+              <th>${t('x_nombre')}</th><th class="col-sec">${t('x_email')}</th><th>${t('x_telefono')}</th>
               <th>${t('x_rol')}</th><th>${t('col_almacen')}</th><th style="text-align:center">${t('modal_activo')}</th>
               <th style="text-align:center">${t('x_clave')}</th>
               ${canAdmin ? '<th style="text-align:right">' + t('x_acciones') + '</th>' : ''}
@@ -8871,22 +8990,22 @@ const ConfigPage = {
     const currentId = UserService.getUser()?.id;
     return tecnicos.map(tec => `<tr id="tec-row-${UI.esc(tec.id)}">
       <td style="font-weight:500">${UI.esc(tec.nombre)}</td>
-      <td style="color:var(--gray-muted);font-size:12px">${UI.esc(tec.email||'—')}</td>
+      <td class="col-sec" style="color:var(--gray-muted);font-size:12px">${UI.esc(tec.email||'—')}</td>
       <td style="color:var(--gray-muted);font-size:12px">${UI.esc(tec.telefono||'—')}</td>
       <td>${ConfigPage._rolBadge(tec.rol)}</td>
       <td>${UI.esc(tec.almacen||'—')}</td>
       <td style="text-align:center">
         ${canAdmin
           ? `<button class="btn btn-sm ${tec.activo?'btn-secondary':'btn-danger'}" style="font-size:11px;padding:3px 8px" onclick="ConfigPage.toggleActivo('${UI.esc(tec.id)}')">
-               ${tec.activo ? '✅ Activo' : '⬜ Inactivo'}
+               ${tec.activo ? '✅ ' + t('x_activo') : '⬜ ' + t('x_inactivo')}
              </button>`
           : (tec.activo ? '✅' : '⬜')
         }
       </td>
       <td style="text-align:center">
         ${canAdmin
-          ? `<button class="btn btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" title="${tec.password?'Contraseña establecida':'Sin contraseña'}" onclick="ConfigPage.managePassword('${UI.esc(tec.id)}')">
-               ${tec.password ? '🔒' : '🔓 Sin clave'}
+          ? `<button class="btn btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" title="${tec.password?t('x_contrasena_establecida'):t('x_sin_contrasena')}" onclick="ConfigPage.managePassword('${UI.esc(tec.id)}')">
+               ${tec.password ? '🔒' : '🔓 ' + t('x_sin_clave')}
              </button>`
           : (tec.password ? '🔒' : '🔓')
         }
@@ -8938,7 +9057,7 @@ const ConfigPage = {
   },
 
   openNewTecnico() {
-    Modal.open('Añadir técnico', ConfigPage._tecFormHtml(),
+    Modal.open(t('x_anadir_tecnico'), ConfigPage._tecFormHtml(),
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ConfigPage._saveTecnico(null)">${t('save')}</button>`);
   },
@@ -8946,7 +9065,7 @@ const ConfigPage = {
   async editTecnico(id) {
     const tec = await db.tecnicos.get(id);
     if (!tec) return;
-    Modal.open('Editar técnico', ConfigPage._tecFormHtml(tec),
+    Modal.open(t('x_editar_tecnico'), ConfigPage._tecFormHtml(tec),
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ConfigPage._saveTecnico('${UI.esc(id)}')">${t('btn_guardar_cambios')}</button>`);
   },
@@ -9007,7 +9126,7 @@ const ConfigPage = {
     if (!tec) return;
     const hasPw  = !!(tec.password);
     const curPw  = tec.password || '';
-    Modal.open(`🔑 Contraseña — ${UI.esc(tec.nombre)}`, `
+    Modal.open(`🔑 ${t('x_contrasena')} — ${UI.esc(tec.nombre)}`, `
       <div style="margin-bottom:14px">
         <label style="font-size:12px;color:var(--gray-muted);font-weight:600">${t('x_contrasena_actual')}</label>
         ${hasPw ? `
@@ -10292,7 +10411,7 @@ CREATE POLICY "anon_all" ON cae_datos FOR ALL USING (true) WITH CHECK (true);`;
     const tecOpts = '<option value="">' + t('x_seleccionar') + '</option>' +
       tecnicos.map(t => `<option value="${UI.esc(t.nombre)}" ${t.nombre === user?.nombre ? 'selected' : ''}>${UI.esc(t.nombre)}</option>`).join('');
 
-    Modal.open('Nuevo Parte de Trabajo', `
+    Modal.open(t('x_nuevo_parte'), `
       <p style="font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px;margin-bottom:12px">
         ${t('x_localiza_el_equipo_intervenido_almacen_z')}
       </p>
@@ -10344,7 +10463,7 @@ CREATE POLICY "anon_all" ON cae_datos FOR ALL USING (true) WITH CHECK (true);`;
           <textarea class="form-input" id="pf-notas" rows="3" placeholder="${t('x_describe_el_trabajo_realizado')}" style="resize:vertical"></textarea>
         </div>
         <div class="form-field full">
-          <div class="form-section-label">📦 Materiales utilizados</div>
+          <div class="form-section-label">📦 ${t('x_materiales_utilizados')}</div>
           <div class="materiales-row" style="margin-bottom:8px">
             <div>
               <small style="color:var(--gray-muted)">${t('col_tipo')}</small>
@@ -10653,11 +10772,11 @@ const InspeccionesPage = {
         </select>
         <select class="filter-select" id="insp-f-tipo">
           <option value="">${t('todos_tipos')}</option>
-          ${this._TIPOS.map(t=>`<option>${t}</option>`).join('')}
+          ${this._TIPOS.map(tp=>`<option value="${tp}">${tv('x_tin_', tp)}</option>`).join('')}
         </select>
         <select class="filter-select" id="insp-f-resultado">
           <option value="">${t('todos_resultados')}</option>
-          ${this._RESULTADOS.map(r=>`<option>${r}</option>`).join('')}
+          ${this._RESULTADOS.map(r=>`<option value="${r}">${tv('x_res_', r)}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -10728,7 +10847,7 @@ const InspeccionesPage = {
     );
     const k = this._sortKey, d = this._sortDir === 'asc' ? 1 : -1;
     this._filtered.sort((a, b) => d * (a[k]||'').localeCompare(b[k]||''));
-    document.getElementById('insp-count').textContent = `${this._filtered.length} inspección(es)`;
+    document.getElementById('insp-count').textContent = `${this._filtered.length} ${t('x_inspecciones_min')}`;
     this._renderTable();
     this._updateBadge();
     document.querySelectorAll('[id^="insp-sort-"]').forEach(el => el.textContent = '');
@@ -10749,10 +10868,10 @@ const InspeccionesPage = {
     tbody.innerHTML = this._filtered.map(i => {
       const dias = this._diasHasta(i.proxima);
       const resBadge = i.resultado === 'Favorable'
-        ? `<span class="badge badge-green">Favorable</span>`
+        ? `<span class="badge badge-green">${tv('x_res_', 'Favorable')}</span>`
         : i.resultado === 'Desfavorable'
-        ? `<span class="badge badge-red">Desfavorable</span>`
-        : i.resultado ? `<span class="badge" style="background:var(--orange-muted);color:var(--orange)">${UI.esc(i.resultado)}</span>` : '—';
+        ? `<span class="badge badge-red">${tv('x_res_', 'Desfavorable')}</span>`
+        : i.resultado ? `<span class="badge" style="background:var(--orange-muted);color:var(--orange)">${UI.esc(tv('x_res_', i.resultado))}</span>` : '—';
       const docBtn = i.documento
         ? `<button onclick="InspeccionesPage.openPdf('${UI.esc(i.id)}')" title="${t('x_ver_pdf')}" style="background:none;border:none;cursor:pointer;font-size:18px;padding:0">📄</button>`
         : `<span style="color:var(--gray-muted);font-size:12px">—</span>`;
@@ -10789,7 +10908,7 @@ const InspeccionesPage = {
           <label>${t('lbl_tipo_insp')} *</label>
           <select class="form-input" id="fi-tipo" required>
             <option value="">${t('seleccionar')}</option>
-            ${this._TIPOS.map(t=>`<option${insp?.tipo===t?' selected':''}>${t}</option>`).join('')}
+            ${this._TIPOS.map(tp=>`<option value="${tp}"${insp?.tipo===tp?' selected':''}>${tv('x_tin_', tp)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -10804,7 +10923,7 @@ const InspeccionesPage = {
           <label>${t('lbl_resultado')}</label>
           <select class="form-input" id="fi-resultado">
             <option value="">—</option>
-            ${this._RESULTADOS.map(r=>`<option${insp?.resultado===r?' selected':''}>${r}</option>`).join('')}
+            ${this._RESULTADOS.map(r=>`<option value="${r}"${insp?.resultado===r?' selected':''}>${tv('x_res_', r)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -10822,7 +10941,7 @@ const InspeccionesPage = {
         <div class="form-field full">
           <label>${t('lbl_cert_pdf')} ${insp?.documento?'<a href="'+UI.esc(insp.documento)+'" target="_blank" style="margin-left:8px;font-size:12px">📄 Ver actual</a>':''}</label>
           <input class="form-input" type="file" id="fi-pdf" accept="application/pdf">
-          <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?'Ya tiene PDF adjunto. Sube uno nuevo para reemplazarlo.':'Sube el certificado y los campos se rellenarán automáticamente ✨'}</span>
+          <span style="font-size:11px;color:var(--gray-muted)" id="fi-pdf-status">${insp?.documento?t('x_ya_tiene_pdf'):t('x_sube_certificado')}</span>
         </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
@@ -10992,16 +11111,16 @@ const PartesAnalisisPage = {
     </div>
     <!-- Fila 1: Almacenes -->
     <div class="pa-filter-row">
-      <span class="pbi-ctrl-label" style="margin-right:4px">Almacén</span>
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('lbl_almacen')}</span>
       <button id="pa-btn-alm-todos" class="pa-togbtn active" onclick="PartesAnalisisPage._toggleAlm('')" ${effAlm?'disabled':''}>${t('todos')}</button>
       ${almList.map(a=>`<button id="pa-btn-alm-${a.toLowerCase()}" class="pa-togbtn${effAlm&&normalizeAlmacen(a)===normalizeAlmacen(effAlm)?' active':''}" onclick="PartesAnalisisPage._toggleAlm('${a}')" ${effAlm?'disabled':''}>${a}</button>`).join('')}
       <div class="pa-filter-sep" style="margin-left:auto"></div>
-      <span class="pbi-ctrl-label" style="margin-right:4px">Técnico</span>
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('lbl_tecnico')}</span>
       <select class="pbi-select" id="pa-tec" onchange="PartesAnalisisPage._rebuild()" style="height:28px"><option value="">${t('todos')}</option></select>
     </div>
     <!-- Fila 2: Horizonte temporal -->
     <div class="pa-filter-row">
-      <span class="pbi-ctrl-label" style="margin-right:4px">Período</span>
+      <span class="pbi-ctrl-label" style="margin-right:4px">${t('x_periodo')}</span>
       <button id="pa-preset-hoy" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('hoy')">${t('hoy')}</button>
       <button id="pa-preset-ayer" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('ayer')">${t('ayer')}</button>
       <button id="pa-preset-semana" class="pa-togbtn" onclick="PartesAnalisisPage._setPreset('semana')">${t('x_esta_semana')}</button>
@@ -11016,7 +11135,7 @@ const PartesAnalisisPage = {
       <div class="chart-wrap">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <div>
-            <span class="chart-title" style="margin:0;font-size:15px">Horas por técnico</span>
+            <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_horas_por_tecnico')}</span>
             <span style="font-size:12px;color:var(--gray-muted);margin-left:8px">${t('x_click_ver_sus_partes')}</span>
           </div>
           <select id="pa-tec-orden" class="pbi-select" onchange="PartesAnalisisPage._rebuildTec()">
@@ -11029,7 +11148,7 @@ const PartesAnalisisPage = {
       </div>
       <div class="chart-wrap">
         <div style="margin-bottom:12px">
-          <span class="chart-title" style="margin:0;font-size:15px">Horas por almacén</span>
+          <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_horas_por_almacen')}</span>
           <span style="font-size:12px;color:var(--gray-muted);display:block;margin-top:2px">${t('x_click_ver_partes_de_ese_almacen')}</span>
         </div>
         <div style="position:relative;height:220px"><canvas id="pa-chart-alm"></canvas></div>
@@ -11037,7 +11156,7 @@ const PartesAnalisisPage = {
     </div>
     <div class="chart-wrap" style="margin-bottom:16px">
       <div style="margin-bottom:12px">
-        <span class="chart-title" style="margin:0;font-size:15px">Evolución mensual de horas</span>
+        <span class="chart-title" style="margin:0;font-size:15px">${t('x_ch_evolucion_mensual_horas')}</span>
       </div>
       <div style="position:relative;height:180px"><canvas id="pa-chart-evol"></canvas></div>
     </div>`;
@@ -11410,8 +11529,14 @@ const PlanesPage = {
   _asig: [],
 
   _frecLabel(p) {
-    const u = { dias: 'días', semanas: 'semanas', meses: 'meses' }[p.frecuencia_tipo] || p.frecuencia_tipo;
-    return `Cada ${p.frecuencia_valor} ${u}`;
+    return PlanesPage.frecTexto(p.frecuencia_valor, p.frecuencia_tipo);
+  },
+  // "Cada 3 meses" / "Cada 1 semana" traducido y con singular/plural (v10.2)
+  frecTexto(valor, tipo) {
+    const n = +valor || 0;
+    const KEY = { dias: ['x_u_dia', 'x_u_dias'], semanas: ['x_u_semana', 'x_u_semanas'], meses: ['x_u_mes', 'x_u_meses'] }[tipo];
+    const u = KEY ? t(n === 1 ? KEY[0] : KEY[1]) : (tipo || '');
+    return `${t('x_cada')} ${n} ${u}`;
   },
 
   async render() {
@@ -11437,7 +11562,7 @@ const PlanesPage = {
     [this._planes, this._asig] = await Promise.all([db.planes.toArray(), db.plan_activos.toArray()]);
     this._planes.sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
     this._renderTable();
-    document.getElementById('plan-count').textContent = `${this._planes.length} planes de mantenimiento`;
+    document.getElementById('plan-count').textContent = `${this._planes.length} ${t('x_planes_de_mantenimiento')}`;
   },
 
   // Recarga y repinta sin reconstruir la página.
@@ -11447,7 +11572,7 @@ const PlanesPage = {
     this._planes.sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
     this._renderTable();
     const c = document.getElementById('plan-count');
-    if (c) c.textContent = `${this._planes.length} planes de mantenimiento`;
+    if (c) c.textContent = `${this._planes.length} ${t('x_planes_de_mantenimiento')}`;
   },
 
   _renderTable() {
@@ -11462,7 +11587,7 @@ const PlanesPage = {
         <td>${UI.criticidadBadge(p.criticidad)}</td>
         <td>${(p.tareas||[]).length}</td>
         <td>${nAsig}</td>
-        <td>${p.activo === false ? '<span class="badge badge-gray">Pausado</span>' : '<span class="badge badge-green">Activo</span>'}</td>
+        <td>${p.activo === false ? `<span class="badge badge-gray">${t('x_pausado')}</span>` : `<span class="badge badge-green">${t('x_activo')}</span>`}</td>
       </tr>`;
     }).join('');
   },
@@ -11491,7 +11616,7 @@ const PlanesPage = {
           <div style="display:flex;gap:8px">
             <input class="form-input" type="number" min="1" id="plan-frec-valor" value="${p.frecuencia_valor||1}" style="width:80px">
             <select class="form-input" id="plan-frec-tipo">
-              ${opt('dias',p.frecuencia_tipo)}días</option>${opt('semanas',p.frecuencia_tipo)}semanas</option>${opt('meses',p.frecuencia_tipo||'meses')}meses</option>
+              ${opt('dias',p.frecuencia_tipo)}${t('x_u_dias')}</option>${opt('semanas',p.frecuencia_tipo)}${t('x_u_semanas')}</option>${opt('meses',p.frecuencia_tipo||'meses')}${t('x_u_meses')}</option>
             </select>
           </div>
         </div>
@@ -11514,7 +11639,7 @@ const PlanesPage = {
   },
 
   openNew() {
-    Modal.open('Nuevo plan de preventivo', this._formHtml(),
+    Modal.open(t('x_nuevo_plan_preventivo'), this._formHtml(),
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="PlanesPage._save()">${t('save')}</button>`);
   },
@@ -11522,7 +11647,7 @@ const PlanesPage = {
   async openEdit(id) {
     const p = await db.planes.get(id);
     if (!p) return;
-    Modal.open('Editar plan', this._formHtml(p),
+    Modal.open(t('x_editar_plan'), this._formHtml(p),
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="PlanesPage._save('${UI.esc(id)}')">${t('save')}</button>`);
   },
@@ -11574,7 +11699,7 @@ const PlanesPage = {
         <div class="detail-field"><label>${t('x_frecuencia')}</label><p>${this._frecLabel(p)}</p></div>
         <div class="detail-field"><label>${t('col_crit')}</label><p>${UI.criticidadBadge(p.criticidad)}</p></div>
         <div class="detail-field"><label>${t('x_tiempo_estimado')}</label><p>${p.tiempo_estimado||0} h</p></div>
-        <div class="detail-field"><label>${t('col_estado')}</label><p>${p.activo===false?'Pausado':'Activo'}</p></div>
+        <div class="detail-field"><label>${t('col_estado')}</label><p>${p.activo===false?t('x_pausado'):t('x_activo')}</p></div>
         ${p.descripcion ? `<div class="detail-field full"><label>${t('col_desc')}</label><p>${UI.esc(p.descripcion)}</p></div>` : ''}
       </div>
       <div style="margin-top:14px"><label style="font-size:12px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.5px">${t('x_checklist')}</label>
@@ -11606,7 +11731,7 @@ const PlanesPage = {
   async openAsignar(planId) {
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
     const today = new Date().toISOString().slice(0,10);
-    Modal.open('Asignar activo al plan', `
+    Modal.open(t('x_asignar_activo_al_plan'), `
       <form class="form-grid">
         <div class="form-field"><label>${t('x_almacen')}</label>
           <select class="form-input" id="pa-almacen"><option value="">${t('x_seleccionar_2')}</option>${almacenes.map(a=>`<option>${a}</option>`).join('')}</select>
@@ -11713,14 +11838,14 @@ const OrdenesPage = {
           <option value="">${t('x_todos_los_origenes')}</option>
           <option value="PREVENTIVO">${t('cr_preventivo')}</option><option value="INCIDENCIA">${t('x_incidencia')}</option><option value="MANUAL">${t('x_manual')}</option>
         </select>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="ot-f-vencidas"> Solo vencidas</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="ot-f-vencidas"> ${t('x_solo_vencidas')}</label>
       </div>
     </div>
     <div class="card">
       <div class="table-wrap">
         <table class="table-clickable">
           <thead><tr>
-            <th>${t('x_prevista')}</th><th>${t('col_almacen')}</th><th>${t('col_equipo')}</th><th>${t('x_titulo')}</th><th>${t('col_tipo')}</th><th>${t('x_origen')}</th><th>${t('col_estado')}</th><th>${t('col_tecnico')}</th>
+            <th>${t('x_prevista')}</th><th>${t('col_almacen')}</th><th>${t('col_equipo')}</th><th>${t('x_titulo')}</th><th>${t('col_tipo')}</th><th class="col-sec">${t('x_origen')}</th><th>${t('col_estado')}</th><th>${t('col_tecnico')}</th>
           </tr></thead>
           <tbody id="ot-tbody"></tbody>
         </table>
@@ -11755,7 +11880,7 @@ const OrdenesPage = {
     const abiertas = this._data.filter(o => o.estado !== 'Cerrada').length;
     const vencidas = this._data.filter(o => o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy).length;
     const el = document.getElementById('ot-count');
-    if (el) el.textContent = `${this._data.length} OTs — ${abiertas} abiertas${vencidas ? ` · ${vencidas} vencidas` : ''}`;
+    if (el) el.textContent = `${this._data.length} ${t('x_ots')} — ${abiertas} ${t('x_abiertas_min')}${vencidas ? ` · ${vencidas} ${t('x_vencidas_min')}` : ''}`;
   },
 
   _applyFilters() {
@@ -11786,7 +11911,7 @@ const OrdenesPage = {
         <td>${UI.esc(o.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(o.titulo||'—')}</td>
         <td><span class="badge badge-${o.tipo==='Preventivo'?'blue':'red'}">${UI.esc(o.tipo||'—')}</span></td>
-        <td>${this._origenBadge(o.origen)}</td>
+        <td class="col-sec">${this._origenBadge(o.origen)}</td>
         <td>${this._estadoBadge(o.estado)}</td>
         <td>${UI.esc(o.tecnico||'—')}</td>
       </tr>`;
@@ -11800,7 +11925,7 @@ const OrdenesPage = {
       ? (o.checklist||[]).map(x => `<li>${x.hecho ? '✅' : '⬜'} ${UI.esc(x.texto)}</li>`).join('')
       : '<li style="color:var(--gray-muted)">Sin checklist</li>';
     const abierta = o.estado !== 'Cerrada';
-    Modal.open(`OT ${UI.esc(o.id)}`, `
+    Modal.open(`${t('x_ot')} ${UI.esc(o.id)}`, `
       <div class="detail-grid">
         <div class="detail-field"><label>${t('col_estado')}</label><p>${this._estadoBadge(o.estado)}</p></div>
         <div class="detail-field"><label>${t('x_tipo_origen')}</label><p><span class="badge badge-${o.tipo==='Preventivo'?'blue':'red'}">${UI.esc(o.tipo)}</span> ${this._origenBadge(o.origen)}</p></div>
@@ -11826,7 +11951,7 @@ const OrdenesPage = {
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
     const tecnicos = await DataService.getTecnicos(true);
     const today = new Date().toISOString().slice(0,10);
-    Modal.open('Nueva orden de trabajo', `
+    Modal.open(t('x_nueva_orden_de_trabajo'), `
       <form class="form-grid">
         <div class="form-field"><label>${t('x_almacen')}</label>
           <select class="form-input" id="ot-almacen"><option value="">${t('x_seleccionar_2')}</option>${almacenes.map(a=>`<option>${a}</option>`).join('')}</select>
@@ -11943,7 +12068,7 @@ const OrdenesPage = {
     OrdenesPage._repuestosSel = [];
     OrdenesPage._closeAlmacen = o.almacen || '';
     OrdenesPage._prodCache = prods;
-    Modal.open(`Ejecutar OT ${UI.esc(o.id)}`, `
+    Modal.open(`${t('x_ejecutar_ot')} ${UI.esc(o.id)}`, `
       <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;border-left:3px solid var(--green)">
         <strong>${UI.esc(o.titulo)}</strong> · ${UI.esc(o.equipo||o.almacen)}
       </div>
@@ -11968,7 +12093,7 @@ const OrdenesPage = {
         </div>
         <div class="form-field full"><label>${t('x_otros_materiales_texto_libre')}</label><textarea class="form-input" id="otc-mat" rows="2" placeholder="${t('x_materiales_sin_stock_notas')}"></textarea></div>
         <div class="form-field"><label>${t('x_fecha_ejecucion')}</label><input class="form-input" type="date" id="otc-fecha" value="${today}"></div>
-        <div class="form-field"><label>${t('x_zona_limpia')}</label><select class="form-input" id="otc-limpia"><option value="true" selected>Sí</option><option value="false">${t('x_no')}</option></select></div>
+        <div class="form-field"><label>${t('x_zona_limpia')}</label><select class="form-input" id="otc-limpia"><option value="true" selected>${t('x_si')}</option><option value="false">${t('x_no')}</option></select></div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" style="background:var(--green)" onclick="OrdenesPage._saveClose('${UI.esc(id)}')">${t('x_cerrar_ot')}</button>`);
@@ -12125,7 +12250,7 @@ const PreventivosPage = {
           <option value="">${t('todos_los_centros')}</option>
           ${almacenes.map(a=>`<option>${a}</option>`).join('')}
         </select>`}
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="prev-all"> Seleccionar todos</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="prev-all"> ${t('x_seleccionar_todos')}</label>
       </div>
     </div>
     <div class="card">
@@ -12153,6 +12278,13 @@ const PreventivosPage = {
     if (plan.frecuencia_tipo === 'meses' && v === 12) return 'Anual';
     return `Cada ${plan.frecuencia_valor} ${plan.frecuencia_tipo}`;
   },
+  // Texto visible de la categoría de frecuencia (la categoría interna sigue en castellano para los filtros)
+  _frecCatLabel(plan) {
+    const fc = this._frecCat(plan);
+    if (fc === 'Mensual') return t('x_mensual');
+    if (fc === 'Anual') return t('x_anual');
+    return PlanesPage.frecTexto(plan.frecuencia_valor, plan.frecuencia_tipo);
+  },
 
   async _load() {
     const lockedAlm = UserService.getEffectiveAlmacen() || '';
@@ -12163,7 +12295,7 @@ const PreventivosPage = {
     this._pend = pend;
     this._renderTable();
     const el = document.getElementById('prev-count');
-    if (el) el.textContent = `${this._pend.length} preventivo(s) vencido(s) pendiente(s) de aprobación`;
+    if (el) el.textContent = `${this._pend.length} ${t('x_preventivos_pendientes_aprobacion')}`;
     const btn = document.getElementById('prev-generar');
     if (btn) btn.disabled = this._pend.length === 0;
   },
@@ -12171,14 +12303,14 @@ const PreventivosPage = {
   _renderTable() {
     const tbody = document.getElementById('prev-tbody');
     if (!tbody) return;
-    if (this._pend.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('Nada pendiente', 'No hay preventivos vencidos sin OT en este centro')}</td></tr>`; return; }
+    if (this._pend.length === 0) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty(t('x_nada_pendiente'), t('x_sin_preventivos_vencidos'))}</td></tr>`; return; }
     tbody.innerHTML = this._pend.map((p, i) => {
-      const retraso = p.dias <= 0 ? 'Hoy' : `hace ${p.dias} día${p.dias>1?'s':''}`;
+      const retraso = p.dias <= 0 ? t('hoy') : t('x_hace_n_dias').replace('{n}', p.dias);
       const fc = PreventivosPage._frecCat(p.plan);
       return `<tr>
         <td><input type="checkbox" class="prev-chk" data-idx="${i}"></td>
         <td><strong>${UI.esc(p.plan.nombre||'—')}</strong></td>
-        <td><span class="badge badge-${fc==='Anual'?'blue':'gray'}">${UI.esc(fc)}</span></td>
+        <td><span class="badge badge-${fc==='Anual'?'blue':'gray'}">${UI.esc(PreventivosPage._frecCatLabel(p.plan))}</span></td>
         <td>${UI.esc(p.act.equipo||p.pa_id||'—')}</td>
         <td>${UI.esc(p.almacen||'—')}</td>
         <td style="white-space:nowrap">${p.prox?UI.formatDate(p.prox):'—'}</td>
@@ -12467,7 +12599,7 @@ const CAEPage = {
   },
 
   _fechaTxt() {
-    if (!this._fecha) return 'sin datos importados';
+    if (!this._fecha) return t('x_sin_datos_importados');
     const d = new Date(this._fecha);
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
            ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -12500,7 +12632,7 @@ const CAEPage = {
 
     const cab = '<div class="page-header"><div><h1>' + t('x_cae_empresas_externas') + '</h1><p class="page-subtitle">' + t('x_cumplimiento_documental_de_empresas_ex') + '</p></div>' +
       '<div class="page-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      '<span style="font-size:12px;color:var(--gray-muted)">Actualizado: <b>' + this._fechaTxt() + '</b></span>' +
+      '<span style="font-size:12px;color:var(--gray-muted)">' + t('x_actualizado') + ' <b>' + this._fechaTxt() + '</b></span>' +
       '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'cae-file\').click()">' + t('x_importar_excel') + '</button>' +
       '<input type="file" id="cae-file" accept=".xlsx,.xls" style="display:none" onchange="CAEPage.importar(this.files[0])">' +
       '</div></div><div id="cae-prog" style="font-size:12px;color:var(--gray-muted);margin-bottom:8px"></div>';
@@ -12509,7 +12641,7 @@ const CAEPage = {
       main.innerHTML = cab +
         '<div class="card" style="padding:28px;text-align:center">' +
         '<p style="margin:0 0 6px;font-weight:600">' + t('x_todavia_no_hay_datos_de_cae') + '</p>' +
-        '<p style="margin:0;color:var(--gray-muted);font-size:13px">En SmartOSH: <b>CAE › Documentos</b> → quitar el filtro de ámbito → <b>Exportar a Excel</b>. Después súbelo con el botón «Importar Excel».</p>' +
+        '<p style="margin:0;color:var(--gray-muted);font-size:13px">' + t('x_cae_instrucciones') + '</p>' +
         '</div>';
       return;
     }
@@ -12530,17 +12662,17 @@ const CAEPage = {
         '<select id="cae-prin"><option value="">' + t('x_todas_las_empresas_principales') + '</option>' +
           Object.keys(prins).sort().map(p => '<option value="' + this._esc(p) + '"' + (p === this._principal ? ' selected' : '') + '>' + this._esc(p) + '</option>').join('') +
         '</select>' +
-        '<label class="cae-sw"><input type="checkbox" id="cae-ko"' + (this._soloKO ? ' checked' : '') + '> Solo pendientes</label>' +
-        '<label class="cae-sw"><input type="checkbox" id="cae-ex"' + (this._verExcl ? ' checked' : '') + '> Incluir excluidas</label>' +
+        '<label class="cae-sw"><input type="checkbox" id="cae-ko"' + (this._soloKO ? ' checked' : '') + '> ' + t('x_solo_pendientes') + '</label>' +
+        '<label class="cae-sw"><input type="checkbox" id="cae-ex"' + (this._verExcl ? ' checked' : '') + '> ' + t('x_incluir_excluidas') + '</label>' +
       '</div>' +
       '<div class="cae-leyenda">' +
-        '<span><span class="cae-chip ok">OK</span> Trabajador y empresa con todo aceptado.</span>' +
-        '<span><span class="cae-chip rev">REVISIÓN</span> Documentación aportada, pendiente de que <b>Deterra</b> la revise/acepte.</span>' +
-        '<span><span class="cae-chip ko">KO</span> Documentación solicitada y aún <b>sin aportar por la empresa externa</b>.</span>' +
+        '<span><span class="cae-chip ok">OK</span> ' + t('x_leyenda_ok') + '</span>' +
+        '<span><span class="cae-chip rev">' + t('x_revision_chip') + '</span> ' + t('x_leyenda_rev') + '</span>' +
+        '<span><span class="cae-chip ko">KO</span> ' + t('x_leyenda_ko') + '</span>' +
       '</div>' +
       '<div id="cae-lista"></div>' +
-      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">' + t('x_ok_los_documentos_del_trabajador') + ' <b>y los de su empresa</b> están en «Aceptado» o «Anulado/No aplica». <b>KO</b> = falta documentación por aportar (responsabilidad de la empresa externa). <b>REVISIÓN</b> = documentación ya aportada, pendiente de que la revisemos/aceptemos. Fuente: exportación SmartOSH CAE › Documentos' +
-      (this._data.filas ? ' (' + this._data.filas.toLocaleString('es-ES') + ' filas)' : '') + '.</p>';
+      '<p style="font-size:11px;color:var(--gray-muted);margin-top:18px">' + t('x_cae_pie') + ' ' + t('x_cae_fuente') +
+      (this._data.filas ? ' (' + this._data.filas.toLocaleString('es-ES') + ' ' + t('x_filas') + ')' : '') + '.</p>';
 
     const q = document.getElementById('cae-q');
     q.addEventListener('input', () => { this._q = q.value; this._pintar(); });
@@ -12559,15 +12691,15 @@ const CAEPage = {
     const dko = es.reduce((a, e) => a + e.docsEmpresaKO, 0);
     const pct = (ok + ko) ? Math.round(ok * 100 / (ok + ko)) : 0;
     document.getElementById('cae-kpis').innerHTML =
-      '<div class="cae-kpi"><div class="v">' + es.length + '</div><div class="l">Empresas externas</div></div>' +
-      '<div class="cae-kpi ok"><div class="v">' + ok + '</div><div class="l">Trabajadores en regla</div></div>' +
-      '<div class="cae-kpi ko"><div class="v">' + koRed + '</div><div class="l">Falta aportar (empresa)</div></div>' +
-      '<div class="cae-kpi rev"><div class="v">' + rev + '</div><div class="l">Pdte. de revisar (Deterra)</div></div>' +
-      '<div class="cae-kpi"><div class="v">' + pct + '%</div><div class="l">Cumplimiento</div></div>' +
-      '<div class="cae-kpi"><div class="v">' + dko + '</div><div class="l">Docs de empresa pendientes</div></div>';
+      '<div class="cae-kpi"><div class="v">' + es.length + '</div><div class="l">' + t('x_kpi_empresas_externas') + '</div></div>' +
+      '<div class="cae-kpi ok"><div class="v">' + ok + '</div><div class="l">' + t('x_kpi_trabajadores_en_regla') + '</div></div>' +
+      '<div class="cae-kpi ko"><div class="v">' + koRed + '</div><div class="l">' + t('x_kpi_falta_aportar') + '</div></div>' +
+      '<div class="cae-kpi rev"><div class="v">' + rev + '</div><div class="l">' + t('x_kpi_pdte_revisar') + '</div></div>' +
+      '<div class="cae-kpi"><div class="v">' + pct + '%</div><div class="l">' + t('x_cumplimiento') + '</div></div>' +
+      '<div class="cae-kpi"><div class="v">' + dko + '</div><div class="l">' + t('x_kpi_docs_empresa_pendientes') + '</div></div>';
 
     const cont = document.getElementById('cae-lista');
-    if (!es.length) { cont.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:var(--gray-muted)">Ninguna empresa cumple el filtro en este centro.</div>'; return; }
+    if (!es.length) { cont.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:var(--gray-muted)">' + t('x_ninguna_empresa_filtro') + '</div>'; return; }
     const q = this._q.trim().toLowerCase();
     cont.innerHTML = es.map((e, i) => {
       const tot = e.ok + e.ko, w = tot ? Math.round(e.ok * 100 / tot) : 0;
@@ -12575,22 +12707,21 @@ const CAEPage = {
       let tr = e.trabajadores;
       if (this._soloKO) tr = tr.filter(t => t.e !== 'OK');
       if (q && e.nombre.toLowerCase().indexOf(q) < 0) tr = tr.filter(t => t.n.toLowerCase().indexOf(q) >= 0);
-      const MOT = { propio: 'Documentación propia', empresa: 'Documentación de la empresa', ambos: 'Propia + empresa' };
-      const filas = tr.map(t => {
+      const MOT = { propio: t('x_mot_propio'), empresa: t('x_mot_empresa'), ambos: t('x_mot_ambos') };
+      const filas = tr.map(wk => {
         let det = '—';
-        if (t.e !== 'OK') {
-          if (t.m === 'empresa') {
-            det = t.e === 'REV' ? 'Docs propios en regla; la empresa tiene documentación por revisar'
-                                : 'Sus documentos están en regla; falla la empresa';
+        if (wk.e !== 'OK') {
+          if (wk.m === 'empresa') {
+            det = wk.e === 'REV' ? t('x_det_rev_empresa') : t('x_det_ko_empresa');
           } else {
-            det = this._esc(t.d.join(' · ')) || (t.f + ' documento(s)');
+            det = this._esc(wk.d.join(' · ')) || (wk.f + ' ' + t('x_documentos_n'));
           }
         }
-        const chipCls = t.e === 'OK' ? 'ok' : (t.e === 'REV' ? 'rev' : 'ko');
-        const chipTxt = t.e === 'REV' ? 'REVISIÓN' : t.e;
-        const mot = t.e === 'OK' ? '—'
-                  : (t.e === 'REV' ? 'Aportado, pendiente de revisión' : this._esc(MOT[t.m] || ''));
-        return '<tr><td>' + this._esc(t.n) + '</td><td><span class="cae-chip ' + chipCls + '">' + chipTxt + '</span></td>' +
+        const chipCls = wk.e === 'OK' ? 'ok' : (wk.e === 'REV' ? 'rev' : 'ko');
+        const chipTxt = wk.e === 'REV' ? t('x_revision_chip') : wk.e;
+        const mot = wk.e === 'OK' ? '—'
+                  : (wk.e === 'REV' ? t('x_aportado_pdte_revision') : this._esc(MOT[wk.m] || ''));
+        return '<tr><td>' + this._esc(wk.n) + '</td><td><span class="cae-chip ' + chipCls + '">' + chipTxt + '</span></td>' +
           '<td class="cae-falta">' + mot + '</td>' +
           '<td class="cae-falta">' + det + '</td></tr>';
       }).join('');
@@ -12606,8 +12737,8 @@ const CAEPage = {
           (e.docsEmpresaKO ? (function(){
             var ped = e.docsEmpresaKO - (e.docsEmpresaRev || 0);
             var lst = (e.docsEmpresa && e.docsEmpresa.length) ? ': ' + CAEPage._esc(e.docsEmpresa.join(' · ')) : '';
-            if (ped > 0) return '<p class="cae-docsemp">⚠ La empresa tiene ' + ped + ' documento(s) <b>sin aportar</b>, así que <b>ninguno de sus trabajadores puede acceder</b>' + lst + '</p>';
-            return '<p class="cae-docsemp cae-rev">🕒 La empresa ha aportado ' + e.docsEmpresaKO + ' documento(s), <b>pendientes de que Deterra los revise/acepte</b>' + lst + '</p>';
+            if (ped > 0) return '<p class="cae-docsemp">' + t('x_docsemp_ko').replace('{n}', ped) + lst + '</p>';
+            return '<p class="cae-docsemp cae-rev">' + t('x_docsemp_rev').replace('{n}', e.docsEmpresaKO) + lst + '</p>';
           })() : '') +
           (filas ? '<table class="cae-tabla"><thead><tr><th>' + t('x_trabajador') + '</th><th>' + t('col_estado') + '</th><th>' + t('x_motivo') + '</th><th>' + t('x_documentos_pendientes') + '</th></tr></thead><tbody>' + filas + '</tbody></table>'
                  : '<p class="cae-falta">' + t('x_sin_trabajadores_que_mostrar_con_este_fi') + '</p>') +
