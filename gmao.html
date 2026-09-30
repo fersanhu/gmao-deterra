@@ -131,6 +131,56 @@ ul{list-style:none}
 .almacen-card:hover{border-color:var(--green);background:#f5fbf7;transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .almacen-card-name{font-weight:700;font-size:15px;color:var(--gray-text)}
 .almacen-card-count{font-size:12px;color:var(--gray-muted)}
+/* ── Vista Producción (bloques zona → línea → máquina) ── */
+.prod-crumb{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--gray-muted);margin-bottom:14px}
+.prod-crumb button{background:none;border:none;color:var(--green);font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;padding:2px 4px}
+.prod-crumb button:hover{text-decoration:underline}
+.prod-crumb .cur{font-weight:700;color:var(--gray-text)}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.prod-block{position:relative;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:22px 14px;min-height:112px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;transition:all .15s;user-select:none}
+.prod-block:hover{border-color:var(--green);background:#f5fbf7;transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.prod-block:active{transform:translateY(0)}
+.prod-block-name{font-weight:700;font-size:15px;color:var(--gray-text);line-height:1.25;overflow-wrap:anywhere}
+.prod-block-sub{font-size:12px;color:var(--gray-muted)}
+.prod-block.alert{border-color:var(--red);background:var(--red-bg)}
+.prod-block.alert .prod-block-name{color:var(--red)}
+.prod-block-badge{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;line-height:20px;border-radius:10px;padding:0 6px}
+.prod-block-ico{font-size:26px;line-height:1}
+.prod-open-list{display:flex;flex-direction:column;gap:8px}
+.prod-open-item{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:var(--radius);padding:10px 14px}
+.prod-open-item.encurso{border-left-color:var(--orange)}
+.prod-open-item .txt{flex:1 1 220px;min-width:0}
+.prod-open-item .txt b{display:block;font-size:14px}
+.prod-open-item .txt small{color:var(--gray-muted);font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-open-item .acts{display:flex;gap:6px;flex-wrap:wrap}
+.prod-ask-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.prod-ask-row:last-child{border-bottom:none}
+.prod-ask-row .txt{flex:1 1 200px;min-width:0}
+.prod-ask-row .txt b{display:block}
+.prod-ask-row .txt small{color:var(--gray-muted);font-size:12px}
+.prod-ask-row.done{opacity:.45}
+.prod-ask-row.done .acts{display:none}
+@media (max-width:700px){
+  .prod-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .prod-block{padding:20px 10px;min-height:130px;border-width:3px;border-radius:12px}
+  .prod-block-ico{font-size:34px}
+  .prod-block-name{font-size:17px}
+  .prod-block-sub{font-size:12px}
+  .prod-block-badge{top:10px;right:10px;min-width:26px;height:26px;line-height:26px;font-size:13px;border-radius:13px}
+  .prod-crumb{font-size:15px;gap:8px}
+  .prod-crumb button{font-size:15px;padding:8px 10px;background:var(--surface);border:2px solid var(--border);border-radius:10px;min-height:44px}
+  .prod-open-item{padding:14px}
+  .prod-open-item .txt b{font-size:15px}
+  .prod-open-item .acts,.prod-ask-row .acts{width:100%}
+  .prod-open-item .acts .btn,.prod-ask-row .acts .btn{flex:1 1 0;min-height:52px;font-size:15px;font-weight:700;border-radius:10px}
+  .prod-ask-row .txt b{font-size:15px}
+  #modal-overlay.open .prod-mobile-form .form-input{min-height:52px;font-size:16px;border-radius:10px}
+  #modal-overlay.open .prod-mobile-form textarea.form-input{min-height:80px}
+  #modal-overlay.open .prod-mobile-form label{font-size:14px}
+  .prod-big-actions{display:flex;flex-direction:column;gap:10px;width:100%}
+  .prod-big-actions .btn{min-height:56px;font-size:17px;font-weight:700;border-radius:12px;width:100%}
+}
+@media (min-width:701px){.prod-big-actions{display:flex;gap:8px}}
 .users-back{background:none;border:none;cursor:pointer;color:var(--green);font-size:13px;font-weight:600;padding:0;display:flex;align-items:center;gap:4px}
 .users-back:hover{text-decoration:underline}
 .rol-Mecanico{background:#E3EEE6;color:#275D3A}
@@ -719,6 +769,11 @@ th:last-child{border-top-right-radius:var(--radius)}
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="nav-group-items">
+          <div class="nav-item" data-route="produccion" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
+            <span class="nav-label">Producción</span>
+            <span class="nav-badge" id="badge-produccion" style="display:none">0</span>
+          </div>
           <div class="nav-item" data-route="averias">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <span class="nav-label" data-i18n="nav_averias">Averías</span>
@@ -811,7 +866,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.3</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.4</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -2771,6 +2826,12 @@ const UserService = {
   isAdmin()       { return this._user?.rol === 'Admin'; },
   isResponsable() { return this._user?.rol === 'Responsable'; },
   isMecanico()    { return this._user?.rol === 'Mecanico'; },
+  isProduccion()  { return this._user?.rol === 'Produccion'; },
+  // Ruta de inicio según rol
+  homeRoute() {
+    if (this.isProduccion()) return 'produccion';
+    return (this.isAdmin() || this.isResponsable()) ? 'dashboard' : 'averias';
+  },
 
   // '' = ve todo (Admin); string canónico = su centro
   getEffectiveAlmacen() {
@@ -2960,20 +3021,31 @@ const Router = {
     const hash = (window.location.hash || '#averias').slice(1) || 'averias';
     const [base] = hash.split('/');
 
+    // Producción: solo su vista de bloques
+    if (UserService.isProduccion() && base !== 'produccion') {
+      window.location.hash = 'produccion';
+      return;
+    }
+    // Vista Producción: solo Producción y Admin
+    if (base === 'produccion' && !UserService.isProduccion() && !UserService.isAdmin()) {
+      window.location.hash = 'averias';
+      return;
+    }
     // Roles sin privilegios solo pueden ver Averías y Partes
     const _priv = UserService.isAdmin() || UserService.isResponsable();
-    if (!_priv && base !== 'averias' && base !== 'partes' && base !== 'ordenes') {
+    if (!_priv && !UserService.isProduccion() && base !== 'averias' && base !== 'partes' && base !== 'ordenes') {
       window.location.hash = 'averias';
       return;
     }
 
     const fn = this._routes[base] || this._routes['averias'];
+    if (base !== 'produccion' && typeof ProduccionPage !== 'undefined') ProduccionPage._stopAutoRefresh();
 
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
+    const titles = { produccion:'Producción · Averías', dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -5376,6 +5448,7 @@ const AveriasPage = {
         <div class="detail-field"><label>${t('lbl_tipo_av')}</label><p>${UI.esc(a.tipo||'—')}</p></div>
         <div class="detail-field"><label>${t('lbl_duracion')}</label><p>${UI.formatDuration(a.duracion)}</p></div>
         <div class="detail-field full"><label>${t('lbl_desc')}</label><p>${UI.esc(a.descripcion||'—')}</p></div>
+        ${a.reportado_por ? `<div class="detail-field"><label>Avisado por</label><p>${UI.esc(a.reportado_por)}</p></div>` : ''}
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>${t('lbl_solucion')}</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>${t('x_materiales_utilizados')}</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
@@ -8663,7 +8736,7 @@ const ConfigPage = {
             </select>
             <select class="filter-select" id="tec-f-rol" onchange="ConfigPage._filterTecTable()">
               <option value="">${t('x_todos_los_roles')}</option>
-              <option value="Mecanico">${t('x_mecanico')}</option><option value="Responsable">${t('lbl_responsable')}</option><option value="Admin">${t('x_admin')}</option>
+              <option value="Mecanico">${t('x_mecanico')}</option><option value="Responsable">${t('lbl_responsable')}</option><option value="Admin">${t('x_admin')}</option><option value="Produccion">Producción</option>
             </select>
             <select class="filter-select" id="tec-f-estado" onchange="ConfigPage._filterTecTable()">
               <option value="">${t('x_activos_e_inactivos')}</option>
@@ -8988,7 +9061,7 @@ const ConfigPage = {
   },
 
   _rolBadge(rol) {
-    const cls = rol === 'Admin' ? 'badge-red' : rol === 'Responsable' ? 'badge-orange' : 'badge-green';
+    const cls = rol === 'Admin' ? 'badge-red' : rol === 'Responsable' ? 'badge-orange' : rol === 'Produccion' ? 'badge-blue' : 'badge-green';
     return `<span class="badge ${cls}">${UI.esc(rol)}</span>`;
   },
 
@@ -9029,7 +9102,7 @@ const ConfigPage = {
 
   _tecFormHtml(tec = {}) {
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi','Todos'];
-    const roles     = ['Mecanico','Responsable','Admin'];
+    const roles     = ['Mecanico','Responsable','Admin','Produccion'];
     return `
       <div class="form-grid">
         <div class="form-field">
@@ -9567,7 +9640,7 @@ const UserSelectScreen = {
     App.updateUserUI();
     App.showScreen('screen-app');
     if (!Router._initialized) { Router.init(); Router._initialized = true; }
-    const _home = (UserService.isAdmin() || UserService.isResponsable()) ? 'dashboard' : 'averias';
+    const _home = UserService.homeRoute();
     if (_home === 'averias') AveriasPage._bootNew = true;
     Router.navigate(_home);
     Router.handle();
@@ -9615,7 +9688,7 @@ const App = {
     this.showScreen('screen-app');
     Router.init();
     Router._initialized = true;
-    const _home = (UserService.isAdmin() || UserService.isResponsable()) ? 'dashboard' : 'averias';
+    const _home = UserService.homeRoute();
     if (_home === 'averias') AveriasPage._bootNew = true;
     Router.navigate(_home);
     await Router.handle();
@@ -9792,7 +9865,7 @@ const App = {
     document.getElementById('topbar-username').textContent = u.nombre;
 
     // Colorear avatar según rol
-    const avatarBg = { Admin:'var(--red)', Responsable:'var(--orange)', Mecanico:'var(--green)' };
+    const avatarBg = { Admin:'var(--red)', Responsable:'var(--orange)', Mecanico:'var(--green)', Produccion:'var(--blue)' };
     const bg = avatarBg[u.rol] || 'var(--green)';
     document.getElementById('sidebar-avatar').style.background = bg;
     document.getElementById('topbar-avatar').style.background = bg;
@@ -9825,6 +9898,19 @@ const App = {
     document.querySelectorAll('.nav-item[data-route="partes"], .nav-item[data-route="ordenes"]').forEach(el => {
       el.style.display = '';
     });
+    // Vista Producción: solo Producción y Admin. Producción NO ve nada más.
+    const isProd = UserService.isProduccion();
+    document.querySelectorAll('.nav-item[data-route="produccion"]').forEach(el => {
+      el.style.display = (isProd || UserService.isAdmin()) ? '' : 'none';
+    });
+    if (isProd) {
+      document.querySelectorAll('.nav-item[data-route]').forEach(el => {
+        if (el.dataset.route !== 'produccion') el.style.display = 'none';
+      });
+      ProduccionPage.startReminder();
+    } else {
+      ProduccionPage.stopReminder();
+    }
 
     // Agrupación: privilegiados ven grupos con cabecera; técnicos ven modo
     // plano (sin cabeceras, ítems siempre visibles) → solo Averías/OT/Partes.
@@ -10066,6 +10152,9 @@ $$;
 -- ──────────────────────────────────────────────────────────────────────
 -- BLOQUE C: Tablas opcionales (partes de trabajo y fotos)
 -- ──────────────────────────────────────────────────────────────────────
+
+-- Perfil Producción: quién avisó de la avería (opcional; la app funciona sin ella)
+ALTER TABLE averias ADD COLUMN IF NOT EXISTS reportado_por TEXT DEFAULT '';
 
 -- Tabla partes_trabajo
 CREATE TABLE IF NOT EXISTS partes_trabajo (
@@ -12359,8 +12448,382 @@ const PreventivosPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PRODUCCIÓN — vista de bloques (zona → línea → máquina) para que
+// producción abra averías, y recordatorio cada 15 min de las abiertas.
+// ═══════════════════════════════════════════════════════════════════
+const ProduccionPage = {
+  _activos: [],
+  _abiertas: [],
+  _tecnicos: [],
+  _zona: '', _linea: '',
+  _saving: false,
+  _timer: null,
+  _refreshTimer: null,
+  _REFRESH_MS: 30 * 1000,
+  _ASK_KEY: 'gmao_prod_last_ask',
+  _ASK_EVERY_MS: 15 * 60 * 1000,
+
+  _almacen() {
+    const u = UserService.getUser();
+    if (!u) return '';
+    // Producción/Mecánico: su centro. Admin: filtro global (o vacío = elegir).
+    return UserService.getEffectiveAlmacen()
+      || normalizeAlmacen(document.getElementById('global-almacen-filter')?.value || '')
+      || '';
+  },
+
+  async _load() {
+    const alm = this._almacen();
+    const [activos, averias, tecnicos] = await Promise.all([
+      alm ? db.activos.where('almacen').equals(alm).toArray() : Promise.resolve([]),
+      DataService.getAverias(alm ? { almacen: alm } : {}),
+      DataService.getTecnicos(true),
+    ]);
+    this._activos  = activos.filter(a => a.zona);
+    this._abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso');
+    // Técnicos asignables: mecánicos/responsables del centro (o de todos si Admin sin centro)
+    this._tecnicos = tecnicos
+      .filter(t => ['Mecanico','Responsable'].includes(t.rol))
+      .filter(t => !alm || normalizeAlmacen(t.almacen) === alm || t.almacen === 'Todos')
+      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+  },
+
+  // Refresco automático cada 30 s mientras la vista está abierta (mantiene zona/línea actual)
+  _startAutoRefresh() {
+    this._stopAutoRefresh();
+    this._refreshTimer = setInterval(() => this._autoRefresh(), this._REFRESH_MS);
+  },
+  _stopAutoRefresh() { if (this._refreshTimer) { clearInterval(this._refreshTimer); this._refreshTimer = null; } },
+  async _autoRefresh() {
+    if (window.location.hash.slice(1) !== 'produccion' || !document.getElementById('prod-grid')) { this._stopAutoRefresh(); return; }
+    if (document.visibilityState !== 'visible') return;
+    if (document.getElementById('modal-overlay')?.classList.contains('open')) return;
+    try {
+      await this._load();
+      this._renderLevel(); this._renderOpenList(); this._updateBadge();
+      const el = document.getElementById('prod-last-refresh');
+      if (el) el.textContent = 'Actualizado ' + new Date().toTimeString().slice(0,5);
+    } catch (e) { console.warn('[Produccion autoRefresh]', e); }
+  },
+
+  async render() {
+    const alm = this._almacen();
+    if (!alm) {
+      document.getElementById('content').innerHTML = `
+        <div class="page-header"><div><h1>Producción</h1><p class="page-subtitle">Selecciona un almacén en el filtro superior para ver sus bloques.</p></div></div>`;
+      return;
+    }
+    await this._load();
+    this._zona = ''; this._linea = '';
+    const u = UserService.getUser();
+    document.getElementById('content').innerHTML = `
+      <div class="page-header">
+        <div>
+          <h1>${UI.esc(alm)}</h1>
+          <p class="page-subtitle">Pulsa la zona, después la línea y por último la máquina para avisar de una avería.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span id="prod-last-refresh" style="font-size:11px;color:var(--gray-muted)">Se actualiza cada 30 s</span>
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.render()">↻ Actualizar</button>
+        </div>
+      </div>
+      <div id="prod-crumb" class="prod-crumb"></div>
+      <div id="prod-grid" class="prod-grid"></div>
+      <div style="margin-top:28px">
+        <h3 style="font-size:15px;margin-bottom:10px">Averías abiertas · ${UI.esc(alm)} <span id="prod-open-count" class="badge badge-red"></span></h3>
+        <div id="prod-open-list" class="prod-open-list"></div>
+      </div>`;
+    this._renderLevel();
+    this._renderOpenList();
+    this._updateBadge();
+    this._startAutoRefresh();
+  },
+
+  // ── Conteo de averías abiertas por clave (zona / línea / id_activo) ──
+  _countOpen(fn) { return this._abiertas.filter(fn).length; },
+
+  _renderCrumb() {
+    const el = document.getElementById('prod-crumb'); if (!el) return;
+    const parts = [`<button onclick="ProduccionPage._go('','')">${UI.esc(this._almacen())}</button>`];
+    if (this._zona) parts.push('›', this._linea
+      ? `<button onclick="ProduccionPage._go('${UI.esc(this._zona)}','')">${UI.esc(this._zona)}</button>`
+      : `<span class="cur">${UI.esc(this._zona)}</span>`);
+    if (this._linea) parts.push('›', `<span class="cur">Línea ${UI.esc(this._linea)}</span>`);
+    el.innerHTML = parts.join(' ');
+  },
+
+  _go(zona, linea) { this._zona = zona; this._linea = linea; this._renderLevel(); },
+
+  _renderLevel() {
+    this._renderCrumb();
+    const grid = document.getElementById('prod-grid'); if (!grid) return;
+    const esc = UI.esc;
+
+    // Nivel 1: zonas
+    if (!this._zona) {
+      const zonas = [...new Set(this._activos.map(a => a.zona))].sort();
+      if (!zonas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">No hay activos con zona definida en este almacén.</p>`; return; }
+      grid.innerHTML = zonas.map(z => {
+        const n = this._countOpen(a => (a.zona||'') === z);
+        return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage._go('${esc(z)}','')">
+          ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
+          <span class="prod-block-ico">🏭</span>
+          <span class="prod-block-name">${esc(z)}</span>
+          <span class="prod-block-sub">${this._activos.filter(a=>a.zona===z).length} máquinas</span>
+        </div>`;
+      }).join('');
+      return;
+    }
+
+    // Nivel 2: líneas de la zona (si la zona no tiene líneas → máquinas directamente)
+    const enZona = this._activos.filter(a => a.zona === this._zona);
+    const lineas = [...new Set(enZona.map(a => a.linea).filter(Boolean))]
+      .sort((a,b) => String(a).localeCompare(String(b), undefined, { numeric:true }));
+    if (!this._linea && lineas.length) {
+      grid.innerHTML = lineas.map(l => {
+        const n = this._countOpen(a => a.zona === this._zona && String(a.linea||'') === String(l));
+        return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage._go('${esc(this._zona)}','${esc(String(l))}')">
+          ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
+          <span class="prod-block-ico">➡️</span>
+          <span class="prod-block-name">Línea ${esc(String(l))}</span>
+          <span class="prod-block-sub">${enZona.filter(a=>String(a.linea)===String(l)).length} máquinas</span>
+        </div>`;
+      }).join('');
+      return;
+    }
+
+    // Nivel 3: máquinas
+    const maquinas = (this._linea ? enZona.filter(a => String(a.linea) === String(this._linea)) : enZona)
+      .sort((a,b) => String(a.equipo||'').localeCompare(String(b.equipo||''), undefined, { numeric:true }));
+    if (!maquinas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">Sin máquinas.</p>`; return; }
+    grid.innerHTML = maquinas.map(m => {
+      const n = this._countOpen(a => a.id_activo === m.id_activo);
+      return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage.openNew('${esc(m.id_activo)}')">
+        ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
+        <span class="prod-block-ico">${n ? '🔴' : '⚙️'}</span>
+        <span class="prod-block-name">${esc(m.equipo||m.id_activo)}</span>
+        <span class="prod-block-sub">${n ? 'Avería abierta · pulsa para añadir otra' : 'Pulsa para avisar de avería'}</span>
+      </div>`;
+    }).join('');
+  },
+
+  // ── Listado de averías abiertas del almacén ──────────────────────
+  _renderOpenList() {
+    const list = document.getElementById('prod-open-list'); if (!list) return;
+    const cnt  = document.getElementById('prod-open-count');
+    if (cnt) cnt.textContent = this._abiertas.length;
+    if (!this._abiertas.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">No hay averías abiertas.</p>`; return; }
+    const esc = UI.esc;
+    list.innerHTML = this._abiertas.map(a => `
+      <div class="prod-open-item${a.estado==='En curso'?' encurso':''}">
+        <div class="txt">
+          <b>${esc(a.equipo||'—')} <small style="display:inline;color:var(--gray-muted)">· ${esc(a.zona||'')}${a.linea?' · L'+esc(String(a.linea)):''}</small></b>
+          <small title="${esc(a.descripcion||'')}">${esc(a.descripcion||'')}</small>
+          <small>${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(a.estado)}${a.tecnico?' · '+esc(a.tecnico):''}</small>
+        </div>
+        <div class="acts">
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.confirmResuelta('${esc(a.id)}')">✔ Ya funciona</button>
+        </div>
+      </div>`).join('');
+  },
+
+  async _updateBadge() {
+    const b = document.getElementById('badge-produccion'); if (!b) return;
+    const n = this._abiertas.length;
+    b.textContent = n; b.style.display = n > 0 ? '' : 'none';
+  },
+
+  // ── Alta rápida de avería desde una máquina ──────────────────────
+  openNew(id_activo) {
+    const m = this._activos.find(a => a.id_activo === id_activo);
+    if (!m) { toast('Máquina no encontrada', 'error'); return; }
+    const esc = UI.esc;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+    Modal.open(`🔧 Avisar avería — ${esc(m.equipo||'')}`, `
+      <div class="form-grid prod-mobile-form">
+        <p class="full" style="grid-column:1/-1;font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px">
+          ${esc(m.almacen)} › ${esc(m.zona||'')}${m.linea?' › Línea '+esc(String(m.linea)):''} › <b>${esc(m.equipo||'')}</b>
+        </p>
+        <div class="form-field">
+          <label>¿La máquina está parada? *</label>
+          <select class="form-input" id="prod-crit">
+            <option value="Alta" selected>Sí, parada — URGENTE</option>
+            <option value="Moderada">Funciona con problemas</option>
+            <option value="Baja">Funciona, aviso para revisar</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Hora del aviso</label>
+          <input class="form-input" type="time" id="prod-hora" value="${hh}:${mm}">
+        </div>
+        <div class="form-field full" style="grid-column:1/-1">
+          <label>¿Qué pasa? <span style="font-weight:400;color:var(--gray-muted)">(opcional)</span></label>
+          <textarea class="form-input" id="prod-desc" rows="2" placeholder="Si quieres, describe el problema. Se puede avisar sin rellenar."></textarea>
+        </div>
+        <div class="form-field full" style="grid-column:1/-1">
+          <label>Avisar a un técnico <span style="font-weight:400;color:var(--gray-muted)">(opcional)</span></label>
+          <select class="form-input" id="prod-tec">
+            <option value="">Sin asignar — lo verá todo mantenimiento</option>
+            ${this._tecnicos.map(t => `<option value="${esc(t.nombre)}">${esc(t.nombre)}</option>`).join('')}
+          </select>
+        </div>
+      </div>`,
+      `<div class="prod-big-actions">
+        <button class="btn btn-primary" id="prod-save-btn" onclick="ProduccionPage._save('${esc(id_activo)}')">🚨 Avisar a mantenimiento</button>
+        <button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       </div>`);
+    setTimeout(() => document.getElementById('prod-save-btn')?.focus(), 80);
+  },
+
+  async _save(id_activo) {
+    if (this._saving) return;
+    const m = this._activos.find(a => a.id_activo === id_activo);
+    const desc = (document.getElementById('prod-desc')?.value || '').trim();
+    const crit = document.getElementById('prod-crit')?.value || 'Moderada';
+    const hora = document.getElementById('prod-hora')?.value || '';
+    const tec  = document.getElementById('prod-tec')?.value || '';
+    if (!m)    { toast('Máquina no encontrada', 'error'); return; }
+
+    this._saving = true;
+    const btn = document.getElementById('prod-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = t('cargando'); }
+    try {
+      const now = new Date();
+      const ds = now.toISOString().slice(0,10).replace(/-/g,'');
+      const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+      const id = `AV-${ds}-${ts}`;
+      const user = UserService.getUser();
+      const averia = {
+        id, id_activo: m.id_activo,
+        fecha_inicio: now.toISOString().slice(0,10),
+        hora_inicio: (hora || `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`) + ':00',
+        descripcion: desc || (crit === 'Alta' ? 'Máquina parada — aviso de producción' : 'Aviso de producción'),
+        tecnico: tec,
+        tipo: '',
+        criticidad: crit, estado: 'Abierta',
+        almacen: m.almacen, zona: m.zona || '', linea: m.linea || '', equipo: m.equipo || '',
+        fecha_fin: '', hora_fin: '', solucion: '', materiales: '', coste: 0, duracion: '',
+      };
+      // reportado_por es una columna opcional (ver SQL en Config). Si no existe, guardamos sin ella.
+      try {
+        await DataService.saveAveria({ ...averia, reportado_por: `Producción · ${user?.nombre || ''}` });
+      } catch (e) {
+        if (/reportado_por/i.test(e.message || '')) await DataService.saveAveria(averia);
+        else throw e;
+      }
+      Modal.close();
+      toast(`✅ Avería ${id} enviada a mantenimiento`, 'success');
+      await this._load();
+      this._renderLevel(); this._renderOpenList(); this._updateBadge();
+      App.updateBadges();
+    } catch (e) {
+      console.error('[Produccion._save]', e);
+      toast('❌ No se pudo registrar: ' + e.message, 'error');
+    } finally {
+      this._saving = false;
+      if (btn) { btn.disabled = false; btn.textContent = '🚨 Avisar a mantenimiento'; }
+    }
+  },
+
+  // ── Producción confirma que la máquina ya funciona → cierra la avería ──
+  async confirmResuelta(id, silent = false) {
+    const a = await DataService.getAveria(id);
+    if (!a) { toast('Avería no encontrada', 'error'); return false; }
+    if (!silent) {
+      const ok = await Modal.confirm(`¿La máquina "${a.equipo||''}" ya funciona? Se cerrará la avería ${id}.`, { title:'Confirmar', okText:'Sí, ya funciona', danger:false });
+      if (!ok) return false;
+    }
+    const now = new Date();
+    const user = UserService.getUser();
+    const fechaFin = now.toISOString().slice(0,10);
+    const horaFin  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:00`;
+    let duracion = '';
+    try {
+      const ini = new Date(`${a.fecha_inicio}T${(a.hora_inicio||'00:00:00')}`);
+      const min = Math.max(0, Math.round((now - ini) / 60000));
+      duracion = `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}:00`;
+    } catch(_) {}
+    const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por producción (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}`;
+    await DataService.saveAveria({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol });
+    if (!silent) toast(`✅ Avería ${id} cerrada`, 'success');
+    if (window.location.hash.slice(1) === 'produccion') {
+      await this._load(); this._renderLevel(); this._renderOpenList(); this._updateBadge();
+    }
+    App.updateBadges();
+    return true;
+  },
+
+  // ── Recordatorio cada 15 min: "¿sigue abierta?" ──────────────────
+  startReminder() {
+    this.stopReminder();
+    if (!UserService.isProduccion()) return;
+    const last = parseInt(localStorage.getItem(this._ASK_KEY) || '0');
+    const wait = Math.max(5000, this._ASK_EVERY_MS - (Date.now() - last));
+    this._timer = setTimeout(() => this._tick(), wait);
+  },
+  stopReminder() { if (this._timer) { clearTimeout(this._timer); this._timer = null; } },
+
+  async _tick() {
+    this._timer = null;
+    if (!UserService.isLoggedIn() || !UserService.isProduccion()) return;
+    // Si hay un modal abierto o la pestaña no se ve, reintentar en 1 min
+    const modalOpen = document.getElementById('modal-overlay')?.classList.contains('open');
+    if (modalOpen || document.visibilityState !== 'visible') {
+      this._timer = setTimeout(() => this._tick(), 60 * 1000); return;
+    }
+    try { await this._load(); } catch(e) { console.warn('[Produccion reminder]', e); }
+    localStorage.setItem(this._ASK_KEY, String(Date.now()));
+    if (this._abiertas.length) this._showAsk();
+    this._timer = setTimeout(() => this._tick(), this._ASK_EVERY_MS);
+  },
+
+  _showAsk() {
+    const esc = UI.esc;
+    const rows = this._abiertas.map(a => `
+      <div class="prod-ask-row" id="ask-${esc(a.id)}">
+        <div class="txt">
+          <b>${esc(a.equipo||'—')} <small>· ${esc(a.zona||'')}${a.linea?' · L'+esc(String(a.linea)):''}</small></b>
+          <small>${esc(a.descripcion||'')}</small><br>
+          <small>Abierta desde ${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(a.estado)}</small>
+        </div>
+        <div class="acts" style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage._askKeep('${esc(a.id)}')">Sigue abierta</button>
+          <button class="btn btn-primary btn-sm" onclick="ProduccionPage._askClose('${esc(a.id)}')">✔ Ya funciona</button>
+        </div>
+      </div>`).join('');
+    Modal.open(`⏰ Revisión de averías abiertas (${this._abiertas.length})`, `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Confirma el estado de cada máquina. Se volverá a preguntar dentro de 15 minutos.</p>
+      ${rows}`,
+      `<div class="prod-big-actions"><button class="btn btn-primary" onclick="Modal.close()">Cerrar</button></div>`);
+  },
+  _askKeep(id) {
+    const r = document.getElementById(`ask-${id}`); if (r) r.classList.add('done');
+    this._askAutoClose();
+  },
+  async _askClose(id) {
+    const r = document.getElementById(`ask-${id}`);
+    const btns = r?.querySelectorAll('button') || [];
+    btns.forEach(b => b.disabled = true);
+    try {
+      await this.confirmResuelta(id, true);
+      if (r) { r.classList.add('done'); r.querySelector('.txt b').insertAdjacentHTML('beforeend', ' <span class="badge badge-gray">Cerrada</span>'); }
+      toast(`✅ Avería ${id} cerrada`, 'success');
+    } catch (e) {
+      toast('❌ ' + e.message, 'error'); btns.forEach(b => b.disabled = false);
+    }
+    this._askAutoClose();
+  },
+  _askAutoClose() {
+    const pending = document.querySelectorAll('#modal-body .prod-ask-row:not(.done)').length;
+    if (pending === 0) setTimeout(() => Modal.close(), 600);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
+Router.register('produccion',      async () => ProduccionPage.render());
 Router.register('dashboard',       async () => DashboardPage.render());
 Router.register('partes-analisis', async () => PartesAnalisisPage.render());
 Router.register('activos',         async () => ActivosPage.render());
