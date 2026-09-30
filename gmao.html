@@ -771,7 +771,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <div class="nav-group-items">
           <div class="nav-item" data-route="produccion" style="display:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
-            <span class="nav-label">Producción</span>
+            <span class="nav-label" data-i18n="nav_produccion">Producción</span>
             <span class="nav-badge" id="badge-produccion" style="display:none">0</span>
           </div>
           <div class="nav-item" data-route="averias">
@@ -866,7 +866,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.5</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -943,6 +943,9 @@ const I18N = {
       btn.classList.toggle('active', map[lang] === title);
     });
     // Re-renderizar la página actual para actualizar contenido dinámico (${t(...)})
+    // v10.5: el rol del bloque de usuario también cambia de idioma
+    const ur = document.getElementById('sidebar-userrole'), uu = (typeof UserService !== 'undefined') ? UserService.getUser() : null;
+    if (ur && uu) ur.textContent = tv('x_rolv_', uu.rol) + (uu.almacen && uu.almacen !== 'Todos' ? ' · ' + uu.almacen : '');
     if (typeof Router !== 'undefined' && Router._initialized) {
       Router.handle();
     }
@@ -970,6 +973,19 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.5: perfil Producción traducido y roles con nombre ──
+      nav_produccion:'Producción', x_prod_titulo:'Producción · Averías', x_avisado_por:'Avisado por',
+      x_rolv_mecanico:'Mecánico', x_rolv_responsable:'Responsable', x_rolv_admin:'Admin', x_rolv_produccion:'Producción',
+      x_prod_actualizado:'Actualizado', x_prod_elige_almacen:'Selecciona un almacén en el filtro superior para ver sus bloques.',
+      x_prod_subtitulo:'Pulsa la zona, después la línea y por último la máquina para avisar de una avería.', x_prod_auto_refresh:'Se actualiza cada 30 s', x_prod_actualizar:'↻ Actualizar',
+      x_prod_averias_abiertas:'Averías abiertas', x_prod_sin_zonas:'No hay activos con zona definida en este almacén.', x_prod_maquinas:'máquinas', x_prod_sin_maquinas:'Sin máquinas.',
+      x_prod_pulsa_otra:'Avería abierta · pulsa para añadir otra', x_prod_pulsa_avisar:'Pulsa para avisar de avería', x_prod_no_abiertas:'No hay averías abiertas.',
+      x_prod_ya_funciona:'✔ Ya funciona', x_prod_si_ya_funciona:'Sí, ya funciona', x_prod_maquina_no_encontrada:'Máquina no encontrada', x_prod_averia_no_encontrada:'Avería no encontrada',
+      x_prod_avisar_averia:'🔧 Avisar avería', x_prod_esta_parada:'¿La máquina está parada? *', x_prod_crit_alta:'Sí, parada — URGENTE', x_prod_crit_moderada:'Funciona con problemas', x_prod_crit_baja:'Funciona, aviso para revisar',
+      x_prod_hora_aviso:'Hora del aviso', x_prod_que_pasa:'¿Qué pasa?', x_prod_opcional:'(opcional)', x_prod_desc_ph:'Si quieres, describe el problema. Se puede avisar sin rellenar.',
+      x_prod_avisar_tecnico:'Avisar a un técnico', x_prod_sin_asignar:'Sin asignar — lo verá todo mantenimiento', x_prod_avisar_mant:'🚨 Avisar a mantenimiento',
+      x_prod_enviada:'✅ Avería {id} enviada a mantenimiento', x_prod_no_registrar:'❌ No se pudo registrar:', x_prod_confirm_cierre:'¿La máquina "{eq}" ya funciona? Se cerrará la avería {id}.', x_prod_cerrada:'✅ Avería {id} cerrada',
+      x_prod_abierta_desde:'Abierta desde', x_prod_sigue_abierta:'Sigue abierta', x_prod_revision:'⏰ Revisión de averías abiertas', x_prod_revision_txt:'Confirma el estado de cada máquina. Se volverá a preguntar dentro de 15 minutos.',
       // ── v10.3: reseteo de contraseña desde Técnicos ──
       x_cambiar_o_resetear_la_contrasena:'Cambiar o resetear la contraseña', x_resetear_contrasena_tip:'Resetear la contraseña: el técnico creará una nueva en su próximo acceso', x_resetear_contrasena:'Resetear contraseña', x_resetear_contrasena_explica:'Borra la contraseña actual. La próxima vez que el técnico entre, la app le pedirá crear una nueva.', x_confirm_reset_contrasena:'¿Resetear la contraseña de "{n}"? Deberá crear una nueva en su próximo acceso.', x_confirm_reset_propia:'Vas a resetear TU PROPIA contraseña: al volver a entrar tendrás que crear una nueva. ¿Continuar?', x_contrasena_reseteada:'Contraseña de {n} reseteada: creará una nueva en su próximo acceso', x_este_tecnico_no_tiene_contrasena:'Este técnico no tiene contraseña: la creará al entrar',
       x_sin_averias_abiertas:'Sin averías abiertas', x_total:'Total', x_total_dur:'Total dur.',
@@ -1233,6 +1249,19 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.5: perfil Producción traducido y roles con nombre ──
+      nav_produccion:'Production', x_prod_titulo:'Production · Breakdowns', x_avisado_por:'Reported by',
+      x_rolv_mecanico:'Mechanic', x_rolv_responsable:'Responsible', x_rolv_admin:'Admin', x_rolv_produccion:'Production',
+      x_prod_actualizado:'Updated', x_prod_elige_almacen:'Select a warehouse in the top filter to see its blocks.',
+      x_prod_subtitulo:'Tap the area, then the line and finally the machine to report a breakdown.', x_prod_auto_refresh:'Refreshes every 30 s', x_prod_actualizar:'↻ Refresh',
+      x_prod_averias_abiertas:'Open breakdowns', x_prod_sin_zonas:'No assets with an area defined in this warehouse.', x_prod_maquinas:'machines', x_prod_sin_maquinas:'No machines.',
+      x_prod_pulsa_otra:'Open breakdown · tap to add another', x_prod_pulsa_avisar:'Tap to report a breakdown', x_prod_no_abiertas:'No open breakdowns.',
+      x_prod_ya_funciona:'✔ Working again', x_prod_si_ya_funciona:'Yes, it works', x_prod_maquina_no_encontrada:'Machine not found', x_prod_averia_no_encontrada:'Breakdown not found',
+      x_prod_avisar_averia:'🔧 Report breakdown', x_prod_esta_parada:'Is the machine stopped? *', x_prod_crit_alta:'Yes, stopped — URGENT', x_prod_crit_moderada:'Running with problems', x_prod_crit_baja:'Running, please check it',
+      x_prod_hora_aviso:'Time of notice', x_prod_que_pasa:'What is wrong?', x_prod_opcional:'(optional)', x_prod_desc_ph:'Describe the problem if you like. You can report without filling this in.',
+      x_prod_avisar_tecnico:'Notify a technician', x_prod_sin_asignar:'Unassigned — all maintenance will see it', x_prod_avisar_mant:'🚨 Notify maintenance',
+      x_prod_enviada:'✅ Breakdown {id} sent to maintenance', x_prod_no_registrar:'❌ Could not save:', x_prod_confirm_cierre:'Is machine "{eq}" working again? Breakdown {id} will be closed.', x_prod_cerrada:'✅ Breakdown {id} closed',
+      x_prod_abierta_desde:'Open since', x_prod_sigue_abierta:'Still open', x_prod_revision:'⏰ Open breakdowns check', x_prod_revision_txt:'Confirm the status of each machine. You will be asked again in 15 minutes.',
       // ── v10.3: reseteo de contraseña desde Técnicos ──
       x_cambiar_o_resetear_la_contrasena:'Change or reset the password', x_resetear_contrasena_tip:'Reset the password: the technician will create a new one at next login', x_resetear_contrasena:'Reset password', x_resetear_contrasena_explica:'Clears the current password. The next time the technician logs in, the app will ask them to create a new one.', x_confirm_reset_contrasena:'Reset the password of "{n}"? They will have to create a new one at next login.', x_confirm_reset_propia:'You are about to reset YOUR OWN password: you will have to create a new one when you log in again. Continue?', x_contrasena_reseteada:'Password of {n} reset: they will create a new one at next login', x_este_tecnico_no_tiene_contrasena:'This technician has no password: they will create it at login',
       x_sin_averias_abiertas:'No open breakdowns', x_total:'Total', x_total_dur:'Total dur.',
@@ -1496,6 +1525,19 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.5: perfil Producción traducido y roles con nombre ──
+      nav_produccion:'الإنتاج', x_prod_titulo:'الإنتاج · الأعطال', x_avisado_por:'أبلغ عنه',
+      x_rolv_mecanico:'ميكانيكي', x_rolv_responsable:'المسؤول', x_rolv_admin:'المدير', x_rolv_produccion:'الإنتاج',
+      x_prod_actualizado:'تم التحديث', x_prod_elige_almacen:'اختر مستودعًا من الفلتر العلوي لعرض كتله.',
+      x_prod_subtitulo:'اضغط على المنطقة ثم الخط ثم الآلة للإبلاغ عن عطل.', x_prod_auto_refresh:'يتم التحديث كل 30 ثانية', x_prod_actualizar:'↻ تحديث',
+      x_prod_averias_abiertas:'الأعطال المفتوحة', x_prod_sin_zonas:'لا توجد أصول بمنطقة محددة في هذا المستودع.', x_prod_maquinas:'آلات', x_prod_sin_maquinas:'لا توجد آلات.',
+      x_prod_pulsa_otra:'عطل مفتوح · اضغط لإضافة آخر', x_prod_pulsa_avisar:'اضغط للإبلاغ عن عطل', x_prod_no_abiertas:'لا توجد أعطال مفتوحة.',
+      x_prod_ya_funciona:'✔ تعمل الآن', x_prod_si_ya_funciona:'نعم، تعمل', x_prod_maquina_no_encontrada:'الآلة غير موجودة', x_prod_averia_no_encontrada:'العطل غير موجود',
+      x_prod_avisar_averia:'🔧 الإبلاغ عن عطل', x_prod_esta_parada:'هل الآلة متوقفة؟ *', x_prod_crit_alta:'نعم، متوقفة — عاجل', x_prod_crit_moderada:'تعمل مع مشاكل', x_prod_crit_baja:'تعمل، تنبيه للمراجعة',
+      x_prod_hora_aviso:'وقت التنبيه', x_prod_que_pasa:'ما المشكلة؟', x_prod_opcional:'(اختياري)', x_prod_desc_ph:'صف المشكلة إن أردت. يمكن الإبلاغ دون تعبئة هذا الحقل.',
+      x_prod_avisar_tecnico:'إبلاغ فني', x_prod_sin_asignar:'غير معيّن — سيراه كل قسم الصيانة', x_prod_avisar_mant:'🚨 إبلاغ الصيانة',
+      x_prod_enviada:'✅ تم إرسال العطل {id} إلى الصيانة', x_prod_no_registrar:'❌ تعذر التسجيل:', x_prod_confirm_cierre:'هل الآلة "{eq}" تعمل الآن؟ سيتم إغلاق العطل {id}.', x_prod_cerrada:'✅ تم إغلاق العطل {id}',
+      x_prod_abierta_desde:'مفتوح منذ', x_prod_sigue_abierta:'لا يزال مفتوحًا', x_prod_revision:'⏰ مراجعة الأعطال المفتوحة', x_prod_revision_txt:'أكد حالة كل آلة. سيتم السؤال مرة أخرى بعد 15 دقيقة.',
       // ── v10.3: reseteo de contraseña desde Técnicos ──
       x_cambiar_o_resetear_la_contrasena:'تغيير أو إعادة تعيين كلمة المرور', x_resetear_contrasena_tip:'إعادة تعيين كلمة المرور: سينشئ الفني كلمة جديدة عند الدخول التالي', x_resetear_contrasena:'إعادة تعيين كلمة المرور', x_resetear_contrasena_explica:'يحذف كلمة المرور الحالية. عند الدخول التالي سيطلب التطبيق من الفني إنشاء كلمة جديدة.', x_confirm_reset_contrasena:'إعادة تعيين كلمة مرور "{n}"؟ سيتعين عليه إنشاء كلمة جديدة عند الدخول التالي.', x_confirm_reset_propia:'أنت على وشك إعادة تعيين كلمة مرورك أنت: سيتعين عليك إنشاء كلمة جديدة عند الدخول مجددًا. متابعة؟', x_contrasena_reseteada:'تمت إعادة تعيين كلمة مرور {n}: سينشئ كلمة جديدة عند الدخول التالي', x_este_tecnico_no_tiene_contrasena:'هذا الفني ليس لديه كلمة مرور: سينشئها عند الدخول',
       x_sin_averias_abiertas:'لا توجد أعطال مفتوحة', x_total:'الإجمالي', x_total_dur:'إجمالي المدة',
@@ -1762,6 +1804,8 @@ const I18N = {
 };
 // Atajo global
 const t = (key) => I18N.t(key);
+// v10.5: texto traducido con parámetros: tf(clave, { id }) sustituye {id} en el texto
+const tf = (key, p = {}) => Object.entries(p).reduce((acc, [k, v]) => acc.split('{' + k + '}').join(String(v)), t(key));
 // v10.2: etiqueta traducida de un VALOR fijo (tipo de avería, estado de activo, resultado…):
 // busca la clave prefijo+slug(valor) y, si no existe, devuelve el valor tal cual.
 const tv = (prefix, v) => { const k = prefix + String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); const r = I18N.t(k); return r === k ? String(v == null ? '' : v) : r; };
@@ -3045,7 +3089,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { produccion:'Producción · Averías', dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
+    const titles = { produccion:t('x_prod_titulo'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -5448,7 +5492,7 @@ const AveriasPage = {
         <div class="detail-field"><label>${t('lbl_tipo_av')}</label><p>${UI.esc(a.tipo||'—')}</p></div>
         <div class="detail-field"><label>${t('lbl_duracion')}</label><p>${UI.formatDuration(a.duracion)}</p></div>
         <div class="detail-field full"><label>${t('lbl_desc')}</label><p>${UI.esc(a.descripcion||'—')}</p></div>
-        ${a.reportado_por ? `<div class="detail-field"><label>Avisado por</label><p>${UI.esc(a.reportado_por)}</p></div>` : ''}
+        ${a.reportado_por ? `<div class="detail-field"><label>${t('x_avisado_por')}</label><p>${UI.esc(a.reportado_por)}</p></div>` : ''}
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>${t('lbl_solucion')}</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>${t('x_materiales_utilizados')}</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
@@ -8736,7 +8780,7 @@ const ConfigPage = {
             </select>
             <select class="filter-select" id="tec-f-rol" onchange="ConfigPage._filterTecTable()">
               <option value="">${t('x_todos_los_roles')}</option>
-              <option value="Mecanico">${t('x_mecanico')}</option><option value="Responsable">${t('lbl_responsable')}</option><option value="Admin">${t('x_admin')}</option><option value="Produccion">Producción</option>
+              <option value="Mecanico">${t('x_mecanico')}</option><option value="Responsable">${t('lbl_responsable')}</option><option value="Admin">${t('x_admin')}</option><option value="Produccion">${tv('x_rolv_', 'Produccion')}</option>
             </select>
             <select class="filter-select" id="tec-f-estado" onchange="ConfigPage._filterTecTable()">
               <option value="">${t('x_activos_e_inactivos')}</option>
@@ -9062,7 +9106,7 @@ const ConfigPage = {
 
   _rolBadge(rol) {
     const cls = rol === 'Admin' ? 'badge-red' : rol === 'Responsable' ? 'badge-orange' : rol === 'Produccion' ? 'badge-blue' : 'badge-green';
-    return `<span class="badge ${cls}">${UI.esc(rol)}</span>`;
+    return `<span class="badge ${cls}">${UI.esc(tv('x_rolv_', rol))}</span>`;
   },
 
   _tecRows(tecnicos, canAdmin) {
@@ -9120,7 +9164,7 @@ const ConfigPage = {
         <div class="form-field">
           <label>${t('x_rol_2')}</label>
           <select class="form-input" id="tec-rol">
-            ${roles.map(r => `<option${tec.rol===r?' selected':''}>${r}</option>`).join('')}
+            ${roles.map(r => `<option value="${r}"${tec.rol===r?' selected':''}>${tv('x_rolv_', r)}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
@@ -9860,7 +9904,7 @@ const App = {
     // Sidebar
     document.getElementById('sidebar-avatar').textContent = initial;
     document.getElementById('sidebar-username').textContent = u.nombre;
-    document.getElementById('sidebar-userrole').textContent = u.rol + (u.almacen && u.almacen !== 'Todos' ? ' · ' + u.almacen : '');
+    document.getElementById('sidebar-userrole').textContent = tv('x_rolv_', u.rol) + (u.almacen && u.almacen !== 'Todos' ? ' · ' + u.almacen : '');
     document.getElementById('topbar-avatar').textContent = initial;
     document.getElementById('topbar-username').textContent = u.nombre;
 
@@ -12483,8 +12527,8 @@ const ProduccionPage = {
     this._abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso');
     // Técnicos asignables: mecánicos/responsables del centro (o de todos si Admin sin centro)
     this._tecnicos = tecnicos
-      .filter(t => ['Mecanico','Responsable'].includes(t.rol))
-      .filter(t => !alm || normalizeAlmacen(t.almacen) === alm || t.almacen === 'Todos')
+      .filter(tec => ['Mecanico','Responsable'].includes(tec.rol))
+      .filter(tec => !alm || normalizeAlmacen(tec.almacen) === alm || tec.almacen === 'Todos')
       .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
   },
 
@@ -12502,7 +12546,7 @@ const ProduccionPage = {
       await this._load();
       this._renderLevel(); this._renderOpenList(); this._updateBadge();
       const el = document.getElementById('prod-last-refresh');
-      if (el) el.textContent = 'Actualizado ' + new Date().toTimeString().slice(0,5);
+      if (el) el.textContent = t('x_prod_actualizado') + ' ' + new Date().toTimeString().slice(0,5);
     } catch (e) { console.warn('[Produccion autoRefresh]', e); }
   },
 
@@ -12510,7 +12554,7 @@ const ProduccionPage = {
     const alm = this._almacen();
     if (!alm) {
       document.getElementById('content').innerHTML = `
-        <div class="page-header"><div><h1>Producción</h1><p class="page-subtitle">Selecciona un almacén en el filtro superior para ver sus bloques.</p></div></div>`;
+        <div class="page-header"><div><h1>${t('nav_produccion')}</h1><p class="page-subtitle">${t('x_prod_elige_almacen')}</p></div></div>`;
       return;
     }
     await this._load();
@@ -12520,17 +12564,17 @@ const ProduccionPage = {
       <div class="page-header">
         <div>
           <h1>${UI.esc(alm)}</h1>
-          <p class="page-subtitle">Pulsa la zona, después la línea y por último la máquina para avisar de una avería.</p>
+          <p class="page-subtitle">${t('x_prod_subtitulo')}</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span id="prod-last-refresh" style="font-size:11px;color:var(--gray-muted)">Se actualiza cada 30 s</span>
-          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.render()">↻ Actualizar</button>
+          <span id="prod-last-refresh" style="font-size:11px;color:var(--gray-muted)">${t('x_prod_auto_refresh')}</span>
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.render()">${t('x_prod_actualizar')}</button>
         </div>
       </div>
       <div id="prod-crumb" class="prod-crumb"></div>
       <div id="prod-grid" class="prod-grid"></div>
       <div style="margin-top:28px">
-        <h3 style="font-size:15px;margin-bottom:10px">Averías abiertas · ${UI.esc(alm)} <span id="prod-open-count" class="badge badge-red"></span></h3>
+        <h3 style="font-size:15px;margin-bottom:10px">${t('x_prod_averias_abiertas')} · ${UI.esc(alm)} <span id="prod-open-count" class="badge badge-red"></span></h3>
         <div id="prod-open-list" class="prod-open-list"></div>
       </div>`;
     this._renderLevel();
@@ -12548,7 +12592,7 @@ const ProduccionPage = {
     if (this._zona) parts.push('›', this._linea
       ? `<button onclick="ProduccionPage._go('${UI.esc(this._zona)}','')">${UI.esc(this._zona)}</button>`
       : `<span class="cur">${UI.esc(this._zona)}</span>`);
-    if (this._linea) parts.push('›', `<span class="cur">Línea ${UI.esc(this._linea)}</span>`);
+    if (this._linea) parts.push('›', `<span class="cur">${t('lbl_linea')} ${UI.esc(this._linea)}</span>`);
     el.innerHTML = parts.join(' ');
   },
 
@@ -12562,14 +12606,14 @@ const ProduccionPage = {
     // Nivel 1: zonas
     if (!this._zona) {
       const zonas = [...new Set(this._activos.map(a => a.zona))].sort();
-      if (!zonas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">No hay activos con zona definida en este almacén.</p>`; return; }
+      if (!zonas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">${t('x_prod_sin_zonas')}</p>`; return; }
       grid.innerHTML = zonas.map(z => {
         const n = this._countOpen(a => (a.zona||'') === z);
         return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage._go('${esc(z)}','')">
           ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
           <span class="prod-block-ico">🏭</span>
           <span class="prod-block-name">${esc(z)}</span>
-          <span class="prod-block-sub">${this._activos.filter(a=>a.zona===z).length} máquinas</span>
+          <span class="prod-block-sub">${this._activos.filter(a=>a.zona===z).length} ${t('x_prod_maquinas')}</span>
         </div>`;
       }).join('');
       return;
@@ -12585,8 +12629,8 @@ const ProduccionPage = {
         return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage._go('${esc(this._zona)}','${esc(String(l))}')">
           ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
           <span class="prod-block-ico">➡️</span>
-          <span class="prod-block-name">Línea ${esc(String(l))}</span>
-          <span class="prod-block-sub">${enZona.filter(a=>String(a.linea)===String(l)).length} máquinas</span>
+          <span class="prod-block-name">${t('lbl_linea')} ${esc(String(l))}</span>
+          <span class="prod-block-sub">${enZona.filter(a=>String(a.linea)===String(l)).length} ${t('x_prod_maquinas')}</span>
         </div>`;
       }).join('');
       return;
@@ -12595,14 +12639,14 @@ const ProduccionPage = {
     // Nivel 3: máquinas
     const maquinas = (this._linea ? enZona.filter(a => String(a.linea) === String(this._linea)) : enZona)
       .sort((a,b) => String(a.equipo||'').localeCompare(String(b.equipo||''), undefined, { numeric:true }));
-    if (!maquinas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">Sin máquinas.</p>`; return; }
+    if (!maquinas.length) { grid.innerHTML = `<p style="color:var(--gray-muted)">${t('x_prod_sin_maquinas')}</p>`; return; }
     grid.innerHTML = maquinas.map(m => {
       const n = this._countOpen(a => a.id_activo === m.id_activo);
       return `<div class="prod-block${n?' alert':''}" onclick="ProduccionPage.openNew('${esc(m.id_activo)}')">
         ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
         <span class="prod-block-ico">${n ? '🔴' : '⚙️'}</span>
         <span class="prod-block-name">${esc(m.equipo||m.id_activo)}</span>
-        <span class="prod-block-sub">${n ? 'Avería abierta · pulsa para añadir otra' : 'Pulsa para avisar de avería'}</span>
+        <span class="prod-block-sub">${n ? t('x_prod_pulsa_otra') : t('x_prod_pulsa_avisar')}</span>
       </div>`;
     }).join('');
   },
@@ -12612,17 +12656,17 @@ const ProduccionPage = {
     const list = document.getElementById('prod-open-list'); if (!list) return;
     const cnt  = document.getElementById('prod-open-count');
     if (cnt) cnt.textContent = this._abiertas.length;
-    if (!this._abiertas.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">No hay averías abiertas.</p>`; return; }
+    if (!this._abiertas.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('x_prod_no_abiertas')}</p>`; return; }
     const esc = UI.esc;
     list.innerHTML = this._abiertas.map(a => `
       <div class="prod-open-item${a.estado==='En curso'?' encurso':''}">
         <div class="txt">
           <b>${esc(a.equipo||'—')} <small style="display:inline;color:var(--gray-muted)">· ${esc(a.zona||'')}${a.linea?' · L'+esc(String(a.linea)):''}</small></b>
           <small title="${esc(a.descripcion||'')}">${esc(a.descripcion||'')}</small>
-          <small>${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(a.estado)}${a.tecnico?' · '+esc(a.tecnico):''}</small>
+          <small>${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(tv('opt_', a.estado))}${a.tecnico?' · '+esc(a.tecnico):''}</small>
         </div>
         <div class="acts">
-          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.confirmResuelta('${esc(a.id)}')">✔ Ya funciona</button>
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage.confirmResuelta('${esc(a.id)}')">${t('x_prod_ya_funciona')}</button>
         </div>
       </div>`).join('');
   },
@@ -12636,41 +12680,41 @@ const ProduccionPage = {
   // ── Alta rápida de avería desde una máquina ──────────────────────
   openNew(id_activo) {
     const m = this._activos.find(a => a.id_activo === id_activo);
-    if (!m) { toast('Máquina no encontrada', 'error'); return; }
+    if (!m) { toast(t('x_prod_maquina_no_encontrada'), 'error'); return; }
     const esc = UI.esc;
     const now = new Date();
     const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-    Modal.open(`🔧 Avisar avería — ${esc(m.equipo||'')}`, `
+    Modal.open(`${t('x_prod_avisar_averia')} — ${esc(m.equipo||'')}`, `
       <div class="form-grid prod-mobile-form">
         <p class="full" style="grid-column:1/-1;font-size:12px;color:var(--gray-muted);background:var(--bg);padding:10px 12px;border-radius:8px">
-          ${esc(m.almacen)} › ${esc(m.zona||'')}${m.linea?' › Línea '+esc(String(m.linea)):''} › <b>${esc(m.equipo||'')}</b>
+          ${esc(m.almacen)} › ${esc(m.zona||'')}${m.linea?' › '+t('lbl_linea')+' '+esc(String(m.linea)):''} › <b>${esc(m.equipo||'')}</b>
         </p>
         <div class="form-field">
-          <label>¿La máquina está parada? *</label>
+          <label>${t('x_prod_esta_parada')}</label>
           <select class="form-input" id="prod-crit">
-            <option value="Alta" selected>Sí, parada — URGENTE</option>
-            <option value="Moderada">Funciona con problemas</option>
-            <option value="Baja">Funciona, aviso para revisar</option>
+            <option value="Alta" selected>${t('x_prod_crit_alta')}</option>
+            <option value="Moderada">${t('x_prod_crit_moderada')}</option>
+            <option value="Baja">${t('x_prod_crit_baja')}</option>
           </select>
         </div>
         <div class="form-field">
-          <label>Hora del aviso</label>
+          <label>${t('x_prod_hora_aviso')}</label>
           <input class="form-input" type="time" id="prod-hora" value="${hh}:${mm}">
         </div>
         <div class="form-field full" style="grid-column:1/-1">
-          <label>¿Qué pasa? <span style="font-weight:400;color:var(--gray-muted)">(opcional)</span></label>
-          <textarea class="form-input" id="prod-desc" rows="2" placeholder="Si quieres, describe el problema. Se puede avisar sin rellenar."></textarea>
+          <label>${t('x_prod_que_pasa')} <span style="font-weight:400;color:var(--gray-muted)">${t('x_prod_opcional')}</span></label>
+          <textarea class="form-input" id="prod-desc" rows="2" placeholder="${t('x_prod_desc_ph')}"></textarea>
         </div>
         <div class="form-field full" style="grid-column:1/-1">
-          <label>Avisar a un técnico <span style="font-weight:400;color:var(--gray-muted)">(opcional)</span></label>
+          <label>${t('x_prod_avisar_tecnico')} <span style="font-weight:400;color:var(--gray-muted)">${t('x_prod_opcional')}</span></label>
           <select class="form-input" id="prod-tec">
-            <option value="">Sin asignar — lo verá todo mantenimiento</option>
-            ${this._tecnicos.map(t => `<option value="${esc(t.nombre)}">${esc(t.nombre)}</option>`).join('')}
+            <option value="">${t('x_prod_sin_asignar')}</option>
+            ${this._tecnicos.map(tec => `<option value="${esc(tec.nombre)}">${esc(tec.nombre)}</option>`).join('')}
           </select>
         </div>
       </div>`,
       `<div class="prod-big-actions">
-        <button class="btn btn-primary" id="prod-save-btn" onclick="ProduccionPage._save('${esc(id_activo)}')">🚨 Avisar a mantenimiento</button>
+        <button class="btn btn-primary" id="prod-save-btn" onclick="ProduccionPage._save('${esc(id_activo)}')">${t('x_prod_avisar_mant')}</button>
         <button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        </div>`);
     setTimeout(() => document.getElementById('prod-save-btn')?.focus(), 80);
@@ -12683,7 +12727,7 @@ const ProduccionPage = {
     const crit = document.getElementById('prod-crit')?.value || 'Moderada';
     const hora = document.getElementById('prod-hora')?.value || '';
     const tec  = document.getElementById('prod-tec')?.value || '';
-    if (!m)    { toast('Máquina no encontrada', 'error'); return; }
+    if (!m)    { toast(t('x_prod_maquina_no_encontrada'), 'error'); return; }
 
     this._saving = true;
     const btn = document.getElementById('prod-save-btn');
@@ -12713,25 +12757,25 @@ const ProduccionPage = {
         else throw e;
       }
       Modal.close();
-      toast(`✅ Avería ${id} enviada a mantenimiento`, 'success');
+      toast(tf('x_prod_enviada', { id }), 'success');
       await this._load();
       this._renderLevel(); this._renderOpenList(); this._updateBadge();
       App.updateBadges();
     } catch (e) {
       console.error('[Produccion._save]', e);
-      toast('❌ No se pudo registrar: ' + e.message, 'error');
+      toast(t('x_prod_no_registrar') + ' ' + e.message, 'error');
     } finally {
       this._saving = false;
-      if (btn) { btn.disabled = false; btn.textContent = '🚨 Avisar a mantenimiento'; }
+      if (btn) { btn.disabled = false; btn.textContent = t('x_prod_avisar_mant'); }
     }
   },
 
   // ── Producción confirma que la máquina ya funciona → cierra la avería ──
   async confirmResuelta(id, silent = false) {
     const a = await DataService.getAveria(id);
-    if (!a) { toast('Avería no encontrada', 'error'); return false; }
+    if (!a) { toast(t('x_prod_averia_no_encontrada'), 'error'); return false; }
     if (!silent) {
-      const ok = await Modal.confirm(`¿La máquina "${a.equipo||''}" ya funciona? Se cerrará la avería ${id}.`, { title:'Confirmar', okText:'Sí, ya funciona', danger:false });
+      const ok = await Modal.confirm(tf('x_prod_confirm_cierre', { eq: a.equipo||'', id }), { title:t('confirm_title'), okText:t('x_prod_si_ya_funciona'), danger:false });
       if (!ok) return false;
     }
     const now = new Date();
@@ -12746,7 +12790,7 @@ const ProduccionPage = {
     } catch(_) {}
     const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por producción (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}`;
     await DataService.saveAveria({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol });
-    if (!silent) toast(`✅ Avería ${id} cerrada`, 'success');
+    if (!silent) toast(tf('x_prod_cerrada', { id }), 'success');
     if (window.location.hash.slice(1) === 'produccion') {
       await this._load(); this._renderLevel(); this._renderOpenList(); this._updateBadge();
     }
@@ -12785,17 +12829,17 @@ const ProduccionPage = {
         <div class="txt">
           <b>${esc(a.equipo||'—')} <small>· ${esc(a.zona||'')}${a.linea?' · L'+esc(String(a.linea)):''}</small></b>
           <small>${esc(a.descripcion||'')}</small><br>
-          <small>Abierta desde ${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(a.estado)}</small>
+          <small>${t('x_prod_abierta_desde')} ${esc(a.fecha_inicio||'')} ${esc((a.hora_inicio||'').slice(0,5))} · ${esc(tv('opt_', a.estado))}</small>
         </div>
         <div class="acts" style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage._askKeep('${esc(a.id)}')">Sigue abierta</button>
-          <button class="btn btn-primary btn-sm" onclick="ProduccionPage._askClose('${esc(a.id)}')">✔ Ya funciona</button>
+          <button class="btn btn-secondary btn-sm" onclick="ProduccionPage._askKeep('${esc(a.id)}')">${t('x_prod_sigue_abierta')}</button>
+          <button class="btn btn-primary btn-sm" onclick="ProduccionPage._askClose('${esc(a.id)}')">${t('x_prod_ya_funciona')}</button>
         </div>
       </div>`).join('');
-    Modal.open(`⏰ Revisión de averías abiertas (${this._abiertas.length})`, `
-      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">Confirma el estado de cada máquina. Se volverá a preguntar dentro de 15 minutos.</p>
+    Modal.open(`${t('x_prod_revision')} (${this._abiertas.length})`, `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_prod_revision_txt')}</p>
       ${rows}`,
-      `<div class="prod-big-actions"><button class="btn btn-primary" onclick="Modal.close()">Cerrar</button></div>`);
+      `<div class="prod-big-actions"><button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button></div>`);
   },
   _askKeep(id) {
     const r = document.getElementById(`ask-${id}`); if (r) r.classList.add('done');
@@ -12807,8 +12851,8 @@ const ProduccionPage = {
     btns.forEach(b => b.disabled = true);
     try {
       await this.confirmResuelta(id, true);
-      if (r) { r.classList.add('done'); r.querySelector('.txt b').insertAdjacentHTML('beforeend', ' <span class="badge badge-gray">Cerrada</span>'); }
-      toast(`✅ Avería ${id} cerrada`, 'success');
+      if (r) { r.classList.add('done'); r.querySelector('.txt b').insertAdjacentHTML('beforeend', ` <span class="badge badge-gray">${t('opt_cerrada')}</span>`); }
+      toast(tf('x_prod_cerrada', { id }), 'success');
     } catch (e) {
       toast('❌ ' + e.message, 'error'); btns.forEach(b => b.disabled = false);
     }
