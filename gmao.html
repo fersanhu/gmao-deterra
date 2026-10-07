@@ -592,6 +592,33 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   html[dir="rtl"] #main-panel{margin-right:0}
 }
 
+/* ── v10.6: Averías en tarjetas en el móvil (≤768px): sin scroll horizontal, descripción completa ── */
+@media(max-width:768px){
+  #av-table{min-width:0}
+  #av-table thead{display:none}
+  .card:has(> .table-wrap > #av-table){padding:0;overflow:hidden}                                                 /* la tarjeta ocupa todo el ancho */
+  #av-tbody tr:last-child{border-bottom:0}
+  #av-tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px;padding:12px 14px;border-bottom:1px solid var(--gray-light)}
+  #av-tbody tr:active{background:var(--bg)}
+  #av-tbody td{display:block;padding:0;border:0;max-width:none!important;white-space:normal!important;font-size:12px;color:var(--gray-muted)}
+  #av-tbody td.col-sec{display:block}
+  #av-tbody td[colspan]{flex:1 1 100%}
+  #av-tbody td:nth-child(6){order:1;flex:1 1 45%;font-size:15px;font-weight:600;color:var(--text);line-height:1.3}   /* equipo */
+  #av-tbody td:nth-child(9){order:2;margin-inline-start:auto}                                                    /* criticidad */
+  #av-tbody td:nth-child(10){order:3}                                                                             /* estado */
+  #av-tbody td:nth-child(12){order:4;font-size:14px}                                                              /* fotos */
+  #av-tbody td:nth-child(7){order:5;flex:1 1 100%;font-size:13.5px;line-height:1.45;color:var(--text);overflow:visible;text-overflow:clip;margin:2px 0 3px} /* descripción */
+  #av-tbody td:nth-child(2){order:6}                                                                              /* fecha */
+  #av-tbody td:nth-child(3){order:7;font-size:12px!important}                                                     /* hora */
+  #av-tbody td:nth-child(4){order:8}                                                                              /* almacén */
+  #av-tbody td:nth-child(5){display:none}                                                                         /* línea: no aporta en la tarjeta */
+  #av-tbody td:nth-child(8){order:9}                                                                              /* técnico */
+  #av-tbody td:nth-child(11){order:10}                                                                            /* duración */
+  #av-tbody td:nth-child(1){order:11;font-size:11px!important;font-family:monospace}                              /* id */
+  #av-tbody td:nth-child(4)::before,#av-tbody td:nth-child(8)::before,#av-tbody td:nth-child(11)::before,#av-tbody td:nth-child(1)::before{content:"· ";color:var(--gray-light)}
+  #av-tbody td:has(> .td-empty){display:none}                                                                     /* sin técnico / sin duración: no se pinta "· —" */
+}
+
 /* ── HEATMAP PLANTA×ZONA ── */
 .heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .heatmap-table{border-collapse:separate;border-spacing:3px;width:100%;min-width:420px}
@@ -866,7 +893,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.5</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.6</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -5244,7 +5271,7 @@ const AveriasPage = {
     </div>
     <div class="card">
       <div class="table-wrap">
-        <table class="table-clickable">
+        <table class="table-clickable" id="av-table">
           <thead><tr id="av-thead">
             <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('x_id')} <span id="av-sort-id"></span></th>
             <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_fecha')} <span id="av-sort-fecha_inicio"></span></th>
@@ -5423,10 +5450,10 @@ const AveriasPage = {
         <td class="col-sec" style="color:var(--gray-muted);font-size:12px">${UI.esc(a.linea||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
-        <td>${UI.esc(a.tecnico||'—')}</td>
+        <td>${a.tecnico ? UI.esc(a.tecnico) : '<span class="td-empty">—</span>'}</td>
         <td>${UI.criticidadBadge(a.criticidad)}</td>
         <td>${UI.estadoBadge(a.estado)}</td>
-        <td>${UI.formatDuration(a.duracion)}</td>
+        <td>${a.duracion ? UI.formatDuration(a.duracion) : '<span class="td-empty">—</span>'}</td>
         <td style="text-align:center">${fotosSet.has(a.id) ? '📷' : ''}</td>
       </tr>`).join('');
   },
