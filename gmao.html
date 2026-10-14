@@ -619,6 +619,21 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   #av-tbody td:has(> .td-empty){display:none}                                                                     /* sin técnico / sin duración: no se pinta "· —" */
 }
 
+/* ── v10.7: Config › Producción (máquinas visibles) y casilla en la ficha del activo ── */
+.pv-zona{border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.pv-zona-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);font-size:13px;flex-wrap:wrap}
+.pv-linea{padding:4px 12px 8px}
+.pv-linea-head{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-muted);margin:8px 0 2px}
+.pv-item{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--gray-light);cursor:pointer;font-size:13px}
+.pv-item:last-child{border-bottom:0}
+.pv-item input{width:18px;height:18px;accent-color:var(--green);flex-shrink:0;margin:0}
+.pv-item .pv-name{font-weight:500}
+.pv-item small{color:var(--gray-muted);font-size:11px}
+.pv-item.off .pv-name{color:var(--gray-muted);text-decoration:line-through}
+.pv-check{display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none!important;letter-spacing:0!important;font-size:13px!important;color:var(--gray-text)!important}
+.pv-check input{width:18px;height:18px;accent-color:var(--green);margin:0}
+@media(max-width:768px){.pv-item{min-height:44px}}
+
 /* ── HEATMAP PLANTA×ZONA ── */
 .heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .heatmap-table{border-collapse:separate;border-spacing:3px;width:100%;min-width:420px}
@@ -893,7 +908,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.6</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.7</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1000,6 +1015,12 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.7: máquinas visibles para producción ──
+      x_pv_titulo:'Máquinas visibles para producción', x_pv_desc:'Producción solo puede avisar de averías en las máquinas marcadas. Desmarca lo que no quieras que aparezca (puertas, cámaras, instalaciones…). Los cambios se guardan al momento.',
+      x_pv_buscar:'Buscar máquina…', x_pv_todas:'Todas', x_pv_ninguna:'Ninguna', x_pv_visibles:'visibles', x_pv_sin_linea:'Sin línea',
+      x_pv_sin_activos:'No hay máquinas con zona en este almacén.', x_pv_guardado:'{n} máquinas actualizadas',
+      x_pv_error_col:'No se pudo guardar: falta la columna visible_produccion en la base de datos. Ejecuta el SQL de ⚙️ Setup SQL (pantalla Partes).',
+      x_visible_produccion:'Visible para producción', x_visible_produccion_tip:'Si se desmarca, producción no verá esta máquina al avisar de una avería.', x_pv_oculta:'Oculta para producción',
       // ── v10.5: perfil Producción traducido y roles con nombre ──
       nav_produccion:'Producción', x_prod_titulo:'Producción · Averías', x_avisado_por:'Avisado por',
       x_rolv_mecanico:'Mecánico', x_rolv_responsable:'Responsable', x_rolv_admin:'Admin', x_rolv_produccion:'Producción',
@@ -1276,6 +1297,12 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.7: máquinas visibles para producción ──
+      x_pv_titulo:'Machines visible to production', x_pv_desc:'Production can only report breakdowns on the checked machines. Uncheck what should not appear (doors, cold rooms, facilities…). Changes are saved immediately.',
+      x_pv_buscar:'Search machine…', x_pv_todas:'All', x_pv_ninguna:'None', x_pv_visibles:'visible', x_pv_sin_linea:'No line',
+      x_pv_sin_activos:'No machines with an area in this warehouse.', x_pv_guardado:'{n} machines updated',
+      x_pv_error_col:'Could not save: the visible_produccion column is missing in the database. Run the SQL from ⚙️ SQL Setup (Work reports screen).',
+      x_visible_produccion:'Visible to production', x_visible_produccion_tip:'If unchecked, production will not see this machine when reporting a breakdown.', x_pv_oculta:'Hidden from production',
       // ── v10.5: perfil Producción traducido y roles con nombre ──
       nav_produccion:'Production', x_prod_titulo:'Production · Breakdowns', x_avisado_por:'Reported by',
       x_rolv_mecanico:'Mechanic', x_rolv_responsable:'Responsible', x_rolv_admin:'Admin', x_rolv_produccion:'Production',
@@ -1552,6 +1579,12 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.7: máquinas visibles para producción ──
+      x_pv_titulo:'الآلات الظاهرة للإنتاج', x_pv_desc:'يمكن للإنتاج الإبلاغ عن الأعطال فقط في الآلات المحددة. ألغِ تحديد ما لا تريد ظهوره (أبواب، غرف تبريد، منشآت…). تُحفظ التغييرات فورًا.',
+      x_pv_buscar:'بحث عن آلة…', x_pv_todas:'الكل', x_pv_ninguna:'لا شيء', x_pv_visibles:'ظاهرة', x_pv_sin_linea:'بدون خط',
+      x_pv_sin_activos:'لا توجد آلات بمنطقة في هذا المستودع.', x_pv_guardado:'تم تحديث {n} آلات',
+      x_pv_error_col:'تعذر الحفظ: عمود visible_produccion غير موجود في قاعدة البيانات. نفّذ SQL من ⚙️ إعداد SQL (شاشة تقارير العمل).',
+      x_visible_produccion:'ظاهرة للإنتاج', x_visible_produccion_tip:'إذا أُلغي التحديد، لن يرى الإنتاج هذه الآلة عند الإبلاغ عن عطل.', x_pv_oculta:'مخفية عن الإنتاج',
       // ── v10.5: perfil Producción traducido y roles con nombre ──
       nav_produccion:'الإنتاج', x_prod_titulo:'الإنتاج · الأعطال', x_avisado_por:'أبلغ عنه',
       x_rolv_mecanico:'ميكانيكي', x_rolv_responsable:'المسؤول', x_rolv_admin:'المدير', x_rolv_produccion:'الإنتاج',
@@ -2341,7 +2374,16 @@ const DataService = {
     return arr;
   },
   async getActivo(id) { return db.activos.get(id); },
-  async saveActivo(data) { return db.activos.put(data); },
+  // v10.7: visible_produccion es una columna opcional; si aún no existe en Supabase se guarda sin ella
+  async saveActivo(data) {
+    try { return await db.activos.put(data); }
+    catch (e) {
+      if (/visible_produccion/i.test(e.message || '') && data && 'visible_produccion' in data) { const { visible_produccion, ...rest } = data; return db.activos.put(rest); }
+      throw e;
+    }
+  },
+  // v10.7: marca varias máquinas como visibles u ocultas para producción (solo toca esa columna)
+  async setActivosVisibleProduccion(ids, visible) { return db.activos.bulkPut(ids.map(id => ({ id_activo: id, visible_produccion: !!visible }))); },
   async deleteActivo(id) { return db.activos.delete(id); },
 
   async getAverias(filters = {}) {
@@ -4744,6 +4786,7 @@ const ActivosPage = {
         <div class="detail-field"><label>${t('lbl_anio_adq')}</label><p>${a.anio||'—'}</p></div>
         <div class="detail-field"><label>${t('lbl_matricula')}</label><p>${UI.esc(a.matricula||'—')}</p></div>
         <div class="detail-field"><label>${t('lbl_potencia')}</label><p>${UI.esc(a.potencia_motor||'—')}</p></div>
+        <div class="detail-field"><label>${t('nav_produccion')}</label><p>${a.visible_produccion === false ? `<span class="badge badge-gray">${t('x_pv_oculta')}</span>` : `<span class="badge badge-green">${t('x_visible_produccion')}</span>`}</p></div>
       </div>
       <div style="margin-top:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -4785,15 +4828,15 @@ const ActivosPage = {
     const activos = await db.activos.toArray();
     activos.sort((a, b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.equipo||'').localeCompare(b.equipo||''));
     const cabecera = ['ID Activo','Num','Almacén','Zona','Código Zona','Línea','Tipo Máquina','Equipo',
-      'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones'];
+      'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones','Visible Producción'];
     const filas = activos.map(a => [
       a.id_activo, a.num||'', a.almacen, a.zona, a.codigo_zona, a.linea,
       a.tipo_maquina, a.equipo, a.estado, a.anio||'', a.proveedor,
-      a.matricula, a.potencia_motor, a.ancho, a.largo, a.proteccion, a.observaciones,
+      a.matricula, a.potencia_motor, a.ancho, a.largo, a.proteccion, a.observaciones, a.visible_produccion === false ? 'No' : 'Sí',
     ]);
     const ws = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
     // Anchos de columna
-    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30].map(w=>({wch:w}));
+    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30,10].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Activos');
     XLSX.writeFile(wb, `Activos_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -4810,7 +4853,7 @@ const ActivosPage = {
       id_activo:'ID Activo', num:'Num', almacen:'Almacén', zona:'Zona', codigo_zona:'Cód.Zona',
       linea:'Línea', tipo_maquina:'Tipo máquina', equipo:'Equipo', estado:'Estado', anio:'Año',
       proveedor:'Proveedor', matricula:'Matrícula', potencia_motor:'Potencia motor',
-      ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones'
+      ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones', visible_produccion:'Visible producción'
     };
     try {
       toast('Leyendo Excel...', 'info');
@@ -4841,6 +4884,8 @@ const ActivosPage = {
         largo:         _s(r[14]),
         proteccion:    _s(r[15]),
         observaciones: _s(r[16]),
+        // v10.7: columna opcional "Visible Producción" (Sí/No). Si el Excel no la trae, se conserva el valor actual.
+        ...(r.length > 17 && _s(r[17]) !== '' ? { visible_produccion: !/^(no|n|0|false)$/i.test(_s(r[17])) } : {}),
       }));
       const existentes = await db.activos.toArray();
       const exMap = new Map(existentes.map(a => [a.id_activo, a]));
@@ -4851,7 +4896,7 @@ const ActivosPage = {
         if (!ex) {
           changes.push({ id: imp.id_activo, type:'new', fields:[], record: imp });
         } else {
-          const fields = Object.keys(LABELS).filter(k => k !== 'id_activo').reduce((acc, k) => {
+          const fields = Object.keys(LABELS).filter(k => k !== 'id_activo' && !(k === 'visible_produccion' && imp[k] === undefined)).reduce((acc, k) => {
             const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
@@ -4866,7 +4911,7 @@ const ActivosPage = {
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
       _showImportDiff('Validar cambios — Activos', changes, LABELS, async (toUpsert, toDelete) => {
         try {
-          for (const rec of toUpsert) await db.activos.put(rec);
+          for (const rec of toUpsert) await DataService.saveActivo(rec);
           for (const rec of toDelete) await db.activos.delete(rec.id_activo);
           const parts = [toUpsert.length && `${toUpsert.length} actualizado${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminado${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
           toast(`${parts} ✓`, 'success');
@@ -5116,6 +5161,10 @@ const ActivosPage = {
           <label>${t('lbl_observaciones')}</label>
           <textarea class="form-input" id="f-observaciones" rows="2" placeholder="${t('x_origen_de_la_maquina_notas_de_traslado')}">${UI.esc(activo?.observaciones||'')}</textarea>
         </div>
+        <div class="form-field full" style="grid-column:1/-1">
+          <label class="pv-check"><input type="checkbox" id="f-visprod"${activo?.visible_produccion === false ? '' : ' checked'}> ${t('x_visible_produccion')}</label>
+          <small style="font-size:11px;color:var(--gray-muted)">${t('x_visible_produccion_tip')}</small>
+        </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ActivosPage._saveActivo('${UI.esc(activo?.id_activo||'')}')">
@@ -5171,6 +5220,7 @@ const ActivosPage = {
         proteccion:     document.getElementById('f-proteccion').value.trim(),
         observaciones:  document.getElementById('f-observaciones').value.trim(),
         num: parseInt(document.getElementById('f-num').value) || 0,
+        visible_produccion: document.getElementById('f-visprod') ? document.getElementById('f-visprod').checked : true,   // v10.7
       };
 
       // Guardar primero; sólo si tiene éxito eliminamos el registro antiguo
@@ -8791,7 +8841,26 @@ const ConfigPage = {
       <button class="cfg-tab active" data-cfgtab="tecnicos" onclick="ConfigPage._tab('tecnicos')">${t('x_tecnicos')}</button>
       ${canAdmin ? `<button class="cfg-tab" data-cfgtab="datos" onclick="ConfigPage._tab('datos')">${t('x_datos')}</button>
       <button class="cfg-tab" data-cfgtab="integ" onclick="ConfigPage._tab('integ')">${t('x_integraciones')}</button>
-      <button class="cfg-tab" data-cfgtab="sistema" onclick="ConfigPage._tab('sistema')">${t('x_sistema')}</button>` : ''}
+      <button class="cfg-tab" data-cfgtab="sistema" onclick="ConfigPage._tab('sistema')">${t('x_sistema')}</button>
+      <button class="cfg-tab" data-cfgtab="prodvis" onclick="ConfigPage._tab('prodvis')">🏭 ${t('nav_produccion')}</button>` : ''}
+    </div>
+
+    <!-- ══════════ v10.7: MÁQUINAS VISIBLES PARA PRODUCCIÓN ══════════ -->
+    <div class="cfg-panel" data-cfgpanel="prodvis" hidden>
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <span class="card-title">${t('x_pv_titulo')}</span>
+          <span class="badge badge-gray" id="pv-count"></span>
+        </div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:12px">${t('x_pv_desc')}</p>
+        <div class="toolbar filter-bar" style="margin-bottom:12px">
+          <select class="filter-select" id="pv-almacen" onchange="ConfigPage._pvLoad()">
+            ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a => `<option value="${a}"${(globalAlm ? normalizeAlmacen(globalAlm) : 'Miramar') === a ? ' selected' : ''}>${a}</option>`).join('')}
+          </select>
+          <input class="form-input" id="pv-search" placeholder="${t('x_pv_buscar')}" oninput="ConfigPage._pvRender()" style="flex:1;min-width:160px">
+        </div>
+        <div id="pv-list"></div>
+      </div>
     </div>
 
     <!-- ══════════ TÉCNICOS ══════════ -->
@@ -9129,6 +9198,65 @@ const ConfigPage = {
     ConfigPage._lastTab = name;
     document.querySelectorAll('.cfg-panel').forEach(p => { p.hidden = p.dataset.cfgpanel !== name; });
     document.querySelectorAll('.cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.cfgtab === name));
+    if (name === 'prodvis') ConfigPage._pvLoad();   // v10.7
+  },
+
+  // ── v10.7: máquinas visibles para producción (Config › Producción) ──
+  _pv: { activos: [] },
+  async _pvLoad() {
+    const sel = document.getElementById('pv-almacen'), list = document.getElementById('pv-list'); if (!sel || !list) return;
+    list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('cargando')}</p>`;
+    try {
+      const all = await db.activos.where('almacen').equals(sel.value).toArray();
+      ConfigPage._pv.activos = all.filter(a => a.zona);
+    } catch (e) { list.innerHTML = `<p style="color:var(--red);font-size:13px">${UI.esc(e.message)}</p>`; return; }
+    ConfigPage._pvRender();
+  },
+  _pvRender() {
+    const list = document.getElementById('pv-list'); if (!list) return;
+    const esc = UI.esc, q = (document.getElementById('pv-search')?.value || '').toLowerCase().trim();
+    const acts = ConfigPage._pv.activos.filter(a => !q || `${a.equipo} ${a.zona} ${a.linea} ${a.tipo_maquina}`.toLowerCase().includes(q));
+    const total = ConfigPage._pv.activos.length, vis = ConfigPage._pv.activos.filter(a => a.visible_produccion !== false).length;
+    const cnt = document.getElementById('pv-count'); if (cnt) cnt.textContent = `${vis} / ${total} ${t('x_pv_visibles')}`;
+    if (!acts.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('x_pv_sin_activos')}</p>`; return; }
+    const numSort = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
+    const zonas = [...new Set(acts.map(a => a.zona))].sort(numSort);
+    list.innerHTML = zonas.map(z => {
+      const enZona = acts.filter(a => a.zona === z);
+      const zv = enZona.filter(a => a.visible_produccion !== false).length;
+      const lineas = [...new Set(enZona.map(a => a.linea || ''))].sort(numSort);
+      const ids = esc(JSON.stringify(enZona.map(a => a.id_activo)));
+      return `<div class="pv-zona">
+        <div class="pv-zona-head">
+          <b>🏭 ${esc(z)}</b> <span class="badge ${zv ? 'badge-green' : 'badge-gray'}">${zv} / ${enZona.length}</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage._pvSet(${ids}, true)">${t('x_pv_todas')}</button>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage._pvSet(${ids}, false)">${t('x_pv_ninguna')}</button>
+        </div>
+        ${lineas.map(l => {
+          const ms = enZona.filter(a => (a.linea || '') === l).sort((a, b) => numSort(a.equipo || '', b.equipo || ''));
+          return `<div class="pv-linea"><div class="pv-linea-head">${l ? `${t('lbl_linea')} ${esc(l)}` : t('x_pv_sin_linea')}</div>
+            ${ms.map(a => `<label class="pv-item${a.visible_produccion === false ? ' off' : ''}">
+              <input type="checkbox" data-id="${esc(a.id_activo)}"${a.visible_produccion === false ? '' : ' checked'} onchange="ConfigPage._pvSet(${esc(JSON.stringify([a.id_activo]))}, this.checked)">
+              <span class="pv-name">${esc(a.equipo || a.id_activo)}</span><small>${esc(a.tipo_maquina || '')}</small>
+            </label>`).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  },
+  async _pvSet(ids, visible) {
+    if (!ids || !ids.length) return;
+    try {
+      await DataService.setActivosVisibleProduccion(ids, visible);
+      const set = new Set(ids);
+      ConfigPage._pv.activos.forEach(a => { if (set.has(a.id_activo)) a.visible_produccion = !!visible; });
+      if (ids.length > 1) toast(tf('x_pv_guardado', { n: ids.length }), 'success');
+    } catch (e) {
+      console.error('[pvSet]', e);
+      toast(/visible_produccion/i.test(e.message || '') ? t('x_pv_error_col') : '❌ ' + e.message, 'error');
+    }
+    ConfigPage._pvRender();
   },
 
   _rolBadge(rol) {
@@ -10226,6 +10354,9 @@ $$;
 
 -- Perfil Producción: quién avisó de la avería (opcional; la app funciona sin ella)
 ALTER TABLE averias ADD COLUMN IF NOT EXISTS reportado_por TEXT DEFAULT '';
+
+-- Perfil Producción: qué máquinas ve producción al avisar (opcional; sin la columna se ven todas)
+ALTER TABLE activos ADD COLUMN IF NOT EXISTS visible_produccion BOOLEAN DEFAULT true;
 
 -- Tabla partes_trabajo
 CREATE TABLE IF NOT EXISTS partes_trabajo (
@@ -12550,7 +12681,7 @@ const ProduccionPage = {
       DataService.getAverias(alm ? { almacen: alm } : {}),
       DataService.getTecnicos(true),
     ]);
-    this._activos  = activos.filter(a => a.zona);
+    this._activos  = activos.filter(a => a.zona && a.visible_produccion !== false);   // v10.7: solo las marcadas como visibles para producción
     this._abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso');
     // Técnicos asignables: mecánicos/responsables del centro (o de todos si Admin sin centro)
     this._tecnicos = tecnicos
