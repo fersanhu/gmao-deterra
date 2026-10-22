@@ -1,0 +1,83 @@
+# GMAO · Resumen diario de averías
+# Cada día a las 06 (hora de Madrid) genera el resumen de AYER llamando a Supabase y lo publica en la
+# rama "resumen" de este repositorio (resumen/averias.html y resumen/averias.json). A las 06:52 una
+# tarea programada de Claude descarga ese archivo y lo envía por Outlook.
+# No necesita ningún secreto: la clave anon (pública) se lee de la propia gmao.html.
+name: GMAO · Resumen diario de averías
+
+on:
+  schedule:
+    # GitHub Actions va en UTC. Verano (UTC+2): 04:05/04:25/04:45 = 06:05/06:25/06:45 Madrid.
+    # Invierno (UTC+1): 05:05/05:25/05:45 = 06:05/06:25/06:45 Madrid. El paso "Generar" descarta
+    # las ejecuciones que no caen a las 06 de Madrid y las repetidas cuando ya está publicado.
+    - cron: '5,25,45 4 * * *'
+    - cron: '5,25,45 5 * * *'
+  workflow_dispatch:   # botón "Run workflow" para publicar a mano (sin restricción de hora)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: resumen-averias
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio (main)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generar el resumen de AYER desde Supabase
+        id: gen
+        shell: bash
+        run: |
+          set -euo pipefail
+          HORA=$(TZ=Europe/Madrid date +%H)
+          AYER=$(TZ=Europe/Madrid date -d yesterday +%F)
+          saltar() { echo "$1"; echo "saltar=1" >> "$GITHUB_OUTPUT"; exit 0; }
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$HORA" != "06" ]; then
+            saltar "En Madrid son las $HORA: esta ejecución no toca (solo a las 06)."
+          fi
+          if [ "${{ github.event_name }}" = "schedule" ] && git fetch --depth=1 origin resumen 2>/dev/null; then
+            F=$(git show FETCH_HEAD:resumen/averias.json 2>/dev/null | jq -r '.fecha // empty' || true)
+            [ "$F" = "$AYER" ] && saltar "El resumen de $AYER ya está publicado."
+          fi
+          URL=https://carflugxcezjsxplumhn.supabase.co
+          KEY=$(grep -o 'eyJ[A-Za-z0-9_.-]\{60,\}' gmao.html | head -1)
+          [ -n "$KEY" ] || { echo "No encuentro la clave anon en gmao.html"; exit 1; }
+          mkdir -p /tmp/out
+          curl -sS -f -X POST "$URL/rest/v1/rpc/gmao_resumen_averias_json" \
+               -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+               -d "{\"p_dia\":\"$AYER\"}" -o /tmp/out/averias.json
+          curl -sS -f -X POST "$URL/rest/v1/rpc/gmao_resumen_averias_html" \
+               -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+               -d "{\"p_dia\":\"$AYER\"}" | jq -r . > /tmp/out/averias.html
+          jq -e --arg d "$AYER" '.fecha == $d' /tmp/out/averias.json >/dev/null || { echo "El JSON no es de $AYER:"; cat /tmp/out/averias.json; exit 1; }
+          grep -q '^<h2>' /tmp/out/averias.html || { echo "HTML inesperado:"; head -c 300 /tmp/out/averias.html; exit 1; }
+          echo "Asunto: $(jq -r .asunto /tmp/out/averias.json)"
+          echo "saltar=0" >> "$GITHUB_OUTPUT"
+          echo "ayer=$AYER" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar en la rama resumen
+        if: steps.gen.outputs.saltar == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "gmao-bot"
+          git config user.email "gmao-bot@users.noreply.github.com"
+          if git fetch --depth=1 origin resumen 2>/dev/null; then
+            git checkout -q -B resumen FETCH_HEAD
+          else
+            git checkout -q --orphan resumen
+            git rm -rfq --cached .
+            find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          fi
+          mkdir -p resumen
+          cp /tmp/out/averias.json /tmp/out/averias.html resumen/
+          git add resumen
+          git commit -q -m "Resumen averías ${{ steps.gen.outputs.ayer }}" || { echo "Sin cambios"; exit 0; }
+          git push -q origin resumen
+          echo "Publicado: https://raw.githubusercontent.com/fersanhu/gmao-deterra/resumen/resumen/averias.html"
