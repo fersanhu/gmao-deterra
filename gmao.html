@@ -142,6 +142,7 @@ ul{list-style:none}
 .prod-block:active{transform:translateY(0)}
 .prod-block-name{font-weight:700;font-size:15px;color:var(--gray-text);line-height:1.25;overflow-wrap:anywhere}
 .prod-block-sub{font-size:12px;color:var(--gray-muted)}
+.prod-block-tipo{font-size:12px;font-weight:600;color:#275D3A;background:#E3EEE6;padding:2px 9px;border-radius:99px;letter-spacing:.3px;max-width:100%;overflow-wrap:anywhere}   /* v10.10 */
 .prod-block.alert{border-color:var(--red);background:var(--red-bg)}
 .prod-block.alert .prod-block-name{color:var(--red)}
 .prod-block-badge{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;line-height:20px;border-radius:10px;padding:0 6px}
@@ -619,6 +620,70 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   #av-tbody td:has(> .td-empty){display:none}                                                                     /* sin técnico / sin duración: no se pinta "· —" */
 }
 
+/* ── v10.8: Incidencias, Órdenes de trabajo y Partes en tarjetas en el móvil (misma receta que Averías) ── */
+@media(max-width:768px){
+  #inc-table,#ot-table,#pt-table{min-width:0}
+  #inc-table thead,#ot-table thead,#pt-table thead{display:none}
+  .card:has(> .table-wrap > #inc-table),.card:has(> .table-wrap > #ot-table){padding:0;overflow:hidden}
+  #inc-tbody tr,#ot-tbody tr,#pt-tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px;padding:12px 14px;border-bottom:1px solid var(--gray-light)}
+  #inc-tbody tr:last-child,#ot-tbody tr:last-child,#pt-tbody tr:last-child{border-bottom:0}
+  #inc-tbody tr:active,#ot-tbody tr:active{background:var(--bg)}
+  #inc-tbody td,#ot-tbody td,#pt-tbody td{display:block;padding:0;border:0;max-width:none!important;white-space:normal!important;font-size:12px;color:var(--gray-muted)}
+  #inc-tbody td.col-sec,#ot-tbody td.col-sec{display:block}
+  #inc-tbody td[colspan],#ot-tbody td[colspan],#pt-tbody td[colspan]{flex:1 1 100%}
+  #inc-tbody td:has(> .td-empty),#ot-tbody td:has(> .td-empty),#pt-tbody td:has(> .td-empty),#pt-tbody td:empty{display:none}
+  /* Incidencias: zona · tipo prioridad estado / descripción / fecha · almacén · reportado por */
+  #inc-tbody td:nth-child(3){order:1;flex:1 1 40%;font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+  #inc-tbody td:nth-child(4){order:2;margin-inline-start:auto}
+  #inc-tbody td:nth-child(6){order:3}
+  #inc-tbody td:nth-child(7){order:4}
+  #inc-tbody td:nth-child(5){order:5;flex:1 1 100%;font-size:13.5px;line-height:1.45;color:var(--text);overflow:visible;text-overflow:clip;margin:2px 0 3px}
+  #inc-tbody td:nth-child(1){order:6}
+  #inc-tbody td:nth-child(2){order:7}
+  #inc-tbody td:nth-child(8){order:8}
+  #inc-tbody td:nth-child(2)::before,#inc-tbody td:nth-child(8)::before{content:"· ";color:var(--gray-light)}
+  /* Órdenes de trabajo: equipo · tipo estado / título / prevista · almacén · origen · técnico */
+  #ot-tbody td:nth-child(3){order:1;flex:1 1 40%;font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+  #ot-tbody td:nth-child(5){order:2;margin-inline-start:auto}
+  #ot-tbody td:nth-child(7){order:3}
+  #ot-tbody td:nth-child(4){order:4;flex:1 1 100%;font-size:13.5px;line-height:1.45;color:var(--text);overflow:visible;text-overflow:clip;margin:2px 0 3px}
+  #ot-tbody td:nth-child(1){order:5}
+  #ot-tbody td:nth-child(2){order:6}
+  #ot-tbody td:nth-child(6){order:7}
+  #ot-tbody td:nth-child(8){order:8}
+  #ot-tbody td:nth-child(2)::before,#ot-tbody td:nth-child(6)::before,#ot-tbody td:nth-child(8)::before{content:"· ";color:var(--gray-light)}
+  /* Partes: técnico · horas / equipo / avería / materiales / notas / fecha · almacén / Editar */
+  #pt-tbody td:nth-child(2){order:1;flex:1 1 40%;font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+  #pt-tbody td:nth-child(5){order:2;margin-inline-start:auto}
+  #pt-tbody td:nth-child(4){order:3;flex:1 1 100%;font-size:13.5px;color:var(--text);margin-top:2px}
+  #pt-tbody td:nth-child(7){order:4;flex:1 1 100%}
+  #pt-tbody td:nth-child(6){order:5;flex:1 1 100%}
+  #pt-tbody td:nth-child(8){order:6;flex:1 1 100%;font-size:12.5px}
+  #pt-tbody td:nth-child(1){order:7}
+  #pt-tbody td:nth-child(3){order:8}
+  #pt-tbody td:nth-child(3)::before{content:"· ";color:var(--gray-light)}
+  #pt-tbody td:nth-child(9){order:9;flex:1 1 100%;margin-top:6px}
+  #pt-tbody td:nth-child(9) .btn{width:100%;min-height:44px}
+}
+
+/* ── v10.9: criticidad por máquina (impacto de la parada) en Config › Producción y en la ficha ── */
+.pv-item{flex-wrap:wrap}
+.pv-item .pv-main{display:flex;align-items:center;gap:10px;flex:1 1 200px;min-width:0;cursor:pointer}
+.pv-item .pv-cp{display:flex;align-items:center;gap:6px;margin-inline-start:auto;flex-shrink:0}
+.pv-item .pv-cp select,.pv-item .pv-cp input{height:30px;width:auto;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:12px;padding:0 6px;color:var(--gray-text);margin:0}
+.pv-item .pv-cp input{width:58px;text-align:center;-moz-appearance:textfield}
+.pv-item .pv-cp select.niv-critica{background:var(--red-bg);color:var(--red);font-weight:600}
+.pv-item .pv-cp select.niv-alta{background:var(--orange-bg);color:#c45a2a;font-weight:600}
+.pv-item .pv-cp select.niv-media{background:var(--yellow-bg);color:var(--yellow)}
+.pv-item .pv-cp select.niv-baja{background:#E3EEE6;color:#275D3A}
+.pv-zona-cp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 12px 8px;background:var(--bg);border-top:1px dashed var(--border);font-size:12px;color:var(--gray-muted)}
+.pv-zona-cp select,.pv-zona-cp input{height:28px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:12px;padding:0 6px;color:var(--gray-text)}
+.pv-zona-cp input{width:92px;text-align:center}
+.cp-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cp-controls .form-input{width:auto;min-width:130px}
+.cp-controls input.form-input{width:90px;min-width:0}
+@media(max-width:768px){.pv-item .pv-cp{margin-inline-start:28px;width:calc(100% - 28px)}.pv-item .pv-cp select{flex:1 1 90px;min-width:0}}
+
 /* ── v10.7: Config › Producción (máquinas visibles) y casilla en la ficha del activo ── */
 .pv-zona{border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
 .pv-zona-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);font-size:13px;flex-wrap:wrap}
@@ -908,7 +973,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.7</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.10</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1015,6 +1080,14 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.9: criticidad por máquina (impacto de la parada) ──
+      x_cp_titulo:'Impacto si se para', x_cp_desc:'Impacto de cada máquina si se para: nivel, personas que se quedan paradas y a quién afecta (su línea, toda la zona, todo el almacén o un número fijo). Lo usa el correo diario de averías. Sin dato cuenta como Media · 1 persona.',
+      x_cp_tip:'Cuánta gente se queda parada si falla esta máquina. Al escribir las personas, el nivel se propone solo (0-1 Baja, 2-4 Media, 5-9 Alta, 10+ Crítica) y se puede cambiar.',
+      x_cp_nivel:'Nivel', x_cp_personas:'Personas', x_cp_alcance:'A quién para', x_cp_sin:'Sin dato', x_cp_pers_abr:'pers.',
+      x_cpn_baja:'Baja', x_cpn_media:'Media', x_cpn_alta:'Alta', x_cpn_critica:'Crítica',
+      x_cpa_linea:'Su línea', x_cpa_zona:'Toda la zona', x_cpa_almacen:'Todo el almacén', x_cpa_fijo:'Nº fijo',
+      x_cp_zona_aplicar:'Aplicar a la zona', x_cp_zona_tip:'Rellena solo lo que quieras cambiar y se aplica a todas las máquinas de la zona', x_cp_zona_vacio:'Rellena nivel, personas o alcance antes de aplicar',
+      x_cp_guardado:'{n} máquinas actualizadas', x_cp_error_col:'No se pudo guardar: faltan las columnas criticidad_prod / personas_paradas / alcance_parada. Ejecuta el SQL de ⚙️ Setup SQL (pantalla Partes).',
       // ── v10.7: máquinas visibles para producción ──
       x_pv_titulo:'Máquinas visibles para producción', x_pv_desc:'Producción solo puede avisar de averías en las máquinas marcadas. Desmarca lo que no quieras que aparezca (puertas, cámaras, instalaciones…). Los cambios se guardan al momento.',
       x_pv_buscar:'Buscar máquina…', x_pv_todas:'Todas', x_pv_ninguna:'Ninguna', x_pv_visibles:'visibles', x_pv_sin_linea:'Sin línea',
@@ -1297,6 +1370,14 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.9: criticidad por máquina (impacto de la parada) ──
+      x_cp_titulo:'Impact if it stops', x_cp_desc:'Impact of each machine when it stops: level, people left idle and who is affected (its line, the whole area, the whole warehouse or a fixed number). Used by the daily breakdown email. No data counts as Medium · 1 person.',
+      x_cp_tip:'How many people are left idle if this machine fails. When you type the people, the level is proposed automatically (0-1 Low, 2-4 Medium, 5-9 High, 10+ Critical) and can be changed.',
+      x_cp_nivel:'Level', x_cp_personas:'People', x_cp_alcance:'Who stops', x_cp_sin:'No data', x_cp_pers_abr:'ppl.',
+      x_cpn_baja:'Low', x_cpn_media:'Medium', x_cpn_alta:'High', x_cpn_critica:'Critical',
+      x_cpa_linea:'Its line', x_cpa_zona:'Whole area', x_cpa_almacen:'Whole warehouse', x_cpa_fijo:'Fixed number',
+      x_cp_zona_aplicar:'Apply to area', x_cp_zona_tip:'Fill in only what you want to change and it is applied to every machine in the area', x_cp_zona_vacio:'Fill in level, people or scope before applying',
+      x_cp_guardado:'{n} machines updated', x_cp_error_col:'Could not save: the criticidad_prod / personas_paradas / alcance_parada columns are missing. Run the SQL from ⚙️ SQL Setup (Work reports screen).',
       // ── v10.7: máquinas visibles para producción ──
       x_pv_titulo:'Machines visible to production', x_pv_desc:'Production can only report breakdowns on the checked machines. Uncheck what should not appear (doors, cold rooms, facilities…). Changes are saved immediately.',
       x_pv_buscar:'Search machine…', x_pv_todas:'All', x_pv_ninguna:'None', x_pv_visibles:'visible', x_pv_sin_linea:'No line',
@@ -1579,6 +1660,14 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.9: criticidad por máquina (impacto de la parada) ──
+      x_cp_titulo:'الأثر عند التوقف', x_cp_desc:'أثر كل آلة عند توقفها: المستوى، عدد الأشخاص المتوقفين ومن يتأثر (خطها، المنطقة كلها، المستودع كله أو عدد ثابت). يستخدمه البريد اليومي للأعطال. بدون بيانات تُحسب متوسطة · شخص واحد.',
+      x_cp_tip:'كم شخصًا يتوقف إذا تعطلت هذه الآلة. عند كتابة عدد الأشخاص يُقترح المستوى تلقائيًا (0-1 منخفض، 2-4 متوسط، 5-9 عالٍ، 10+ حرج) ويمكن تغييره.',
+      x_cp_nivel:'المستوى', x_cp_personas:'الأشخاص', x_cp_alcance:'من يتوقف', x_cp_sin:'بدون بيانات', x_cp_pers_abr:'أشخاص',
+      x_cpn_baja:'منخفض', x_cpn_media:'متوسط', x_cpn_alta:'عالٍ', x_cpn_critica:'حرج',
+      x_cpa_linea:'خطها', x_cpa_zona:'المنطقة كلها', x_cpa_almacen:'المستودع كله', x_cpa_fijo:'عدد ثابت',
+      x_cp_zona_aplicar:'تطبيق على المنطقة', x_cp_zona_tip:'املأ فقط ما تريد تغييره وسيُطبق على كل آلات المنطقة', x_cp_zona_vacio:'املأ المستوى أو الأشخاص أو النطاق قبل التطبيق',
+      x_cp_guardado:'تم تحديث {n} آلات', x_cp_error_col:'تعذر الحفظ: الأعمدة criticidad_prod / personas_paradas / alcance_parada غير موجودة. نفّذ SQL من ⚙️ إعداد SQL (شاشة تقارير العمل).',
       // ── v10.7: máquinas visibles para producción ──
       x_pv_titulo:'الآلات الظاهرة للإنتاج', x_pv_desc:'يمكن للإنتاج الإبلاغ عن الأعطال فقط في الآلات المحددة. ألغِ تحديد ما لا تريد ظهوره (أبواب، غرف تبريد، منشآت…). تُحفظ التغييرات فورًا.',
       x_pv_buscar:'بحث عن آلة…', x_pv_todas:'الكل', x_pv_ninguna:'لا شيء', x_pv_visibles:'ظاهرة', x_pv_sin_linea:'بدون خط',
@@ -2376,14 +2465,22 @@ const DataService = {
   async getActivo(id) { return db.activos.get(id); },
   // v10.7: visible_produccion es una columna opcional; si aún no existe en Supabase se guarda sin ella
   async saveActivo(data) {
-    try { return await db.activos.put(data); }
-    catch (e) {
-      if (/visible_produccion/i.test(e.message || '') && data && 'visible_produccion' in data) { const { visible_produccion, ...rest } = data; return db.activos.put(rest); }
-      throw e;
+    // v10.9: si Supabase rechaza una columna opcional (visible_produccion, criticidad_prod, personas_paradas,
+    // alcance_parada) se quita y se reintenta, para que la ficha siga funcionando sin ejecutar el Setup SQL.
+    const d = { ...data };
+    for (let i = 0; i < 5; i++) {
+      try { return await db.activos.put(d); }
+      catch (e) {
+        const m = (e.message || '').match(/visible_produccion|criticidad_prod|personas_paradas|alcance_parada/i);
+        if (m && m[0].toLowerCase() in d) { delete d[m[0].toLowerCase()]; continue; }
+        throw e;
+      }
     }
   },
   // v10.7: marca varias máquinas como visibles u ocultas para producción (solo toca esa columna)
   async setActivosVisibleProduccion(ids, visible) { return db.activos.bulkPut(ids.map(id => ({ id_activo: id, visible_produccion: !!visible }))); },
+  // v10.9: criticidad de varias máquinas (solo toca las columnas del patch: criticidad_prod / personas_paradas / alcance_parada)
+  async setActivosCriticidad(ids, patch) { return db.activos.bulkPut(ids.map(id => ({ id_activo: id, ...patch }))); },
   async deleteActivo(id) { return db.activos.delete(id); },
 
   async getAverias(filters = {}) {
@@ -2981,6 +3078,25 @@ const UI = {
     const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green', Abierta:'red', 'En curso':'orange', Cerrada:'gray', Operativo:'green', Parado:'red', Baja_estado:'gray', Mecánica:'blue', Eléctrica:'blue', Neumática:'blue', Alta_prior:'red', Media:'orange', Baja_prior:'green' };
     const cls = map[text] || 'gray';
     return `<span class="badge badge-${cls}">${this.esc(text)}</span>`;
+  },
+  // v10.9: criticidad por máquina (impacto de la parada). Valores guardados en castellano: Baja/Media/Alta/Crítica y linea/zona/almacen/fijo.
+  cpSlug(v) { return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); },
+  cpNivelPorPersonas(n) { return n >= 10 ? 'Crítica' : n >= 5 ? 'Alta' : n >= 2 ? 'Media' : 'Baja'; },
+  cpPersonasPorNivel(niv) { return ({ Baja: 1, Media: 3, Alta: 6, 'Crítica': 12 })[niv] ?? 1; },
+  cpNivelNorm(v) { const k = this.cpSlug(v); return ({ baja: 'Baja', low: 'Baja', media: 'Media', medium: 'Media', alta: 'Alta', high: 'Alta', critica: 'Crítica', critical: 'Crítica' })[k] || ''; },
+  cpAlcanceNorm(v) { const k = this.cpSlug(v); return k.startsWith('lin') || k.startsWith('su l') || k.startsWith('its') ? 'linea' : k.startsWith('zon') || k.startsWith('toda la z') || k.startsWith('whole a') ? 'zona' : k.startsWith('alm') || k.startsWith('todo') || k.startsWith('whole w') ? 'almacen' : k.startsWith('fij') || k.startsWith('n') ? 'fijo' : ''; },
+  cpInfo(a) {
+    const raw = a ? a.personas_paradas : null;
+    const pers = raw == null || raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
+    const nivel = (a && a.criticidad_prod) || (pers != null ? this.cpNivelPorPersonas(pers) : 'Media');
+    return { nivel, personas: pers == null ? 1 : pers, alcance: (a && a.alcance_parada) || 'linea', definido: !!(a && (a.criticidad_prod || pers != null)) };
+  },
+  cpBadge(a) {
+    const i = this.cpInfo(a);
+    const ico = { Baja: '🟢', Media: '🟡', Alta: '🟠', 'Crítica': '🔴' }[i.nivel] || '⚪';
+    const cls = { Baja: 'green', Media: 'yellow', Alta: 'orange', 'Crítica': 'red' }[i.nivel] || 'gray';
+    return `<span class="badge badge-${cls}">${ico} ${this.esc(tv('x_cpn_', i.nivel))} · ${i.personas} ${t('x_cp_pers_abr')} · ${this.esc(tv('x_cpa_', i.alcance))}</span>`
+      + (i.definido ? '' : ` <small style="color:var(--gray-muted)">(${t('x_cp_sin')})</small>`);
   },
   criticidadBadge(c) {
     if (!c) return '<span class="badge badge-gray">—</span>';
@@ -4787,6 +4903,7 @@ const ActivosPage = {
         <div class="detail-field"><label>${t('lbl_matricula')}</label><p>${UI.esc(a.matricula||'—')}</p></div>
         <div class="detail-field"><label>${t('lbl_potencia')}</label><p>${UI.esc(a.potencia_motor||'—')}</p></div>
         <div class="detail-field"><label>${t('nav_produccion')}</label><p>${a.visible_produccion === false ? `<span class="badge badge-gray">${t('x_pv_oculta')}</span>` : `<span class="badge badge-green">${t('x_visible_produccion')}</span>`}</p></div>
+        <div class="detail-field"><label>${t('x_cp_titulo')}</label><p>${UI.cpBadge(a)}</p></div>
       </div>
       <div style="margin-top:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -4828,15 +4945,17 @@ const ActivosPage = {
     const activos = await db.activos.toArray();
     activos.sort((a, b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.equipo||'').localeCompare(b.equipo||''));
     const cabecera = ['ID Activo','Num','Almacén','Zona','Código Zona','Línea','Tipo Máquina','Equipo',
-      'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones','Visible Producción'];
+      'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones','Visible Producción',
+      'Impacto','Personas paradas','A quién para'];
     const filas = activos.map(a => [
       a.id_activo, a.num||'', a.almacen, a.zona, a.codigo_zona, a.linea,
       a.tipo_maquina, a.equipo, a.estado, a.anio||'', a.proveedor,
       a.matricula, a.potencia_motor, a.ancho, a.largo, a.proteccion, a.observaciones, a.visible_produccion === false ? 'No' : 'Sí',
+      a.criticidad_prod || '', a.personas_paradas == null ? '' : a.personas_paradas, a.alcance_parada || '',
     ]);
     const ws = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
     // Anchos de columna
-    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30,10].map(w=>({wch:w}));
+    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30,10,10,10,12].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Activos');
     XLSX.writeFile(wb, `Activos_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -4853,8 +4972,10 @@ const ActivosPage = {
       id_activo:'ID Activo', num:'Num', almacen:'Almacén', zona:'Zona', codigo_zona:'Cód.Zona',
       linea:'Línea', tipo_maquina:'Tipo máquina', equipo:'Equipo', estado:'Estado', anio:'Año',
       proveedor:'Proveedor', matricula:'Matrícula', potencia_motor:'Potencia motor',
-      ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones', visible_produccion:'Visible producción'
+      ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones', visible_produccion:'Visible producción',
+      criticidad_prod:'Impacto', personas_paradas:'Personas paradas', alcance_parada:'A quién para'
     };
+    const OPCIONALES = ['visible_produccion', 'criticidad_prod', 'personas_paradas', 'alcance_parada'];   // si el Excel no las trae, se conserva el valor actual
     try {
       toast('Leyendo Excel...', 'info');
       const buffer = await file.arrayBuffer();
@@ -4886,6 +5007,10 @@ const ActivosPage = {
         observaciones: _s(r[16]),
         // v10.7: columna opcional "Visible Producción" (Sí/No). Si el Excel no la trae, se conserva el valor actual.
         ...(r.length > 17 && _s(r[17]) !== '' ? { visible_produccion: !/^(no|n|0|false)$/i.test(_s(r[17])) } : {}),
+        // v10.9: columnas opcionales Impacto / Personas paradas / A quién para
+        ...(r.length > 18 && UI.cpNivelNorm(_s(r[18])) ? { criticidad_prod: UI.cpNivelNorm(_s(r[18])) } : {}),
+        ...(r.length > 19 && _s(r[19]) !== '' ? { personas_paradas: Math.max(0, parseInt(_s(r[19]), 10) || 0) } : {}),
+        ...(r.length > 20 && UI.cpAlcanceNorm(_s(r[20])) ? { alcance_parada: UI.cpAlcanceNorm(_s(r[20])) } : {}),
       }));
       const existentes = await db.activos.toArray();
       const exMap = new Map(existentes.map(a => [a.id_activo, a]));
@@ -4896,7 +5021,7 @@ const ActivosPage = {
         if (!ex) {
           changes.push({ id: imp.id_activo, type:'new', fields:[], record: imp });
         } else {
-          const fields = Object.keys(LABELS).filter(k => k !== 'id_activo' && !(k === 'visible_produccion' && imp[k] === undefined)).reduce((acc, k) => {
+          const fields = Object.keys(LABELS).filter(k => k !== 'id_activo' && !(OPCIONALES.includes(k) && imp[k] === undefined)).reduce((acc, k) => {
             const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
@@ -5165,6 +5290,15 @@ const ActivosPage = {
           <label class="pv-check"><input type="checkbox" id="f-visprod"${activo?.visible_produccion === false ? '' : ' checked'}> ${t('x_visible_produccion')}</label>
           <small style="font-size:11px;color:var(--gray-muted)">${t('x_visible_produccion_tip')}</small>
         </div>
+        <div class="form-field full" style="grid-column:1/-1">
+          <label>${t('x_cp_titulo')}</label>
+          <div class="cp-controls">
+            <select class="form-input" id="f-cpniv" title="${UI.esc(t('x_cp_nivel'))}">${ConfigPage._cpNivOpts(activo?.criticidad_prod || '')}</select>
+            <input class="form-input" type="number" id="f-cppers" min="0" max="999" placeholder="${UI.esc(t('x_cp_personas'))}" value="${activo?.personas_paradas == null || activo?.personas_paradas === '' ? '' : UI.esc(String(activo.personas_paradas))}" oninput="if(this.value!==''){const s=document.getElementById('f-cpniv');s.value=UI.cpNivelPorPersonas(parseInt(this.value,10)||0);}">
+            <select class="form-input" id="f-cpalc" title="${UI.esc(t('x_cp_alcance'))}">${ConfigPage._cpAlcOpts(activo?.alcance_parada, false)}</select>
+          </div>
+          <small style="font-size:11px;color:var(--gray-muted)">${t('x_cp_tip')}</small>
+        </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        <button class="btn btn-primary" onclick="ActivosPage._saveActivo('${UI.esc(activo?.id_activo||'')}')">
@@ -5221,6 +5355,10 @@ const ActivosPage = {
         observaciones:  document.getElementById('f-observaciones').value.trim(),
         num: parseInt(document.getElementById('f-num').value) || 0,
         visible_produccion: document.getElementById('f-visprod') ? document.getElementById('f-visprod').checked : true,   // v10.7
+        // v10.9: impacto de la parada (columnas opcionales; DataService.saveActivo las quita si aún no existen)
+        criticidad_prod:  document.getElementById('f-cpniv') ? (document.getElementById('f-cpniv').value || null) : null,
+        personas_paradas: document.getElementById('f-cppers') && document.getElementById('f-cppers').value !== '' ? Math.max(0, parseInt(document.getElementById('f-cppers').value, 10) || 0) : null,
+        alcance_parada:   document.getElementById('f-cpalc') ? (document.getElementById('f-cpalc').value || null) : null,
       };
 
       // Guardar primero; sólo si tiene éxito eliminamos el registro antiguo
@@ -6976,7 +7114,7 @@ const IncidenciasPage = {
     </div>
     <div class="card">
       <div class="table-wrap">
-        <table class="table-clickable">
+        <table class="table-clickable" id="inc-table">
           <thead><tr>
             <th>${t('col_fecha')}</th><th>${t('col_almacen')}</th><th>${t('col_zona')}</th><th>${t('col_tipo')}</th>
             <th>${t('col_desc')}</th><th>${t('col_prioridad')}</th><th>${t('col_estado')}</th><th class="col-sec">${t('col_reportado')}</th>
@@ -7043,7 +7181,7 @@ const IncidenciasPage = {
         <td class="col-truncate" style="max-width:240px">${UI.esc(i.descripcion||'—')}</td>
         <td>${UI.criticidadBadge(i.prioridad)}</td>
         <td>${UI.estadoBadge(i.estado)}</td>
-        <td class="col-sec">${UI.esc(i.reportado_por||'—')}</td>
+        <td class="col-sec">${i.reportado_por ? UI.esc(i.reportado_por) : '<span class="td-empty">—</span>'}</td>
       </tr>`).join('');
   },
 
@@ -8852,7 +8990,8 @@ const ConfigPage = {
           <span class="card-title">${t('x_pv_titulo')}</span>
           <span class="badge badge-gray" id="pv-count"></span>
         </div>
-        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:12px">${t('x_pv_desc')}</p>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:6px">${t('x_pv_desc')}</p>
+        <p style="font-size:12px;color:var(--gray-muted);margin-bottom:12px">${t('x_cp_desc')}</p>
         <div class="toolbar filter-bar" style="margin-bottom:12px">
           <select class="filter-select" id="pv-almacen" onchange="ConfigPage._pvLoad()">
             ${['Miramar','Xeresa','Murcia','Alcacer','Algemesi'].map(a => `<option value="${a}"${(globalAlm ? normalizeAlmacen(globalAlm) : 'Miramar') === a ? ' selected' : ''}>${a}</option>`).join('')}
@@ -9221,7 +9360,7 @@ const ConfigPage = {
     if (!acts.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('x_pv_sin_activos')}</p>`; return; }
     const numSort = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
     const zonas = [...new Set(acts.map(a => a.zona))].sort(numSort);
-    list.innerHTML = zonas.map(z => {
+    list.innerHTML = zonas.map((z, zi) => {
       const enZona = acts.filter(a => a.zona === z);
       const zv = enZona.filter(a => a.visible_produccion !== false).length;
       const lineas = [...new Set(enZona.map(a => a.linea || ''))].sort(numSort);
@@ -9233,13 +9372,21 @@ const ConfigPage = {
           <button class="btn btn-secondary btn-sm" onclick="ConfigPage._pvSet(${ids}, true)">${t('x_pv_todas')}</button>
           <button class="btn btn-secondary btn-sm" onclick="ConfigPage._pvSet(${ids}, false)">${t('x_pv_ninguna')}</button>
         </div>
+        <div class="pv-zona-cp" title="${esc(t('x_cp_zona_tip'))}">
+          <span>${t('x_cp_titulo')}:</span>
+          <select id="pvz-niv-${zi}" title="${esc(t('x_cp_nivel'))}">${ConfigPage._cpNivOpts('')}</select>
+          <input type="number" id="pvz-pers-${zi}" min="0" max="999" placeholder="${esc(t('x_cp_personas'))}" title="${esc(t('x_cp_personas'))}">
+          <select id="pvz-alc-${zi}" title="${esc(t('x_cp_alcance'))}">${ConfigPage._cpAlcOpts('', true)}</select>
+          <button class="btn btn-secondary btn-sm" onclick="ConfigPage._cpAplicarZona(${ids}, ${zi})">${t('x_cp_zona_aplicar')}</button>
+        </div>
         ${lineas.map(l => {
           const ms = enZona.filter(a => (a.linea || '') === l).sort((a, b) => numSort(a.equipo || '', b.equipo || ''));
           return `<div class="pv-linea"><div class="pv-linea-head">${l ? `${t('lbl_linea')} ${esc(l)}` : t('x_pv_sin_linea')}</div>
-            ${ms.map(a => `<label class="pv-item${a.visible_produccion === false ? ' off' : ''}">
-              <input type="checkbox" data-id="${esc(a.id_activo)}"${a.visible_produccion === false ? '' : ' checked'} onchange="ConfigPage._pvSet(${esc(JSON.stringify([a.id_activo]))}, this.checked)">
-              <span class="pv-name">${esc(a.equipo || a.id_activo)}</span><small>${esc(a.tipo_maquina || '')}</small>
-            </label>`).join('')}
+            ${ms.map(a => `<div class="pv-item${a.visible_produccion === false ? ' off' : ''}">
+              <label class="pv-main"><input type="checkbox" data-id="${esc(a.id_activo)}"${a.visible_produccion === false ? '' : ' checked'} onchange="ConfigPage._pvSet(${esc(JSON.stringify([a.id_activo]))}, this.checked)">
+              <span class="pv-name">${esc(a.equipo || a.id_activo)}</span><small>${esc(a.tipo_maquina || '')}</small></label>
+              ${ConfigPage._cpControls(a)}
+            </div>`).join('')}
           </div>`;
         }).join('')}
       </div>`;
@@ -9255,6 +9402,75 @@ const ConfigPage = {
     } catch (e) {
       console.error('[pvSet]', e);
       toast(/visible_produccion/i.test(e.message || '') ? t('x_pv_error_col') : '❌ ' + e.message, 'error');
+    }
+    ConfigPage._pvRender();
+  },
+
+  // ── v10.9: criticidad por máquina (impacto de la parada) en Config › Producción ──
+  _cpNivOpts(v) {
+    return `<option value=""${v ? '' : ' selected'}>${t('x_cp_sin')}</option>`
+      + ['Baja', 'Media', 'Alta', 'Crítica'].map(n => `<option value="${n}"${v === n ? ' selected' : ''}>${UI.esc(tv('x_cpn_', n))}</option>`).join('');
+  },
+  _cpAlcOpts(v, conVacio) {
+    const sel = conVacio ? '' : (v || 'linea');
+    return (conVacio ? `<option value="" selected>${t('x_cp_alcance')}…</option>` : '')
+      + ['linea', 'zona', 'almacen', 'fijo'].map(x => `<option value="${x}"${sel === x ? ' selected' : ''}>${UI.esc(tv('x_cpa_', x))}</option>`).join('');
+  },
+  _cpControls(a) {
+    const esc = UI.esc, id = esc(JSON.stringify(a.id_activo));
+    const niv = a.criticidad_prod || '', cls = niv ? ' niv-' + UI.cpSlug(niv) : '';
+    const pers = a.personas_paradas == null || a.personas_paradas === '' ? '' : esc(String(a.personas_paradas));
+    return `<span class="pv-cp">
+      <select class="pv-niv${cls}" title="${esc(t('x_cp_nivel'))}" onchange="ConfigPage._cpSet(${id}, 'nivel', this.value)">${ConfigPage._cpNivOpts(niv)}</select>
+      <input type="number" class="pv-pers" min="0" max="999" placeholder="1" value="${pers}" title="${esc(t('x_cp_personas'))}" onchange="ConfigPage._cpSet(${id}, 'personas', this.value)">
+      <select class="pv-alc" title="${esc(t('x_cp_alcance'))}" onchange="ConfigPage._cpSet(${id}, 'alcance', this.value)">${ConfigPage._cpAlcOpts(a.alcance_parada, false)}</select>
+    </span>`;
+  },
+  async _cpSet(id, campo, valor) {
+    const a = ConfigPage._pv.activos.find(x => x.id_activo === id); if (!a) return;
+    const patch = {};
+    if (campo === 'nivel') {
+      patch.criticidad_prod = valor || null;
+      if (valor && (a.personas_paradas == null || a.personas_paradas === '')) patch.personas_paradas = UI.cpPersonasPorNivel(valor);
+    } else if (campo === 'personas') {
+      const n = valor === '' ? null : Math.max(0, parseInt(valor, 10) || 0);
+      patch.personas_paradas = n;
+      if (n != null) patch.criticidad_prod = UI.cpNivelPorPersonas(n);
+    } else if (campo === 'alcance') {
+      patch.alcance_parada = valor || null;
+    }
+    await ConfigPage._cpGuardar([id], patch, false);
+  },
+  async _cpAplicarZona(ids, zi) {
+    const niv = document.getElementById('pvz-niv-' + zi)?.value || '';
+    const pers = document.getElementById('pvz-pers-' + zi)?.value ?? '';
+    const alc = document.getElementById('pvz-alc-' + zi)?.value || '';
+    const patch = {};
+    if (niv) patch.criticidad_prod = niv;
+    if (pers !== '') { patch.personas_paradas = Math.max(0, parseInt(pers, 10) || 0); if (!niv) patch.criticidad_prod = UI.cpNivelPorPersonas(patch.personas_paradas); }
+    if (alc) patch.alcance_parada = alc;
+    if (!Object.keys(patch).length) { toast(t('x_cp_zona_vacio'), 'info'); return; }
+    if (niv && pers === '') {
+      // nivel sin personas: a las máquinas que aún no tienen personas se les pone el número orientativo del nivel
+      const sinPers = ids.filter(id => { const a = ConfigPage._pv.activos.find(x => x.id_activo === id); return a && (a.personas_paradas == null || a.personas_paradas === ''); });
+      const conPers = ids.filter(id => !sinPers.includes(id));
+      if (sinPers.length) await ConfigPage._cpGuardar(sinPers, { ...patch, personas_paradas: UI.cpPersonasPorNivel(niv) }, false);
+      if (conPers.length) await ConfigPage._cpGuardar(conPers, patch, false);
+      toast(tf('x_cp_guardado', { n: ids.length }), 'success');
+      return;
+    }
+    await ConfigPage._cpGuardar(ids, patch, true);
+  },
+  async _cpGuardar(ids, patch, aviso) {
+    if (!ids.length) return;
+    try {
+      await DataService.setActivosCriticidad(ids, patch);
+      const set = new Set(ids);
+      ConfigPage._pv.activos.forEach(a => { if (set.has(a.id_activo)) Object.assign(a, patch); });
+      if (aviso) toast(tf('x_cp_guardado', { n: ids.length }), 'success');
+    } catch (e) {
+      console.error('[cpGuardar]', e);
+      toast(/criticidad_prod|personas_paradas|alcance_parada/i.test(e.message || '') ? t('x_cp_error_col') : '❌ ' + e.message, 'error');
     }
     ConfigPage._pvRender();
   },
@@ -10358,6 +10574,11 @@ ALTER TABLE averias ADD COLUMN IF NOT EXISTS reportado_por TEXT DEFAULT '';
 -- Perfil Producción: qué máquinas ve producción al avisar (opcional; sin la columna se ven todas)
 ALTER TABLE activos ADD COLUMN IF NOT EXISTS visible_produccion BOOLEAN DEFAULT true;
 
+-- Criticidad por máquina (v10.9): impacto de la parada; lo usa el correo diario de averías (opcional)
+ALTER TABLE activos ADD COLUMN IF NOT EXISTS criticidad_prod TEXT;
+ALTER TABLE activos ADD COLUMN IF NOT EXISTS personas_paradas INTEGER;
+ALTER TABLE activos ADD COLUMN IF NOT EXISTS alcance_parada TEXT;
+
 -- Tabla partes_trabajo
 CREATE TABLE IF NOT EXISTS partes_trabajo (
   id           TEXT PRIMARY KEY,
@@ -10600,7 +10821,7 @@ CREATE POLICY "anon_all" ON cae_datos FOR ALL USING (true) WITH CHECK (true);`;
       // Almacén
       const almLabel = r.almacen || r._av.almacen || '—';
       // Materiales
-      let matsHtml = '—';
+      let matsHtml = '<span class="td-empty">—</span>';
       if (r.materiales) {
         try {
           const mats = JSON.parse(r.materiales);
@@ -12149,7 +12370,7 @@ const OrdenesPage = {
     </div>
     <div class="card">
       <div class="table-wrap">
-        <table class="table-clickable">
+        <table class="table-clickable" id="ot-table">
           <thead><tr>
             <th>${t('x_prevista')}</th><th>${t('col_almacen')}</th><th>${t('col_equipo')}</th><th>${t('x_titulo')}</th><th>${t('col_tipo')}</th><th class="col-sec">${t('x_origen')}</th><th>${t('col_estado')}</th><th>${t('col_tecnico')}</th>
           </tr></thead>
@@ -12212,14 +12433,14 @@ const OrdenesPage = {
     tbody.innerHTML = this._filtered.map(o => {
       const vencida = o.estado !== 'Cerrada' && o.fecha_prevista && o.fecha_prevista < hoy;
       return `<tr onclick="OrdenesPage.openDetail('${UI.esc(o.id)}')">
-        <td style="white-space:nowrap${vencida?';color:var(--red);font-weight:600':''}">${o.fecha_prevista ? UI.formatDate(o.fecha_prevista) : '—'}</td>
+        <td style="white-space:nowrap${vencida?';color:var(--red);font-weight:600':''}">${o.fecha_prevista ? UI.formatDate(o.fecha_prevista) : '<span class="td-empty">—</span>'}</td>
         <td>${UI.esc(o.almacen||'—')}</td>
-        <td>${UI.esc(o.equipo||'—')}</td>
+        <td>${o.equipo ? UI.esc(o.equipo) : '<span class="td-empty">—</span>'}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(o.titulo||'—')}</td>
         <td><span class="badge badge-${o.tipo==='Preventivo'?'blue':'red'}">${UI.esc(o.tipo||'—')}</span></td>
         <td class="col-sec">${this._origenBadge(o.origen)}</td>
         <td>${this._estadoBadge(o.estado)}</td>
-        <td>${UI.esc(o.tecnico||'—')}</td>
+        <td>${o.tecnico ? UI.esc(o.tecnico) : '<span class="td-empty">—</span>'}</td>
       </tr>`;
     }).join('');
   },
@@ -12804,9 +13025,17 @@ const ProduccionPage = {
         ${n ? `<span class="prod-block-badge">${n}</span>` : ''}
         <span class="prod-block-ico">${n ? '🔴' : '⚙️'}</span>
         <span class="prod-block-name">${esc(m.equipo||m.id_activo)}</span>
+        ${ProduccionPage._tipoEtiqueta(m)}
         <span class="prod-block-sub">${n ? t('x_prod_pulsa_otra') : t('x_prod_pulsa_avisar')}</span>
       </div>`;
     }).join('');
+  },
+  // v10.10: tipo de máquina (CA9S, PD2, GB…) bajo el nombre; se omite si el nombre ya lo contiene ("Paletizador 4")
+  _tipoEtiqueta(m) {
+    const norm = v => String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const tipo = String(m.tipo_maquina || '').trim();
+    if (!tipo || norm(m.equipo || m.id_activo).includes(norm(tipo))) return '';
+    return `<span class="prod-block-tipo">${UI.esc(tipo)}</span>`;
   },
 
   // ── Listado de averías abiertas del almacén ──────────────────────
