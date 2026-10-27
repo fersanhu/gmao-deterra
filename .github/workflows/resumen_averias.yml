@@ -1,18 +1,18 @@
 # GMAO · Resumen diario de averías
-# Cada día a las 06 (hora de Madrid) genera el resumen de AYER llamando a Supabase y lo publica en la
-# rama "resumen" de este repositorio (resumen/averias.html y resumen/averias.json). A las 06:52 una
-# tarea programada de Claude descarga ese archivo y lo envía por Outlook.
+# Cada mañana genera el resumen de averías de AYER llamando a Supabase y lo publica en la rama "resumen"
+# de este repositorio (resumen/averias.html y resumen/averias.json). Es la vía de RESERVA: la tarea
+# programada de Claude de las 06:52 llama a Supabase directamente y solo usa este archivo si falla.
 # No necesita ningún secreto: la clave anon (pública) se lee de la propia gmao.html.
 name: GMAO · Resumen diario de averías
 
 on:
   schedule:
-    # GitHub Actions va en UTC. Verano (UTC+2): 04:05/04:25/04:45 = 06:05/06:25/06:45 Madrid.
-    # Invierno (UTC+1): 05:05/05:25/05:45 = 06:05/06:25/06:45 Madrid. El paso "Generar" descarta
-    # las ejecuciones que no caen a las 06 de Madrid y las repetidas cuando ya está publicado.
-    - cron: '5,25,45 4 * * *'
-    - cron: '5,25,45 5 * * *'
-  workflow_dispatch:   # botón "Run workflow" para publicar a mano (sin restricción de hora)
+    # GitHub Actions va en UTC y RETRASA O SALTA muchas ejecuciones programadas (del 23 al 27/10/2026 solo
+    # arrancaron 9 de 30). Por eso se intenta cada 20 min entre las 04:00 y las 09:40 UTC (05:00–10:40 en
+    # invierno, 06:00–11:40 en verano, hora de Madrid): el primer intento que arranca publica el resumen de
+    # AYER y los siguientes ven que ya está publicado y no hacen nada (8 s).
+    - cron: '*/20 4-9 * * *'
+  workflow_dispatch:   # botón "Run workflow" para publicar a mano
 
 permissions:
   contents: write
@@ -35,12 +35,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HORA=$(TZ=Europe/Madrid date +%H)
           AYER=$(TZ=Europe/Madrid date -d yesterday +%F)
           saltar() { echo "$1"; echo "saltar=1" >> "$GITHUB_OUTPUT"; exit 0; }
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "$HORA" != "06" ]; then
-            saltar "En Madrid son las $HORA: esta ejecución no toca (solo a las 06)."
-          fi
           if [ "${{ github.event_name }}" = "schedule" ] && git fetch --depth=1 origin resumen 2>/dev/null; then
             F=$(git show FETCH_HEAD:resumen/averias.json 2>/dev/null | jq -r '.fecha // empty' || true)
             [ "$F" = "$AYER" ] && saltar "El resumen de $AYER ya está publicado."
