@@ -666,6 +666,24 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   #pt-tbody td:nth-child(9) .btn{width:100%;min-height:44px}
 }
 
+/* ── v10.11: panel de centros (Admin/Responsable): averías activas en cada centro ── */
+.cen-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.cen-card{border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:16px 12px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;transition:all .15s;user-select:none}
+.cen-card:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.cen-card-name{font-weight:700;font-size:15px;color:var(--gray-text);overflow-wrap:anywhere}
+.cen-card-num{font-size:36px;font-weight:700;line-height:1.1;color:var(--green)}
+.cen-card-sub{font-size:12px;color:var(--gray-muted)}
+.cen-card.alert{border-color:var(--red);background:var(--red-bg)}
+.cen-card.alert .cen-card-num,.cen-card.alert .cen-card-name{color:var(--red)}
+.cen-card.sel{outline:3px solid var(--green);outline-offset:2px}
+.cen-card.alert.sel{outline-color:var(--red)}
+.cen-h3{font-size:15px;margin-bottom:10px}
+@media (max-width:700px){
+  .cen-panel{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cen-card{border-width:3px;border-radius:12px;padding:18px 10px 14px}
+  .cen-card-name{font-size:17px}
+}
+
 /* ── v10.9: criticidad por máquina (impacto de la parada) en Config › Producción y en la ficha ── */
 .pv-item{flex-wrap:wrap}
 .pv-item .pv-main{display:flex;align-items:center;gap:10px;flex:1 1 200px;min-width:0;cursor:pointer}
@@ -876,6 +894,11 @@ th:last-child{border-top-right-radius:var(--radius)}
           <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="nav-group-items">
+          <div class="nav-item" data-route="centros" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18"/><path d="M7 21v-6h10v6"/><path d="M7 15v-4h10v4"/></svg>
+            <span class="nav-label" data-i18n="nav_centros">Centros</span>
+            <span class="nav-badge" id="badge-centros" style="display:none">0</span>
+          </div>
           <div class="nav-item" data-route="produccion" style="display:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
             <span class="nav-label" data-i18n="nav_produccion">Producción</span>
@@ -973,7 +996,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.10</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.11</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1080,6 +1103,11 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.11: panel de centros (averías activas por centro) ──
+      nav_centros:'Centros', x_cen_subtitulo:'Averías activas en cada centro. Pulsa un centro para ver sus averías y registrar una nueva.',
+      x_cen_activas:'Averías activas', x_cen_sin_activas:'Sin averías activas', x_cen_elige:'Pulsa un centro para ver sus averías activas.',
+      x_cen_nueva:'Registrar una avería nueva', x_cen_ficha:'Ficha', x_cen_cerrar:'✔ Cerrar', x_cen_tiempo:'Tiempo que lleva activa',
+      x_cen_registrar:'Registrar avería', x_cen_registrada:'✅ Avería {id} registrada',
       // ── v10.9: criticidad por máquina (impacto de la parada) ──
       x_cp_titulo:'Impacto si se para', x_cp_desc:'Impacto de cada máquina si se para: nivel, personas que se quedan paradas y a quién afecta (su línea, toda la zona, todo el almacén o un número fijo). Lo usa el correo diario de averías. Sin dato cuenta como Media · 1 persona.',
       x_cp_tip:'Cuánta gente se queda parada si falla esta máquina. Al escribir las personas, el nivel se propone solo (0-1 Baja, 2-4 Media, 5-9 Alta, 10+ Crítica) y se puede cambiar.',
@@ -1370,6 +1398,11 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.11: panel de centros (averías activas por centro) ──
+      nav_centros:'Sites', x_cen_subtitulo:'Active breakdowns at each site. Tap a site to see its breakdowns and log a new one.',
+      x_cen_activas:'Active breakdowns', x_cen_sin_activas:'No active breakdowns', x_cen_elige:'Tap a site to see its active breakdowns.',
+      x_cen_nueva:'Log a new breakdown', x_cen_ficha:'Details', x_cen_cerrar:'✔ Close', x_cen_tiempo:'Time active',
+      x_cen_registrar:'Log breakdown', x_cen_registrada:'✅ Breakdown {id} logged',
       // ── v10.9: criticidad por máquina (impacto de la parada) ──
       x_cp_titulo:'Impact if it stops', x_cp_desc:'Impact of each machine when it stops: level, people left idle and who is affected (its line, the whole area, the whole warehouse or a fixed number). Used by the daily breakdown email. No data counts as Medium · 1 person.',
       x_cp_tip:'How many people are left idle if this machine fails. When you type the people, the level is proposed automatically (0-1 Low, 2-4 Medium, 5-9 High, 10+ Critical) and can be changed.',
@@ -1660,6 +1693,11 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.11: panel de centros (averías activas por centro) ──
+      nav_centros:'المراكز', x_cen_subtitulo:'الأعطال النشطة في كل مركز. اضغط على مركز لعرض أعطاله وتسجيل عطل جديد.',
+      x_cen_activas:'الأعطال النشطة', x_cen_sin_activas:'لا توجد أعطال نشطة', x_cen_elige:'اضغط على مركز لعرض أعطاله النشطة.',
+      x_cen_nueva:'تسجيل عطل جديد', x_cen_ficha:'البطاقة', x_cen_cerrar:'✔ إغلاق', x_cen_tiempo:'المدة منذ بدء العطل',
+      x_cen_registrar:'تسجيل العطل', x_cen_registrada:'✅ تم تسجيل العطل {id}',
       // ── v10.9: criticidad por máquina (impacto de la parada) ──
       x_cp_titulo:'الأثر عند التوقف', x_cp_desc:'أثر كل آلة عند توقفها: المستوى، عدد الأشخاص المتوقفين ومن يتأثر (خطها، المنطقة كلها، المستودع كله أو عدد ثابت). يستخدمه البريد اليومي للأعطال. بدون بيانات تُحسب متوسطة · شخص واحد.',
       x_cp_tip:'كم شخصًا يتوقف إذا تعطلت هذه الآلة. عند كتابة عدد الأشخاص يُقترح المستوى تلقائيًا (0-1 منخفض، 2-4 متوسط، 5-9 عالٍ، 10+ حرج) ويمكن تغييره.',
@@ -3269,12 +3307,13 @@ const Router = {
 
     const fn = this._routes[base] || this._routes['averias'];
     if (base !== 'produccion' && typeof ProduccionPage !== 'undefined') ProduccionPage._stopAutoRefresh();
+    if (base !== 'centros' && typeof CentrosPage !== 'undefined') { CentrosPage._stopAutoRefresh(); ProduccionPage._host = null; }   // v10.11
 
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { produccion:t('x_prod_titulo'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
+    const titles = { produccion:t('x_prod_titulo'), centros:t('nav_centros'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -5527,7 +5566,10 @@ const AveriasPage = {
 
   // Recarga datos y re-aplica los filtros SIN reconstruir la página.
   async _reload() {
-    if (!document.getElementById('av-tbody')) return this.render();
+    if (!document.getElementById('av-tbody')) {
+      if (typeof CentrosPage !== 'undefined' && CentrosPage.isOpen()) return CentrosPage.refresh();   // v10.11: ficha abierta desde el panel de centros
+      return this.render();
+    }
     const almacenGlobal = getAlmacenFilter();
     const [_averias, _fotos] = await Promise.all([
       DataService.getAverias(almacenGlobal ? { almacen: almacenGlobal } : {}),
@@ -10304,7 +10346,7 @@ const App = {
       el.style.display = UserService.canManageConfig() ? '' : 'none';
     });
     // Rutas restringidas a Admin/Responsable
-    ['dashboard','cae','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones','planes','preventivos'].forEach(route => {
+    ['centros','dashboard','cae','partes-analisis','activos','incidencias','inventario','movimientos','inspecciones','planes','preventivos'].forEach(route => {
       document.querySelectorAll(`.nav-item[data-route="${route}"]`).forEach(el => {
         el.style.display = isPriv ? '' : 'none';
       });
@@ -10375,6 +10417,7 @@ const App = {
       const bP = document.getElementById('badge-preventivos');
       if (bP) { bP.textContent = pend.length; bP.style.display = pend.length > 0 ? '' : 'none'; }
     } catch (_) {}
+    try { await CentrosPage.updateBadge(); } catch (_) {}   // v10.11
     NavGroups.refreshDots();
   },
 
@@ -12883,10 +12926,12 @@ const ProduccionPage = {
   _timer: null,
   _refreshTimer: null,
   _REFRESH_MS: 30 * 1000,
+  _host: null,   // v10.11: CentrosPage cuando la navegación de máquinas se usa desde el panel de centros
   _ASK_KEY: 'gmao_prod_last_ask',
   _ASK_EVERY_MS: 15 * 60 * 1000,
 
   _almacen() {
+    if (this._host) return this._host._sel;
     const u = UserService.getUser();
     if (!u) return '';
     // Producción/Mecánico: su centro. Admin: filtro global (o vacío = elegir).
@@ -12902,6 +12947,10 @@ const ProduccionPage = {
       DataService.getAverias(alm ? { almacen: alm } : {}),
       DataService.getTecnicos(true),
     ]);
+    this._setDatos(alm, activos, averias, tecnicos);
+  },
+  // v10.11: también lo usa CentrosPage con los datos del centro seleccionado
+  _setDatos(alm, activos, averias, tecnicos) {
     this._activos  = activos.filter(a => a.zona && a.visible_produccion !== false);   // v10.7: solo las marcadas como visibles para producción
     this._abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso');
     // Técnicos asignables: mecánicos/responsables del centro (o de todos si Admin sin centro)
@@ -12930,6 +12979,7 @@ const ProduccionPage = {
   },
 
   async render() {
+    this._host = null;
     const alm = this._almacen();
     if (!alm) {
       document.getElementById('content').innerHTML = `
@@ -13063,6 +13113,14 @@ const ProduccionPage = {
     const n = this._abiertas.length;
     b.textContent = n; b.style.display = n > 0 ? '' : 'none';
   },
+  // v10.11: tras guardar o cerrar, refresca la vista abierta (Producción o el panel de Centros)
+  async _afterChange() {
+    if (this._host) { await this._host.refresh(); return; }
+    if (window.location.hash.slice(1) !== 'produccion') return;
+    await this._load();
+    this._renderLevel(); this._renderOpenList(); this._updateBadge();
+  },
+  _btnTxt() { return UserService.isProduccion() ? t('x_prod_avisar_mant') : t('x_cen_registrar'); },
 
   // ── Alta rápida de avería desde una máquina ──────────────────────
   openNew(id_activo) {
@@ -13101,7 +13159,7 @@ const ProduccionPage = {
         </div>
       </div>`,
       `<div class="prod-big-actions">
-        <button class="btn btn-primary" id="prod-save-btn" onclick="ProduccionPage._save('${esc(id_activo)}')">${t('x_prod_avisar_mant')}</button>
+        <button class="btn btn-primary" id="prod-save-btn" onclick="ProduccionPage._save('${esc(id_activo)}')">${this._btnTxt()}</button>
         <button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
        </div>`);
     setTimeout(() => document.getElementById('prod-save-btn')?.focus(), 80);
@@ -13125,11 +13183,12 @@ const ProduccionPage = {
       const ts = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
       const id = `AV-${ds}-${ts}`;
       const user = UserService.getUser();
+      const origen = UserService.isProduccion() ? 'producción' : 'mantenimiento';   // v10.11: también desde el panel de centros
       const averia = {
         id, id_activo: m.id_activo,
         fecha_inicio: now.toISOString().slice(0,10),
         hora_inicio: (hora || `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`) + ':00',
-        descripcion: desc || (crit === 'Alta' ? 'Máquina parada — aviso de producción' : 'Aviso de producción'),
+        descripcion: desc || (crit === 'Alta' ? `Máquina parada — aviso de ${origen}` : `Aviso de ${origen}`),
         tecnico: tec,
         tipo: '',
         criticidad: crit, estado: 'Abierta',
@@ -13138,22 +13197,21 @@ const ProduccionPage = {
       };
       // reportado_por es una columna opcional (ver SQL en Config). Si no existe, guardamos sin ella.
       try {
-        await DataService.saveAveria({ ...averia, reportado_por: `Producción · ${user?.nombre || ''}` });
+        await DataService.saveAveria({ ...averia, reportado_por: `${origen === 'producción' ? 'Producción' : 'Mantenimiento'} · ${user?.nombre || ''}` });
       } catch (e) {
         if (/reportado_por/i.test(e.message || '')) await DataService.saveAveria(averia);
         else throw e;
       }
       Modal.close();
-      toast(tf('x_prod_enviada', { id }), 'success');
-      await this._load();
-      this._renderLevel(); this._renderOpenList(); this._updateBadge();
+      toast(tf(origen === 'producción' ? 'x_prod_enviada' : 'x_cen_registrada', { id }), 'success');
+      await this._afterChange();
       App.updateBadges();
     } catch (e) {
       console.error('[Produccion._save]', e);
       toast(t('x_prod_no_registrar') + ' ' + e.message, 'error');
     } finally {
       this._saving = false;
-      if (btn) { btn.disabled = false; btn.textContent = t('x_prod_avisar_mant'); }
+      if (btn) { btn.disabled = false; btn.textContent = this._btnTxt(); }
     }
   },
 
@@ -13175,12 +13233,10 @@ const ProduccionPage = {
       const min = Math.max(0, Math.round((now - ini) / 60000));
       duracion = `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}:00`;
     } catch(_) {}
-    const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por producción (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}`;
+    const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por ${UserService.isProduccion() ? 'producción' : 'mantenimiento'} (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}`;
     await DataService.saveAveria({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol });
     if (!silent) toast(tf('x_prod_cerrada', { id }), 'success');
-    if (window.location.hash.slice(1) === 'produccion') {
-      await this._load(); this._renderLevel(); this._renderOpenList(); this._updateBadge();
-    }
+    await this._afterChange();
     App.updateBadges();
     return true;
   },
@@ -13252,9 +13308,198 @@ const ProduccionPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PAGE: CENTROS (v10.11) — averías activas en cada centro, para Admin y Responsable.
+// Tarjeta por centro; al pulsar una: lista de averías activas (Ficha / ✔ Cerrar) y navegación
+// Zona → Línea → Máquina para registrar una nueva (reutiliza ProduccionPage con _host = CentrosPage).
+// ═══════════════════════════════════════════════════════════════════
+const CentrosPage = {
+  _sel: '',
+  _activas: [],
+  _refreshTimer: null,
+  _REFRESH_MS: 30 * 1000,
+
+  isOpen() { return window.location.hash.slice(1) === 'centros' && !!document.getElementById('cen-panel'); },
+
+  // Centro al que está limitado el usuario ('' = todos): Responsable → el suyo; Admin → el del filtro global si lo ha fijado
+  _limite() {
+    const eff = UserService.getEffectiveAlmacen();
+    if (eff && eff !== 'Todos') return eff;
+    return normalizeAlmacen(document.getElementById('global-almacen-filter')?.value || '');
+  },
+
+  async _fetchActivas() {
+    const [ab, ec] = await Promise.all([
+      db.averias.where('estado').equals('Abierta').toArray(),
+      db.averias.where('estado').equals('En curso').toArray(),
+    ]);
+    const lim = this._limite();
+    return [...ab, ...ec]
+      .filter(a => !lim || normalizeAlmacen(a.almacen) === lim)
+      .sort((a, b) => (b.fecha_inicio || '').localeCompare(a.fecha_inicio || '') || (b.hora_inicio || '').localeCompare(a.hora_inicio || ''));
+  },
+  async _load() { this._activas = await this._fetchActivas(); },
+
+  // Centros en el orden del selector global + los que aparezcan en averías con otro nombre
+  _centros() {
+    const lim = this._limite();
+    if (lim) return [lim];
+    const base = [...document.querySelectorAll('#global-almacen-filter option')].map(o => normalizeAlmacen(o.value)).filter(Boolean);
+    const extra = [...new Set(this._activas.map(a => normalizeAlmacen(a.almacen)).filter(Boolean))].filter(c => !base.includes(c)).sort();
+    return [...base, ...extra];
+  },
+  _deCentro(alm) { return this._activas.filter(a => normalizeAlmacen(a.almacen) === alm); },
+  _ajustarSel() {
+    const centros = this._centros();
+    if (!centros.includes(this._sel)) this._sel = centros.length === 1 ? centros[0] : '';
+  },
+
+  async render() {
+    ProduccionPage._host = this;
+    await this._load();
+    this._ajustarSel();
+    document.getElementById('content').innerHTML = `
+      <div class="page-header">
+        <div><h1>${t('nav_centros')}</h1><p class="page-subtitle">${t('x_cen_subtitulo')}</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span id="cen-last-refresh" style="font-size:11px;color:var(--gray-muted)">${t('x_prod_auto_refresh')}</span>
+          <button class="btn btn-secondary btn-sm" onclick="CentrosPage.render()">${t('x_prod_actualizar')}</button>
+        </div>
+      </div>
+      <div id="cen-panel" class="cen-panel"></div>
+      <div id="cen-detail"></div>`;
+    this._renderPanel();
+    await this._renderDetail(false);
+    this._updateBadge();
+    this._startAutoRefresh();
+  },
+
+  _renderPanel() {
+    const panel = document.getElementById('cen-panel'); if (!panel) return;
+    const esc = UI.esc;
+    panel.innerHTML = this._centros().map(c => {
+      const avs = this._deCentro(c);
+      const nAb = avs.filter(a => a.estado === 'Abierta').length, nEc = avs.length - nAb;
+      const sub = avs.length
+        ? `${nAb} ${t('abiertas')}${nEc ? ` · ${nEc} ${tv('opt_', 'En curso').toLowerCase()}` : ''}`
+        : t('x_cen_sin_activas');
+      return `<div class="cen-card${avs.length ? ' alert' : ''}${c === this._sel ? ' sel' : ''}" onclick="CentrosPage._select('${esc(c)}')">
+        <span class="cen-card-name">${esc(c)}</span>
+        <span class="cen-card-num">${avs.length || '✓'}</span>
+        <span class="cen-card-sub">${sub}</span>
+      </div>`;
+    }).join('');
+  },
+
+  async _select(alm) {
+    if (alm === this._sel) return;
+    this._sel = alm;
+    this._renderPanel();
+    await this._renderDetail(false);
+    if (window.innerWidth <= 700) document.getElementById('cen-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  // Detalle del centro seleccionado: averías activas + máquinas para registrar una nueva
+  async _renderDetail(keepLevel) {
+    const box = document.getElementById('cen-detail'); if (!box) return;
+    if (!this._sel) { box.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('x_cen_elige')}</p>`; return; }
+    const esc = UI.esc;
+    const avs = this._deCentro(this._sel);
+    if (!keepLevel || !document.getElementById('prod-grid')) {
+      box.innerHTML = `
+        <h3 class="cen-h3">${t('x_cen_activas')} · ${esc(this._sel)} <span class="badge badge-red" id="cen-open-count"></span></h3>
+        <div id="cen-open-list" class="prod-open-list"></div>
+        <h3 class="cen-h3" style="margin-top:26px">${t('x_cen_nueva')}</h3>
+        <p style="font-size:12px;color:var(--gray-muted);margin-bottom:10px">${t('x_prod_subtitulo')}</p>
+        <div id="prod-crumb" class="prod-crumb"></div>
+        <div id="prod-grid" class="prod-grid"></div>`;
+      ProduccionPage._zona = ''; ProduccionPage._linea = '';
+    }
+    this._renderOpenList(avs);
+    const sel = this._sel;
+    const [activos, tecnicos] = await Promise.all([
+      db.activos.where('almacen').equals(sel).toArray(),
+      DataService.getTecnicos(true),
+    ]);
+    if (sel !== this._sel || !document.getElementById('prod-grid')) return;   // cambió de centro o salió mientras cargaba
+    ProduccionPage._setDatos(sel, activos, avs, tecnicos);
+    ProduccionPage._renderLevel();
+  },
+
+  _renderOpenList(avs) {
+    const list = document.getElementById('cen-open-list'); if (!list) return;
+    const cnt = document.getElementById('cen-open-count'); if (cnt) cnt.textContent = avs.length;
+    if (!avs.length) { list.innerHTML = `<p style="color:var(--gray-muted);font-size:13px">${t('x_cen_sin_activas')}</p>`; return; }
+    const esc = UI.esc;
+    list.innerHTML = avs.map(a => {
+      const linea = a.linea ? ' · ' + (/^\d+$/.test(String(a.linea)) ? 'L' : '') + esc(String(a.linea)) : '';
+      const tiempo = this._tiempo(a);
+      return `
+      <div class="prod-open-item${a.estado === 'En curso' ? ' encurso' : ''}">
+        <div class="txt">
+          <b>${esc(a.equipo || '—')} <small style="display:inline;color:var(--gray-muted)">· ${esc(a.zona || '')}${linea}</small> ${UI.criticidadBadge(a.criticidad)}</b>
+          <small title="${esc(a.descripcion || '')}">${esc(a.descripcion || '')}</small>
+          <small>${esc(a.fecha_inicio || '')} ${esc((a.hora_inicio || '').slice(0,5))} · ${esc(tv('opt_', a.estado))}${a.tecnico ? ' · ' + esc(a.tecnico) : ''}${tiempo ? ` · <span title="${t('x_cen_tiempo')}">⏱ ${tiempo}</span>` : ''}</small>
+        </div>
+        <div class="acts">
+          <button class="btn btn-secondary btn-sm" onclick="AveriasPage.openDetail('${esc(a.id)}')">${t('x_cen_ficha')}</button>
+          <button class="btn btn-secondary btn-sm" onclick="CentrosPage.cerrar('${esc(a.id)}')">${t('x_cen_cerrar')}</button>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  // Tiempo que lleva activa desde fecha/hora de inicio; '' si la fecha no se entiende
+  _tiempo(a) {
+    const d = new Date(`${a.fecha_inicio || ''}T${a.hora_inicio || '00:00:00'}`);
+    if (isNaN(d)) return '';
+    const min = Math.max(0, Math.round((Date.now() - d) / 60000));
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 48) return `${h} h ${String(min % 60).padStart(2, '0')} min`;
+    return `${Math.floor(h / 24)} d ${h % 24} h`;
+  },
+
+  async cerrar(id) { await ProduccionPage.confirmResuelta(id); },
+
+  async refresh() {
+    if (!this.isOpen()) return;
+    await this._load();
+    this._ajustarSel();
+    this._renderPanel();
+    await this._renderDetail(true);
+    this._updateBadge();
+    const el = document.getElementById('cen-last-refresh');
+    if (el) el.textContent = t('x_prod_actualizado') + ' ' + new Date().toTimeString().slice(0, 5);
+  },
+
+  _startAutoRefresh() { this._stopAutoRefresh(); this._refreshTimer = setInterval(() => this._autoRefresh(), this._REFRESH_MS); },
+  _stopAutoRefresh() { if (this._refreshTimer) { clearInterval(this._refreshTimer); this._refreshTimer = null; } },
+  async _autoRefresh() {
+    if (!this.isOpen()) { this._stopAutoRefresh(); return; }
+    if (document.visibilityState !== 'visible') return;
+    if (document.getElementById('modal-overlay')?.classList.contains('open')) return;
+    try { await this.refresh(); } catch (e) { console.warn('[Centros autoRefresh]', e); }
+  },
+
+  _updateBadge() {
+    const b = document.getElementById('badge-centros'); if (!b) return;
+    const n = this._activas.length;
+    b.textContent = n; b.style.display = n > 0 ? '' : 'none';
+  },
+  // Lo llama App.updateBadges (también sin estar en la pantalla)
+  async updateBadge() {
+    const b = document.getElementById('badge-centros'); if (!b) return;
+    if (!(UserService.isAdmin() || UserService.isResponsable())) { b.style.display = 'none'; return; }
+    if (!this.isOpen()) this._activas = await this._fetchActivas();
+    this._updateBadge();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
 Router.register('produccion',      async () => ProduccionPage.render());
+Router.register('centros',         async () => CentrosPage.render());
 Router.register('dashboard',       async () => DashboardPage.render());
 Router.register('partes-analisis', async () => PartesAnalisisPage.render());
 Router.register('activos',         async () => ActivosPage.render());
