@@ -1000,7 +1000,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.12</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.13</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1107,6 +1107,15 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.13: integración Solved ──
+      opt_pend_validar:'Pendiente de validar', x_sv_enviar_validar:'✓ Enviar a validar', x_sv_enviada:'Enviada a validar ✓ (Solved la cerrará al validarla)',
+      x_sv_resolver_desc:'Esta incidencia viene de Solved: al marcarla resuelta pasa a "Pendiente de validar" y Solved la cierra cuando calidad la valide.',
+      x_sv_bloqueada:'Pendiente de que Solved la valide y la cierre.', x_sv_ref:'Ref. Solved', x_sv_estado_solved:'Estado en Solved', x_sv_ref_externa:'OT / avería enviada',
+      x_sv_sync_ok:'Sincronizada con Solved', x_sv_sync_err:'Error al enviar a Solved', x_sv_sync_aviso:'Aviso de Solved', x_sv_reintentar:'↻ Reintentar envío a Solved',
+      x_sv_reintento_ok:'Enviado a Solved ✓', x_sv_reintento_err:'Solved no lo ha aceptado:',
+      x_sv_card:'Solved (incidencias de planta)', x_sv_desc:'Las incidencias de Mantenimiento creadas en Solved entran aquí solas (webhook) y los cambios se devuelven a Solved: generar OT o avería → En curso, resolver → pendiente de validar, y Solved la cierra al validarla. Requiere ejecutar solved_setup.sql y desplegar solved-webhook y solved-push (guía supabase/DESPLIEGUE_SOLVED.md).',
+      x_sv_url:'URL del webhook (dársela a Solved)', x_sv_copiar:'Copiar', x_sv_copiada:'URL copiada', x_sv_registro:'📋 Registro de Solved', x_sv_recibidos:'Últimos webhooks recibidos', x_sv_enviados:'Últimos envíos a Solved',
+      x_sv_vacio:'Nada todavía', x_sv_no_tablas:'Tablas de Solved no encontradas: ejecuta solved_setup.sql en Supabase.',
       // ── v10.12: compresión de fotos ──
       x_cf_card:'Fotos de averías', x_cf_desc:'Las fotos nuevas se comprimen al subirlas (máx. 1600 px, unos 300 KB). Las subidas antes de la v10.12 ocupan hasta 5 MB cada una: este botón las recomprime en su sitio (misma dirección) para liberar espacio en Supabase.',
       x_cf_boton:'📷 Comprimir fotos antiguas', x_cf_titulo:'Comprimir fotos antiguas', x_cf_analizando:'Analizando las fotos del almacenamiento…',
@@ -1409,6 +1418,15 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.13: integración Solved ──
+      opt_pend_validar:'Pending validation', x_sv_enviar_validar:'✓ Send for validation', x_sv_enviada:'Sent for validation ✓ (Solved will close it once validated)',
+      x_sv_resolver_desc:'This incident comes from Solved: marking it resolved sets it to "Pending validation" and Solved closes it once quality validates it.',
+      x_sv_bloqueada:'Waiting for Solved to validate and close it.', x_sv_ref:'Solved ref.', x_sv_estado_solved:'Status in Solved', x_sv_ref_externa:'WO / breakdown sent',
+      x_sv_sync_ok:'Synced with Solved', x_sv_sync_err:'Error sending to Solved', x_sv_sync_aviso:'Solved notice', x_sv_reintentar:'↻ Retry sending to Solved',
+      x_sv_reintento_ok:'Sent to Solved ✓', x_sv_reintento_err:'Solved did not accept it:',
+      x_sv_card:'Solved (plant incidents)', x_sv_desc:'Maintenance incidents created in Solved arrive here automatically (webhook) and changes go back to Solved: generating a WO or breakdown → In progress, resolving → pending validation, and Solved closes it once validated. Requires running solved_setup.sql and deploying solved-webhook and solved-push (guide supabase/DESPLIEGUE_SOLVED.md).',
+      x_sv_url:'Webhook URL (give it to Solved)', x_sv_copiar:'Copy', x_sv_copiada:'URL copied', x_sv_registro:'📋 Solved log', x_sv_recibidos:'Latest webhooks received', x_sv_enviados:'Latest sends to Solved',
+      x_sv_vacio:'Nothing yet', x_sv_no_tablas:'Solved tables not found: run solved_setup.sql in Supabase.',
       // ── v10.12: compresión de fotos ──
       x_cf_card:'Breakdown photos', x_cf_desc:'New photos are compressed on upload (max. 1600 px, about 300 KB). Photos uploaded before v10.12 take up to 5 MB each: this button recompresses them in place (same address) to free space in Supabase.',
       x_cf_boton:'📷 Compress old photos', x_cf_titulo:'Compress old photos', x_cf_analizando:'Analysing the photos in storage…',
@@ -1711,6 +1729,15 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.13: integración Solved ──
+      opt_pend_validar:'بانتظار التحقق', x_sv_enviar_validar:'✓ إرسال للتحقق', x_sv_enviada:'أُرسلت للتحقق ✓ (Solved سيغلقها بعد التحقق)',
+      x_sv_resolver_desc:'هذه الحادثة قادمة من Solved: عند تعليمها كمحلولة تنتقل إلى "بانتظار التحقق" ويغلقها Solved بعد تحقق الجودة.',
+      x_sv_bloqueada:'بانتظار أن يتحقق Solved منها ويغلقها.', x_sv_ref:'مرجع Solved', x_sv_estado_solved:'الحالة في Solved', x_sv_ref_externa:'أمر العمل / العطل المرسل',
+      x_sv_sync_ok:'متزامنة مع Solved', x_sv_sync_err:'خطأ في الإرسال إلى Solved', x_sv_sync_aviso:'تنبيه من Solved', x_sv_reintentar:'↻ إعادة الإرسال إلى Solved',
+      x_sv_reintento_ok:'أُرسلت إلى Solved ✓', x_sv_reintento_err:'لم يقبلها Solved:',
+      x_sv_card:'Solved (حوادث المصنع)', x_sv_desc:'حوادث الصيانة المنشأة في Solved تصل هنا تلقائياً (webhook) وتعود التغييرات إلى Solved: إنشاء أمر عمل أو عطل ← جارٍ، الحل ← بانتظار التحقق، ويغلقها Solved بعد التحقق. يتطلب تنفيذ solved_setup.sql ونشر solved-webhook و solved-push (الدليل supabase/DESPLIEGUE_SOLVED.md).',
+      x_sv_url:'عنوان الويب هوك (يُعطى إلى Solved)', x_sv_copiar:'نسخ', x_sv_copiada:'تم نسخ العنوان', x_sv_registro:'📋 سجل Solved', x_sv_recibidos:'آخر الويب هوك المستلمة', x_sv_enviados:'آخر الإرسالات إلى Solved',
+      x_sv_vacio:'لا شيء بعد', x_sv_no_tablas:'جداول Solved غير موجودة: نفّذ solved_setup.sql في Supabase.',
       // ── v10.12: compresión de fotos ──
       x_cf_card:'صور الأعطال', x_cf_desc:'تُضغط الصور الجديدة عند رفعها (بحد أقصى 1600 بكسل، نحو 300 كيلوبايت). الصور المرفوعة قبل الإصدار 10.12 تشغل حتى 5 ميغابايت لكل واحدة: هذا الزر يعيد ضغطها في مكانها (نفس العنوان) لتحرير مساحة في Supabase.',
       x_cf_boton:'📷 ضغط الصور القديمة', x_cf_titulo:'ضغط الصور القديمة', x_cf_analizando:'جارٍ تحليل الصور في التخزين…',
@@ -2747,7 +2774,18 @@ const DataService = {
     arr.sort((a,b) => (b.fecha_registro||'').localeCompare(a.fecha_registro||''));
     return arr;
   },
-  async saveIncidencia(data) { return db.incidencias.put(data); },
+  async saveIncidencia(data) {
+    // v10.13: si Supabase rechaza una columna de la integración Solved (solved_setup.sql sin ejecutar), se quita y se reintenta
+    const d = { ...data };
+    for (let i = 0; i < 8; i++) {
+      try { return await db.incidencias.put(d); }
+      catch (e) {
+        const m = (e.message || '').match(/ref_externa|solved_id|solved_ref|solved_status|solved_plant|solved_sync|solved_updated_at/i);
+        if (m && m[0].toLowerCase() in d) { delete d[m[0].toLowerCase()]; continue; }
+        throw e;
+      }
+    }
+  },
 
   async getInventario(filters = {}) {
     let arr = await db.inventario.toArray();
@@ -3191,8 +3229,8 @@ const UI = {
   },
   estadoBadge(e) {
     if (!e) return '<span class="badge badge-gray">—</span>';
-    const map = { Abierta:'red', 'En curso':'orange', Cerrada:'gray' };
-    const lbl = { Abierta:t('opt_abierta'), 'En curso':t('opt_en_curso'), Cerrada:t('opt_cerrada') };
+    const map = { Abierta:'red', 'En curso':'orange', 'Pendiente de validar':'orange', Cerrada:'gray' };
+    const lbl = { Abierta:t('opt_abierta'), 'En curso':t('opt_en_curso'), 'Pendiente de validar':t('opt_pend_validar'), Cerrada:t('opt_cerrada') };
     return `<span class="badge badge-${map[e]||'gray'}">${lbl[e]||this.esc(e)}</span>`;
   },
   activoEstadoBadge(e) {
@@ -5502,6 +5540,7 @@ const AveriasPage = {
   _data: [],
   _filtered: [],
   _prefillFromIncidencia: null,
+  _incidenciaOrigen: null,   // v10.13: id de la incidencia desde la que se está creando la avería
   _pendingFilter: null,
   _extraFilter: null,
 
@@ -6555,6 +6594,12 @@ const AveriasPage = {
     Modal.close();
     AveriasPage._saving = false;
     toast(`Avería ${id} ${cerrarAhora ? 'cerrada' : 'registrada'} ✓`, 'success');
+    // v10.13: avería creada desde una incidencia → En curso y referencia externa (Solved recibe open + externalRef)
+    if (AveriasPage._incidenciaOrigen) {
+      const incId = AveriasPage._incidenciaOrigen; AveriasPage._incidenciaOrigen = null;
+      try { const inc = await db.incidencias.get(incId); if (inc && inc.estado !== 'Cerrada') await DataService.saveIncidencia({ ...inc, estado: 'En curso', ref_externa: id }); }
+      catch (e) { console.warn('[incidencia origen]', e); }
+    }
     App.updateBadges();
     await AveriasPage._reload();
 
@@ -7193,7 +7238,7 @@ const IncidenciasPage = {
         <select class="filter-select" id="inc-f-estado">
           <option value="__abiertas" selected>${t('opt_abierta')}s</option>
           <option value="">${t('todos_estados')}</option>
-          <option value="Abierta">${t('opt_abierta')}</option><option value="En curso">${t('opt_en_curso')}</option><option value="Cerrada">${t('opt_cerrada')}</option>
+          <option value="Abierta">${t('opt_abierta')}</option><option value="En curso">${t('opt_en_curso')}</option><option value="Pendiente de validar">${t('opt_pend_validar')}</option><option value="Cerrada">${t('opt_cerrada')}</option>
         </select>
         <select class="filter-select" id="inc-f-tipo">
           <option value="">${t('todos_tipos')}</option>
@@ -7235,7 +7280,7 @@ const IncidenciasPage = {
     this._data = await DataService.getIncidencias(almacen ? { almacen } : {});
     this._data.sort((a, b) => ((b.fecha_registro||'') + (b.hora_registro||'')).localeCompare((a.fecha_registro||'') + (a.hora_registro||'')) || String(b.id||'').localeCompare(String(a.id||'')));
     this._applyFilters();
-    const abiertas = this._data.filter(i => i.estado === 'Abierta' || i.estado === 'En curso').length;
+    const abiertas = this._data.filter(i => i.estado !== 'Cerrada').length;
     const c = document.getElementById('inc-count');
     if (c) c.textContent = `${this._data.length} ${t('nav_incidencias')} — ${abiertas} ${t('activas')}`;
   },
@@ -7269,7 +7314,7 @@ const IncidenciasPage = {
         <td><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></td>
         <td class="col-truncate" style="max-width:240px">${UI.esc(i.descripcion||'—')}</td>
         <td>${UI.criticidadBadge(i.prioridad)}</td>
-        <td>${UI.estadoBadge(i.estado)}</td>
+        <td>${UI.estadoBadge(i.estado)}${i.solved_id ? ` <span class="badge badge-blue" title="${UI.esc(i.solved_ref||'')}">Solved</span>` : ''}</td>
         <td class="col-sec">${i.reportado_por ? UI.esc(i.reportado_por) : '<span class="td-empty">—</span>'}</td>
       </tr>`).join('');
   },
@@ -7277,11 +7322,20 @@ const IncidenciasPage = {
   async openDetail(id) {
     const i = await db.incidencias.get(id);
     if (!i) return;
-    const canConvert = UserService.canConvertIncidencia() && i.estado !== 'Cerrada';
-    const canClose = i.estado !== 'Cerrada';
+    const esSolved = !!i.solved_id;   // v10.13
+    const pendValidar = i.estado === 'Pendiente de validar';
+    const canConvert = UserService.canConvertIncidencia() && i.estado !== 'Cerrada' && !pendValidar;
+    const canClose = i.estado !== 'Cerrada' && !pendValidar;
+    const sync = String(i.solved_sync || '');
+    const syncHtml = !esSolved ? '' : sync.startsWith('error')
+      ? `<span style="color:var(--red)">⚠ ${t('x_sv_sync_err')}: ${UI.esc(sync.slice(6).trim())}</span>`
+      : sync.startsWith('aviso') ? `<span style="color:var(--orange)">⚠ ${t('x_sv_sync_aviso')}: ${UI.esc(sync.slice(6).trim())}</span>`
+      : `<span style="color:var(--green)">✓ ${t('x_sv_sync_ok')}</span>`;
     Modal.open(`${t('nav_incidencias')}`, `
       <div class="detail-grid">
-        <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.estadoBadge(i.estado)}</p></div>
+        <div class="detail-field"><label>${t('lbl_estado')}</label><p>${UI.estadoBadge(i.estado)}${esSolved ? ' <span class="badge badge-blue">Solved</span>' : ''}</p></div>
+        ${esSolved ? `<div class="detail-field"><label>${t('x_sv_ref')}</label><p>${UI.esc(i.solved_ref || i.solved_id)} · ${t('x_sv_estado_solved')}: <b>${UI.esc(i.solved_status || '—')}</b></p></div>
+        <div class="detail-field full"><label>Solved</label><p>${syncHtml}${i.ref_externa ? ` · ${t('x_sv_ref_externa')}: <b>${UI.esc(i.ref_externa)}</b>` : ''}${pendValidar ? `<br><span style="color:var(--gray-muted)">${t('x_sv_bloqueada')}</span>` : ''}</p></div>` : ''}
         <div class="detail-field"><label>${t('lbl_prioridad')}</label><p>${UI.criticidadBadge(i.prioridad)}</p></div>
         <div class="detail-field"><label>${t('lbl_fecha_reg')}</label><p>${UI.formatDate(i.fecha_registro, i.id)} ${i.hora_registro||''}</p></div>
         <div class="detail-field"><label>${t('lbl_tipo')}</label><p><span class="badge badge-blue">${UI.esc(i.tipo||'—')}</span></p></div>
@@ -7295,7 +7349,8 @@ const IncidenciasPage = {
         ${i.observaciones ? `<div class="detail-field full"><label>${t('lbl_observaciones')}</label><p>${UI.esc(i.observaciones)}</p></div>` : ''}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
-       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">${t('btn_resolver')}</button>` : ''}
+       ${esSolved && (sync.startsWith('error') || sync.startsWith('aviso')) ? `<button class="btn btn-secondary" style="margin-right:auto" onclick="IncidenciasPage.solvedReintentar('${UI.esc(id)}')">${t('x_sv_reintentar')}</button>` : ''}
+       ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--orange);color:var(--orange)" onclick="IncidenciasPage.openClose('${UI.esc(id)}')">${esSolved ? t('x_sv_enviar_validar') : t('btn_resolver')}</button>` : ''}
        ${canClose ? `<button class="btn btn-secondary" style="border-color:var(--blue,#799F51);color:var(--blue,#799F51)" onclick="IncidenciasPage.generarOT('${UI.esc(id)}')">${t('x_generar_ot')}</button>` : ''}
        ${canConvert ? `<button class="btn btn-primary" style="background:var(--red)" onclick="IncidenciasPage.convertirEnAveria('${UI.esc(id)}')">${t('btn_convertir_av')}</button>` : ''}`);
   },
@@ -7467,6 +7522,7 @@ const IncidenciasPage = {
       <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--orange)">
         <strong>${UI.esc(i.equipo||i.zona||i.almacen)}</strong> · ${UI.esc(i.almacen)} · <span class="badge badge-blue">${UI.esc(i.tipo)}</span><br>
         <span style="color:var(--gray-muted)">${UI.esc(i.descripcion)}</span>
+        ${i.solved_id ? `<br><span style="color:var(--orange)">${t('x_sv_resolver_desc')}</span>` : ''}
       </div>
       <form class="form-grid">
         <div class="form-field full">
@@ -7486,7 +7542,7 @@ const IncidenciasPage = {
         </div>
       </form>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
-       <button class="btn btn-primary" style="background:var(--green)" onclick="IncidenciasPage._saveClose('${UI.esc(id)}')">${t('x_marcar_resuelta')}</button>`);
+       <button class="btn btn-primary" style="background:var(--green)" onclick="IncidenciasPage._saveClose('${UI.esc(id)}')">${i.solved_id ? t('x_sv_enviar_validar') : t('x_marcar_resuelta')}</button>`);
   },
 
   async _saveClose(id) {
@@ -7494,13 +7550,14 @@ const IncidenciasPage = {
     if (!i) return;
     const solucion = document.getElementById('incl-sol').value.trim();
     if (!solucion) { toast('La solución es obligatoria', 'error'); return; }
+    const esSolved = !!i.solved_id;   // v10.13: las de Solved quedan pendientes de validar; Solved las cierra (webhook)
     await DataService.saveIncidencia({
-      ...i, estado: 'Cerrada', solucion,
+      ...i, estado: esSolved ? 'Pendiente de validar' : 'Cerrada', solucion,
       responsable: document.getElementById('incl-resp').value || i.responsable,
       fecha_resolucion: document.getElementById('incl-fecha').value,
     });
     Modal.close();
-    toast('Incidencia resuelta ✓', 'success');
+    toast(esSolved ? t('x_sv_enviada') : 'Incidencia resuelta ✓', 'success');
     App.updateBadges();
     await IncidenciasPage._reload();
   },
@@ -7523,11 +7580,26 @@ const IncidenciasPage = {
       fecha_emision: hoy, fecha_prevista: hoy, fecha_inicio: null, fecha_fin: null,
       checklist: [], solucion: '', materiales: '', coste: 0, horas: 0, parte_id: '', zona_limpia: true,
     });
-    await DataService.saveIncidencia({ ...i, estado: 'En curso' });
+    await DataService.saveIncidencia({ ...i, estado: 'En curso', ref_externa: otId });   // v10.13: Solved recibe open + externalRef = OT
     Modal.close();
     toast(`OT ${otId} generada desde incidencia ✓`, 'success');
     App.updateBadges();
     Router.navigate('ordenes');
+  },
+
+  // v10.13: llama a la Edge Function solved-push para volver a enviar el estado/referencia a Solved
+  async solvedReintentar(id) {
+    toast(t('cargando'), '');
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/solved-push`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ incidencia_id: id }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (j.ok) toast(t('x_sv_reintento_ok'), 'success');
+      else toast(`${t('x_sv_reintento_err')} ${j.error || j.omitido || r.status}`, 'error');
+    } catch (e) { toast(`${t('x_sv_reintento_err')} ${e.message}`, 'error'); }
+    await IncidenciasPage.openDetail(id);
   },
 
   async convertirEnAveria(id) {
@@ -7535,7 +7607,7 @@ const IncidenciasPage = {
     if (!i) return;
     if (!await Modal.confirm(`¿Convertir esta incidencia en avería?\nSe abrirá el formulario de nueva avería con los datos prellenados.\nLa incidencia quedará marcada "En curso".`)) return;
     Modal.close();
-    await DataService.saveIncidencia({ ...i, estado: 'En curso' });
+    AveriasPage._incidenciaOrigen = id;   // v10.13: la incidencia pasa a En curso (con la avería como referencia) al guardar la avería
 
     // Guardar los datos de prefill — openNew() los leerá y aplicará con polling fiable
     const tipoMap = { 'Productividad':'Productividad', 'Seguridad':'Seguridad', 'Calidad':'Calidad' };
@@ -9186,6 +9258,18 @@ const ConfigPage = {
     <div class="cfg-panel" data-cfgpanel="integ" hidden>
       <div class="config-grid">
         <div class="card">
+          <div class="card-header"><span class="card-title">${t('x_sv_card')}</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:12px">${t('x_sv_desc')}</p>
+          <div class="form-field" style="margin:0 0 10px 0">
+            <label>${t('x_sv_url')}</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <input class="form-input" id="cfg-sv-url" readonly value="${SUPABASE_URL}/functions/v1/solved-webhook" style="flex:1 1 260px;min-width:0">
+              <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('cfg-sv-url').value).then(()=>toast(t('x_sv_copiada'),'success'))">${t('x_sv_copiar')}</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="cfg-sv-registro" onclick="ConfigPage.solvedRegistro()">${t('x_sv_registro')}</button>
+        </div>
+        <div class="card">
           <div class="card-header"><span class="card-title">${t('x_api_inteligencia_artificial')}</span></div>
           <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">
             ${t('x_clave_de_api_de_anthropic_claude_para_el')}
@@ -9432,6 +9516,29 @@ const ConfigPage = {
     document.querySelectorAll('.cfg-panel').forEach(p => { p.hidden = p.dataset.cfgpanel !== name; });
     document.querySelectorAll('.cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.cfgtab === name));
     if (name === 'prodvis') ConfigPage._pvLoad();   // v10.7
+  },
+
+  // ── v10.13: registro de la integración Solved (últimos webhooks recibidos y envíos) ──
+  async solvedRegistro() {
+    const esc = UI.esc;
+    const fmt = v => v ? String(v).replace('T', ' ').slice(0, 19) : '';
+    let recibidos = [], enviados = [], err = null;
+    try {
+      const r1 = await sb.from('solved_eventos').select('delivery_id,event,incident_id,status,recibido_at,resultado').order('recibido_at', { ascending: false }).limit(10);
+      if (r1.error) throw new Error(r1.error.message);
+      const r2 = await sb.from('solved_envios').select('incidencia_id,status,external_ref,enviado_at,ok,respuesta').order('id', { ascending: false }).limit(10);
+      if (r2.error) throw new Error(r2.error.message);
+      recibidos = r1.data || []; enviados = r2.data || [];
+    } catch (e) { err = e.message || String(e); }
+    const tabla = (filas, cols) => !filas.length ? `<p style="color:var(--gray-muted);font-size:13px">${t('x_sv_vacio')}</p>` :
+      `<div class="table-wrap"><table><thead><tr>${cols.map(c => `<th>${esc(c[0])}</th>`).join('')}</tr></thead><tbody>${filas.map(f => `<tr>${cols.map(c => `<td style="font-size:12px">${esc(c[1](f))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    Modal.open(t('x_sv_registro'), err
+      ? `<p style="color:var(--red)">${/solved_/.test(err) ? t('x_sv_no_tablas') : esc(err)}</p>`
+      : `<h3 style="font-size:14px;margin-bottom:8px">${t('x_sv_recibidos')}</h3>
+         ${tabla(recibidos, [['Fecha', f => fmt(f.recibido_at)], ['Evento', f => f.event], ['Solved', f => f.incident_id], ['Estado', f => f.status], ['Resultado', f => f.resultado]])}
+         <h3 style="font-size:14px;margin:18px 0 8px">${t('x_sv_enviados')}</h3>
+         ${tabla(enviados, [['Fecha', f => fmt(f.enviado_at)], ['Incidencia', f => f.incidencia_id], ['Estado', f => f.status], ['Ref.', f => f.external_ref || ''], ['OK', f => f.ok ? '✓' : '✗'], ['Respuesta', f => String(f.respuesta || '').slice(0, 90)]])}`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>`);
   },
 
   // ── v10.12: recomprimir las fotos ya subidas (Config › Sistema). Lista el bucket, muestra el análisis y,
