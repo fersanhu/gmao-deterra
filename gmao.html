@@ -666,6 +666,10 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   #pt-tbody td:nth-child(9) .btn{width:100%;min-height:44px}
 }
 
+/* ── v10.12: barra de progreso de la compresión de fotos (Config › Sistema) ── */
+.cf-bar{height:8px;background:var(--gray-light);border-radius:4px;overflow:hidden;margin-top:10px}
+.cf-bar>div{height:100%;width:0;background:var(--green);transition:width .2s}
+
 /* ── v10.11: panel de centros (Admin/Responsable): averías activas en cada centro ── */
 .cen-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:22px}
 .cen-card{border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:16px 12px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;transition:all .15s;user-select:none}
@@ -996,7 +1000,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.11</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.12</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1103,6 +1107,13 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.12: compresión de fotos ──
+      x_cf_card:'Fotos de averías', x_cf_desc:'Las fotos nuevas se comprimen al subirlas (máx. 1600 px, unos 300 KB). Las subidas antes de la v10.12 ocupan hasta 5 MB cada una: este botón las recomprime en su sitio (misma dirección) para liberar espacio en Supabase.',
+      x_cf_boton:'📷 Comprimir fotos antiguas', x_cf_titulo:'Comprimir fotos antiguas', x_cf_analizando:'Analizando las fotos del almacenamiento…',
+      x_cf_analisis:'{n} fotos · {mb} MB en total · {c} de más de 400 KB ({mbc} MB) que se pueden comprimir. Se sustituyen por una versión de máx. 1600 px; no se puede deshacer.',
+      x_cf_comprimir:'Comprimir', x_cf_parar:'Parar', x_cf_progreso:'Comprimiendo {i} / {n} · {antes} MB → {despues} MB',
+      x_cf_fin:'✅ Hecho: {ok} comprimidas, {igual} sin cambios, {err} errores · {antes} MB → {despues} MB',
+      x_cf_nota_backup:'La copia espejo del backup nocturno se pone al día sola esta noche.',
       // ── v10.11: panel de centros (averías activas por centro) ──
       nav_centros:'Centros', x_cen_subtitulo:'Averías activas en cada centro. Pulsa un centro para ver sus averías y registrar una nueva.',
       x_cen_activas:'Averías activas', x_cen_sin_activas:'Sin averías activas', x_cen_elige:'Pulsa un centro para ver sus averías activas.',
@@ -1398,6 +1409,13 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.12: compresión de fotos ──
+      x_cf_card:'Breakdown photos', x_cf_desc:'New photos are compressed on upload (max. 1600 px, about 300 KB). Photos uploaded before v10.12 take up to 5 MB each: this button recompresses them in place (same address) to free space in Supabase.',
+      x_cf_boton:'📷 Compress old photos', x_cf_titulo:'Compress old photos', x_cf_analizando:'Analysing the photos in storage…',
+      x_cf_analisis:'{n} photos · {mb} MB in total · {c} over 400 KB ({mbc} MB) that can be compressed. They are replaced by a max. 1600 px version; this cannot be undone.',
+      x_cf_comprimir:'Compress', x_cf_parar:'Stop', x_cf_progreso:'Compressing {i} / {n} · {antes} MB → {despues} MB',
+      x_cf_fin:'✅ Done: {ok} compressed, {igual} unchanged, {err} errors · {antes} MB → {despues} MB',
+      x_cf_nota_backup:'The nightly backup mirror catches up by itself tonight.',
       // ── v10.11: panel de centros (averías activas por centro) ──
       nav_centros:'Sites', x_cen_subtitulo:'Active breakdowns at each site. Tap a site to see its breakdowns and log a new one.',
       x_cen_activas:'Active breakdowns', x_cen_sin_activas:'No active breakdowns', x_cen_elige:'Tap a site to see its active breakdowns.',
@@ -1693,6 +1711,13 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.12: compresión de fotos ──
+      x_cf_card:'صور الأعطال', x_cf_desc:'تُضغط الصور الجديدة عند رفعها (بحد أقصى 1600 بكسل، نحو 300 كيلوبايت). الصور المرفوعة قبل الإصدار 10.12 تشغل حتى 5 ميغابايت لكل واحدة: هذا الزر يعيد ضغطها في مكانها (نفس العنوان) لتحرير مساحة في Supabase.',
+      x_cf_boton:'📷 ضغط الصور القديمة', x_cf_titulo:'ضغط الصور القديمة', x_cf_analizando:'جارٍ تحليل الصور في التخزين…',
+      x_cf_analisis:'{n} صورة · {mb} ميغابايت إجمالاً · {c} أكبر من 400 كيلوبايت ({mbc} ميغابايت) يمكن ضغطها. تُستبدل بنسخة بحد أقصى 1600 بكسل؛ لا يمكن التراجع.',
+      x_cf_comprimir:'ضغط', x_cf_parar:'إيقاف', x_cf_progreso:'جارٍ الضغط {i} / {n} · {antes} ميغابايت ← {despues} ميغابايت',
+      x_cf_fin:'✅ تم: {ok} مضغوطة، {igual} بلا تغيير، {err} أخطاء · {antes} ميغابايت ← {despues} ميغابايت',
+      x_cf_nota_backup:'نسخة المرآة للنسخ الاحتياطي الليلي تتحدّث تلقائياً الليلة.',
       // ── v10.11: panel de centros (averías activas por centro) ──
       nav_centros:'المراكز', x_cen_subtitulo:'الأعطال النشطة في كل مركز. اضغط على مركز لعرض أعطاله وتسجيل عطل جديد.',
       x_cen_activas:'الأعطال النشطة', x_cen_sin_activas:'لا توجد أعطال نشطة', x_cen_elige:'اضغط على مركز لعرض أعطاله النشطة.',
@@ -2682,12 +2707,15 @@ const DataService = {
     catch(e) { return []; }
   },
   async uploadFoto(averia_id, file) {
-    const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // v10.12: la foto se comprime antes de subirla (máx. 1600 px, JPEG): ~300 KB en vez de 3-5 MB
+    const comp = await UI.comprimirImagen(file);
+    const body = comp || file;
+    const ext  = comp ? 'jpg' : (file.name.split('.').pop() || 'jpg').toLowerCase();
     const slug = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const path = `${averia_id}/${slug}`;
     // 1) Subir al Storage — esto es lo crítico; si falla, propagamos el error
-    const { error: storageErr } = await sb.storage.from('fotos-averias').upload(path, file, {
-      contentType: file.type || 'image/jpeg',
+    const { error: storageErr } = await sb.storage.from('fotos-averias').upload(path, body, {
+      contentType: comp ? 'image/jpeg' : (file.type || 'image/jpeg'),
       upsert: false,
     });
     if (storageErr) throw new Error(`[Storage] ${storageErr.message}`);
@@ -3112,6 +3140,25 @@ const UserService = {
 // UI HELPERS
 // ═══════════════════════════════════════════════════════════════════
 const UI = {
+  // v10.12: reduce una imagen a máx. maxLado px y la devuelve como Blob JPEG. null = subir el original tal cual:
+  // no es imagen, ya es pequeña (≤ maxLado px y < minBytes) o el navegador no la sabe decodificar (p. ej. HEIC en Chrome).
+  async comprimirImagen(blob, { maxLado = 1600, calidad = 0.82, minBytes = 400 * 1024 } = {}) {
+    if (!blob || !/^image\//.test(blob.type || '') || typeof createImageBitmap !== 'function') return null;
+    let bmp = null;
+    try { bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' }); }
+    catch (_) { try { bmp = await createImageBitmap(blob); } catch (_2) { return null; } }
+    try {
+      const w = bmp.width, h = bmp.height;
+      const f = Math.min(1, maxLado / Math.max(w, h, 1));
+      if (f === 1 && blob.size < minBytes) return null;
+      const cw = Math.max(1, Math.round(w * f)), ch = Math.max(1, Math.round(h * f));
+      const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      cv.getContext('2d').drawImage(bmp, 0, 0, cw, ch);
+      const out = await new Promise(res => cv.toBlob(res, 'image/jpeg', calidad));
+      return (out && out.size < blob.size) ? out : null;
+    } catch (_) { return null; }
+    finally { if (bmp && bmp.close) bmp.close(); }
+  },
   badge(text, type) {
     const map = { Alta:'red', Altisima:'red', Moderada:'orange', Baja:'green', Abierta:'red', 'En curso':'orange', Cerrada:'gray', Operativo:'green', Parado:'red', Baja_estado:'gray', Mecánica:'blue', Eléctrica:'blue', Neumática:'blue', Alta_prior:'red', Media:'orange', Baja_prior:'green' };
     const cls = map[text] || 'gray';
@@ -9232,6 +9279,11 @@ const ConfigPage = {
             <p style="font-size:11px;color:var(--gray-muted);margin:-4px 0 4px">${t('x_crea_un_parte_de_trabajo_para_cada_averi')}</p>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">${t('x_cf_card')}</span></div>
+          <p style="font-size:13px;color:var(--gray-muted);margin-bottom:16px">${t('x_cf_desc')}</p>
+          <button class="btn btn-secondary btn-sm" id="cfg-cf-btn" onclick="ConfigPage.comprimirFotos()">${t('x_cf_boton')}</button>
+        </div>
       </div>
       <div class="card" style="border-color:var(--red)">
         <div class="card-header"><span class="card-title" style="color:var(--red)">${t('x_zona_peligrosa')}</span></div>
@@ -9381,6 +9433,79 @@ const ConfigPage = {
     document.querySelectorAll('.cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.cfgtab === name));
     if (name === 'prodvis') ConfigPage._pvLoad();   // v10.7
   },
+
+  // ── v10.12: recomprimir las fotos ya subidas (Config › Sistema). Lista el bucket, muestra el análisis y,
+  // al confirmar, descarga cada foto grande, la reduce (UI.comprimirImagen) y la sube encima (misma ruta/URL).
+  _cf: { running: false, stop: false, cand: [] },
+  _cfMb: v => (v / 1e6).toFixed(1),
+  async comprimirFotos() {
+    if (ConfigPage._cf.running) return;
+    Modal.open(t('x_cf_titulo'), `
+      <p id="cf-status" style="font-size:13px;color:var(--gray-muted)">${t('x_cf_analizando')}</p>
+      <div class="cf-bar"><div id="cf-fill"></div></div>
+      <div id="cf-resumen" style="font-size:13px;margin-top:12px"></div>`,
+      `<button class="btn btn-secondary" id="cf-cerrar" onclick="ConfigPage._cfCerrar()">${t('close')}</button>
+       <button class="btn btn-danger" id="cf-stop" style="display:none" onclick="ConfigPage._cf.stop = true">${t('x_cf_parar')}</button>
+       <button class="btn btn-primary" id="cf-go" style="display:none" onclick="ConfigPage._cfRun()">${t('x_cf_comprimir')}</button>`);
+    try {
+      const fotos = await ConfigPage._cfListar();
+      const cand = fotos.filter(f => f.size > 400 * 1024);
+      ConfigPage._cf.cand = cand;
+      const total = fotos.reduce((a, f) => a + f.size, 0), totalCand = cand.reduce((a, f) => a + f.size, 0);
+      const st = document.getElementById('cf-status');
+      if (st) st.textContent = tf('x_cf_analisis', { n: fotos.length, mb: ConfigPage._cfMb(total), c: cand.length, mbc: ConfigPage._cfMb(totalCand) });
+      const go = document.getElementById('cf-go'); if (go && cand.length) go.style.display = '';
+    } catch (e) {
+      const st = document.getElementById('cf-status'); if (st) st.textContent = '❌ ' + (e.message || e);
+    }
+  },
+  async _cfListar() {
+    const out = [];
+    const { data: raiz, error } = await sb.storage.from('fotos-averias').list('', { limit: 1000 });
+    if (error) throw new Error(error.message);
+    for (const e of raiz || []) {
+      if (!e.name || e.name.startsWith('.')) continue;
+      if (e.id) { out.push({ path: e.name, size: Number(e.metadata?.size || 0) }); continue; }
+      const { data: files } = await sb.storage.from('fotos-averias').list(e.name, { limit: 1000 });
+      for (const f of files || []) if (f.id && f.name && !f.name.startsWith('.')) out.push({ path: `${e.name}/${f.name}`, size: Number(f.metadata?.size || 0) });
+    }
+    return out;
+  },
+  async _cfRun() {
+    const cand = ConfigPage._cf.cand || []; if (!cand.length || ConfigPage._cf.running) return;
+    ConfigPage._cf.running = true; ConfigPage._cf.stop = false;
+    const $ = id => document.getElementById(id);
+    if ($('cf-go')) $('cf-go').style.display = 'none';
+    if ($('cf-stop')) $('cf-stop').style.display = '';
+    if ($('cf-cerrar')) $('cf-cerrar').disabled = true;
+    let antes = 0, despues = 0, ok = 0, igual = 0; const errores = [];
+    for (let i = 0; i < cand.length; i++) {
+      if (ConfigPage._cf.stop) break;
+      const f = cand[i];
+      if ($('cf-status')) $('cf-status').textContent = tf('x_cf_progreso', { i: i + 1, n: cand.length, antes: ConfigPage._cfMb(antes), despues: ConfigPage._cfMb(despues) });
+      if ($('cf-fill')) $('cf-fill').style.width = Math.round(100 * i / cand.length) + '%';
+      try {
+        const url = sb.storage.from('fotos-averias').getPublicUrl(f.path).data.publicUrl;
+        const resp = await fetch(url + (url.includes('?') ? '&' : '?') + 'cf=' + Date.now(), { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const blob = await resp.blob();
+        const comp = await UI.comprimirImagen(blob);
+        antes += blob.size;
+        if (!comp) { igual++; despues += blob.size; continue; }
+        const { error } = await sb.storage.from('fotos-averias').upload(f.path, comp, { upsert: true, contentType: 'image/jpeg' });
+        if (error) throw new Error(error.message);
+        ok++; despues += comp.size;
+      } catch (e) { errores.push(`${f.path}: ${e.message || e}`); }
+    }
+    ConfigPage._cf.running = false;
+    if ($('cf-fill')) $('cf-fill').style.width = '100%';
+    if ($('cf-stop')) $('cf-stop').style.display = 'none';
+    if ($('cf-cerrar')) $('cf-cerrar').disabled = false;
+    if ($('cf-status')) $('cf-status').textContent = tf('x_cf_fin', { ok, igual, err: errores.length, antes: ConfigPage._cfMb(antes), despues: ConfigPage._cfMb(despues) });
+    if ($('cf-resumen')) $('cf-resumen').innerHTML = `<p>${t('x_cf_nota_backup')}</p>` +
+      (errores.length ? `<pre style="font-size:11px;max-height:120px;overflow:auto;margin-top:8px">${UI.esc(errores.join('\n'))}</pre>` : '');
+  },
+  _cfCerrar() { if (!ConfigPage._cf.running) Modal.close(); },
 
   // ── v10.7: máquinas visibles para producción (Config › Producción) ──
   _pv: { activos: [] },
