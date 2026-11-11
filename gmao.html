@@ -668,6 +668,54 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
   #pt-tbody td:nth-child(9) .btn{width:100%;min-height:44px}
 }
 
+/* ── v10.16: selección de averías, cierre en bloque y revisión de producción ── */
+.av-chk-w{display:none;align-items:center;vertical-align:middle;margin-inline-end:6px;cursor:pointer}
+#av-table.sel-on .av-chk-w{display:inline-flex}
+.av-chk-w input{width:15px;height:15px;accent-color:var(--green);cursor:pointer;margin:0}
+.av-bulk{display:none;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--green);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px}
+.av-bulk.on{display:flex}
+.av-bulk-n{font-weight:600;margin-inline-end:auto}
+.blq-list{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:14px}
+.blq-item{display:flex;gap:4px 8px;align-items:baseline;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--gray-light);font-size:12px}
+.blq-item:last-child{border-bottom:0}
+.blq-item b{font-size:13px}
+.blq-item small{color:var(--gray-muted)}
+.blq-id{margin-inline-start:auto;font-family:monospace;white-space:nowrap}
+.blq-opt{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:12px;cursor:pointer}
+.blq-opt input{margin-top:3px;accent-color:var(--green);flex-shrink:0}
+.blq-nota{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--gray-muted);line-height:1.5}
+.prod-open-item.revisar{border-left-color:var(--orange);cursor:pointer}
+.prv-chk{width:20px;height:20px;accent-color:var(--green);flex-shrink:0;cursor:pointer}
+@media(max-width:768px){#av-table.sel-on .av-chk-w,.av-bulk.on,#av-sel-btn{display:none}}
+@media(min-width:769px){#av-table.sel-on th:nth-child(12),#av-table.sel-on td:nth-child(12){display:none}}   /* en modo selección la columna 📷 cede su sitio a las casillas */
+
+/* ── v10.15: simulacros de avería (página propia, separada de las averías) ── */
+.sim-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.6px;padding:2px 7px;border-radius:4px;background:var(--orange-bg);color:#c45a2a;border:1px dashed var(--orange);vertical-align:middle;white-space:nowrap}
+.sim-gen-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;align-items:end}
+.sim-sec{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-muted);margin:4px 0 10px}
+.sim-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:22px}
+.sim-card{border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:var(--radius);background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+.sim-card.mio{border-left-color:var(--green)}
+.sim-card-when{font-size:12px;color:var(--gray-muted)}
+.sim-card-maq{font-size:14px;font-weight:600;color:var(--gray-text)}
+.sim-card-desc{font-size:13px;color:var(--gray-text)}
+.sim-card-meta{font-size:12px;color:var(--gray-muted)}
+.sim-aviso{background:var(--orange-bg);color:#c45a2a;border-radius:6px;padding:8px 12px;font-size:12px;margin-bottom:8px}
+.sim-cfg-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:13px}
+.sim-cfg-row .form-input{width:auto;flex:1;min-width:120px}
+.sim-cfg-row input[type=time]{flex:0 0 120px}
+.sim-cfg-turno{min-width:110px;display:flex;gap:6px;align-items:center}
+.sim-prop select{min-width:140px;margin-bottom:4px}
+.sim-prop th,.sim-prop td{padding:8px 10px}
+.modal:has(.sim-prop){width:780px}
+.sim-movil{display:none}
+@media (max-width:768px){.sim-desk{display:none}.sim-movil{display:grid;margin-bottom:0}.sim-prop,.sim-prop tbody{display:block;min-width:0;width:100%}.sim-prop thead{display:none}.sim-prop tr{display:block;padding:10px 0;border-bottom:1px solid var(--border)}.sim-prop td{display:block;padding:2px 0;border:0}.sim-prop td[data-l]::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-muted);margin-top:8px}.sim-prop select{width:100%;min-width:0;box-sizing:border-box;margin-top:4px}}
+.sim-acc{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.sim-acc .btn{white-space:nowrap}
+#sim-table td,.sim-prop td{vertical-align:top}
+html[dir="rtl"] .sim-card{border-left:1px solid var(--border);border-right:4px solid var(--orange)}
+html[dir="rtl"] .sim-card.mio{border-right-color:var(--green)}
+
 /* ── v10.12: barra de progreso de la compresión de fotos (Config › Sistema) ── */
 .cf-bar{height:8px;background:var(--gray-light);border-radius:4px;overflow:hidden;margin-top:10px}
 .cf-bar>div{height:100%;width:0;background:var(--green);transition:width .2s}
@@ -929,6 +977,11 @@ th:last-child{border-top-right-radius:var(--radius)}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span class="nav-label" data-i18n="nav_partes">Partes</span>
           </div>
+          <div class="nav-item" data-route="simulacros">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>
+            <span class="nav-label" data-i18n="nav_simulacros">Simulacros</span>
+            <span class="nav-badge" id="badge-simulacros" style="display:none">0</span>
+          </div>
         </div>
       </div>
       <!-- Preventivo -->
@@ -1002,7 +1055,7 @@ th:last-child{border-top-right-radius:var(--radius)}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.14</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.16</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1109,6 +1162,157 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v10.16: cierre en bloque de averías y revisión de producción ──
+      x_blq_n:'Seleccionadas: {n}',
+      x_blq_seleccionar:'☑ Seleccionar varias',
+      x_blq_asignar:'👤 Asignar mecánico (rotación)',
+      x_blq_cerrar:'Cerrar en bloque…',
+      x_blq_quitar:'Salir de la selección',
+      x_blq_sel_todas:'Marcar todas las abiertas de la lista',
+      x_blq_adm:'Adm.',
+      x_blq_adm_tt:'Cierre administrativo en bloque (sin parte de trabajo)',
+      x_blq_todas_asignadas:'Todas las seleccionadas ya tienen mecánico.',
+      x_blq_sin_mecanicos:'No hay mecánicos activos en el centro de esas averías.',
+      x_blq_asignar_conf:'Averías sin técnico a las que se asignará mecánico por rotación: {n} (seleccionadas: {total}). Quedarán marcadas como «Auto» y siguen abiertas.',
+      x_blq_asignadas:'Asignadas por rotación: {n}.',
+      x_blq_sin_mec_n:'Sin mecánico disponible en su centro: {n}.',
+      x_blq_titulo:'Cierre administrativo en bloque',
+      x_blq_resumen:'Averías que se van a cerrar: {n}',
+      x_blq_motivo:'Motivo del cierre',
+      x_blq_motivo_ph:'Ej.: máquinas ya operativas; averías que no se cerraron en su día',
+      x_blq_opt_asignar:'Asignar mecánico por rotación a las que no tienen ({n}); quedará marcado «Auto»',
+      x_blq_nota:'Se cierran a tu nombre ({nombre}), con la fecha y la hora de ahora, como cierre administrativo. No se crean partes de trabajo ni se descuenta material, y la duración queda sin dato: no cuenta en los indicadores de tiempo. La revisión de limpieza queda pendiente; la firma producción desde su cuenta.',
+      x_blq_confirmar:'Cerrar las seleccionadas ({n})',
+      x_blq_err_motivo:'Escribe el motivo del cierre.',
+      x_blq_cerradas:'Averías cerradas: {n}.',
+      x_blq_ya:'Ya estaban cerradas: {n}.',
+      x_blq_cierre:'Cierre',
+      x_blq_cierre_adm:'Administrativo en bloque',
+      x_blq_rev_prod:'Revisión de limpieza (producción)',
+      x_blq_rev_pend:'Pendiente de la firma de producción',
+      x_blq_sql_titulo:'SQL · cierre en bloque',
+      x_blq_sql_falta:'Faltan columnas en la tabla de averías. Ejecuta este SQL una vez en Supabase › SQL Editor (Run) y vuelve a intentarlo. No se ha cambiado nada.',
+      x_prv_titulo:'🧹 Limpieza pendiente de revisar',
+      x_prv_desc:'Averías que mantenimiento ha cerrado en bloque. Comprueba la zona y firma la revisión de las que marques.',
+      x_prv_desc_mant:'Averías cerradas en bloque, a falta de que producción firme la revisión desde su cuenta.',
+      x_prv_cerrada_el:'Cerrada el',
+      x_prv_firmar_n:'🧹 Firmar revisión ({n})',
+      x_prv_ninguna:'Marca al menos una avería.',
+      x_prv_dlg_resumen:'Revisiones de limpieza que vas a firmar: {n}. El resultado se aplica a todas: si alguna zona no está limpia, desmárcala y fírmala aparte.',
+      x_prv_firmadas:'Revisiones firmadas: {n} ✓',
+      x_prv_ya:'Ya estaban firmadas: {n}.',
+      // ── v10.15: simulacros de avería ──
+      nav_simulacros:'Simulacros',
+      x_sim_subtitulo:'Simulacros de avería: prácticas programadas que hace el mecánico y revisa producción. No cuentan como averías ni entran en informes o avisos.',
+      x_sim_sin_tabla:'Falta la tabla de simulacros en la base de datos. Hay que ejecutar simulacros_setup.sql en Supabase › SQL Editor y recargar.',
+      x_sim_ver_sql:'Ver el SQL',
+      x_sim_sql_titulo:'SQL de la tabla de simulacros',
+      x_sim_sql_ayuda:'Copia y ejecuta en Supabase → SQL Editor → New query. Recarga después.',
+      x_sim_gen_titulo:'Programar simulacros',
+      x_sim_gen_desc:'El sistema los reparte al azar entre las máquinas y los turnos de la semana, asigna mecánico por rotación y el revisor de producción del turno. Cada simulacro lo marca como hecho quien lo hace y la limpieza la firma producción.',
+      x_sim_centro:'Centro',
+      x_sim_numero:'Nº de simulacros',
+      x_sim_semana:'Semana del',
+      x_sim_dias:'Días',
+      x_sim_dias_lv:'Lunes a viernes',
+      x_sim_dias_ls:'Lunes a sábado',
+      x_sim_dias_todos:'Toda la semana',
+      x_sim_generar:'🎲 Generar propuesta',
+      x_sim_err_num:'Indica cuántos simulacros (de 1 a 30).',
+      x_sim_err_semana:'Elige un día de la semana en la que quieres hacerlos.',
+      x_sim_err_pasada:'En esa semana ya no quedan turnos por delante: los simulacros solo se pueden programar de ahora en adelante.',
+      x_sim_err_maquinas:'No hay máquinas dadas de alta en ese centro.',
+      x_sim_err_turnos:'No hay ningún turno activo. Revísalo en ⚙ Revisores y turnos.',
+      x_sim_aviso_sin_mec:'No hay mecánicos activos en este centro: los simulacros quedarán sin asignar.',
+      x_sim_aviso_sin_rev:'Sin revisor de producción configurado para el turno: {turnos}. Añádelos en ⚙ Revisores y turnos.',
+      x_sim_prop_titulo:'Propuesta de simulacros · {centro}',
+      x_sim_prop_semana:'Semana del {ini} al {fin}. Nada queda guardado hasta que pulses "Programar".',
+      x_sim_otra:'🎲 Otra propuesta',
+      x_sim_programar:'Programar {n} simulacros',
+      x_sim_programados:'{n} simulacros programados ✓',
+      x_sim_col_cuando:'Programado',
+      x_sim_col_maquina:'Máquina',
+      x_sim_col_fallo:'Fallo simulado',
+      x_sim_col_mecanico:'Mecánico',
+      x_sim_col_hecho:'Hecho por',
+      x_sim_col_revisor:'Revisor de producción',
+      x_sim_col_revision:'Revisión de limpieza',
+      x_sim_col_estado:'Estado',
+      x_sim_auto:'Auto',
+      x_sim_manual:'Manual',
+      x_sim_auto_tt:'Asignado por el sistema (rotación)',
+      x_sim_manual_tt:'Asignado por una persona',
+      x_sim_sin_asignar:'Sin asignar',
+      x_sim_sin_revisor:'Sin revisor',
+      x_sim_est_programado:'Programado',
+      x_sim_est_pendiente:'Pendiente de hacer',
+      x_sim_est_hecho:'Pendiente de revisar',
+      x_sim_est_revisado:'Revisado',
+      x_sim_est_anulado:'Anulado',
+      x_sim_f_todos:'Todos los estados',
+      x_sim_vacio:'No hay simulacros',
+      x_sim_vacio_sub:'Programa los primeros con el formulario de arriba',
+      x_sim_pend_hacer:'Pendientes de hacer',
+      x_sim_pend_revisar:'Pendientes de revisar la limpieza',
+      x_sim_recientes:'Últimos simulacros',
+      x_sim_nada_pend:'Nada pendiente ✓',
+      x_sim_etiqueta:'SIMULACRO',
+      x_sim_btn_hecho:'✓ Hecho',
+      x_sim_hecho_titulo:'Simulacro hecho',
+      x_sim_actuacion:'Qué has hecho',
+      x_sim_actuacion_ph:'Describe la actuación que has realizado en el simulacro…',
+      x_sim_duracion:'Duración (min)',
+      x_sim_hecho_nota:'Quedará registrado a tu nombre ({nombre}) con la hora de ahora.',
+      x_sim_err_actuacion:'Describe qué has hecho.',
+      x_sim_hecho_ok:'Simulacro marcado como hecho ✓',
+      x_sim_ya_no:'Este simulacro ya no está pendiente. Se ha actualizado la lista.',
+      x_sim_btn_revisar:'🧹 Revisar limpieza',
+      x_sim_rev_titulo:'Revisión de limpieza',
+      x_sim_rev_quien:'Quién revisa',
+      x_sim_rev_otro:'Otra persona…',
+      x_sim_rev_nombre_ph:'Nombre y apellidos',
+      x_sim_rev_limpia:'¿La zona ha quedado limpia?',
+      x_sim_rev_obs:'Observaciones',
+      x_sim_rev_nota:'La firma la persona que ha comprobado la zona. Quedan registradas la hora de ahora y la cuenta desde la que se firma ({cuenta}).',
+      x_sim_err_quien:'Indica quién revisa.',
+      x_sim_err_limpia:'Indica si la zona ha quedado limpia.',
+      x_sim_err_obs:'Si la zona no ha quedado limpia, explica por qué en Observaciones.',
+      x_sim_rev_ok:'Revisión registrada ✓',
+      x_sim_firmar:'Firmar revisión',
+      x_sim_anular:'Anular',
+      x_sim_anular_titulo:'Anular simulacro',
+      x_sim_motivo:'Motivo',
+      x_sim_err_motivo:'Indica el motivo.',
+      x_sim_anulado_ok:'Simulacro anulado',
+      x_sim_reasignar:'Reasignar',
+      x_sim_reasignar_titulo:'Reasignar mecánico',
+      x_sim_reasignado_ok:'Mecánico reasignado (asignación manual)',
+      x_sim_excel:'⬇ Exportar a Excel',
+      x_sim_excel_vacio:'No hay simulacros que exportar',
+      x_sim_cfg:'⚙ Revisores y turnos',
+      x_sim_cfg_titulo:'Revisores de producción y turnos',
+      x_sim_cfg_turnos:'Turnos',
+      x_sim_cfg_de:'de',
+      x_sim_cfg_a:'a',
+      x_sim_cfg_revisores:'Revisores de producción',
+      x_sim_cfg_revisores_desc:'Personas de producción que comprueban la limpieza de la zona después de la intervención. El sistema asigna a cada simulacro un revisor de su turno; quien firma es siempre la persona que lo comprueba.',
+      x_sim_cfg_anadir:'Añadir revisor',
+      x_sim_cfg_guardado:'Configuración guardada ✓',
+      x_sim_cfg_ninguno:'Aún no hay revisores en este centro.',
+      x_sim_turno_manana:'Mañana',
+      x_sim_turno_tarde:'Tarde',
+      x_sim_turno_noche:'Noche',
+      x_sim_turno_cualquiera:'Cualquiera',
+      x_sim_f1:'Atasco de producto en la entrada',
+      x_sim_f2:'Fallo de fotocélula o sensor de presencia',
+      x_sim_f3:'Cinta descentrada o rota',
+      x_sim_f4:'Fuga de aire comprimido',
+      x_sim_f5:'Fuga de aceite en el reductor',
+      x_sim_f6:'Ruido anómalo en un rodamiento del motor',
+      x_sim_f7:'Disparo de la protección eléctrica (térmico)',
+      x_sim_f8:'Parada de emergencia que no rearma',
+      x_sim_f9:'Cadena destensada',
+      x_sim_f10:'Fallo de comunicación con el cuadro de control',
       // ── v10.13: integración Solved ──
       opt_pend_validar:'Pendiente de validar', x_sv_enviar_validar:'✓ Enviar a validar', x_sv_enviada:'Enviada a validar ✓ (Solved la cerrará al validarla)',
       x_sv_resolver_desc:'Esta incidencia viene de Solved: al marcarla resuelta pasa a "Pendiente de validar" y Solved la cierra cuando calidad la valide.',
@@ -1420,6 +1624,157 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v10.16: cierre en bloque de averías y revisión de producción ──
+      x_blq_n:'Selected: {n}',
+      x_blq_seleccionar:'☑ Select several',
+      x_blq_asignar:'👤 Assign mechanic (rotation)',
+      x_blq_cerrar:'Close in bulk…',
+      x_blq_quitar:'Exit selection',
+      x_blq_sel_todas:'Tick all the open ones in the list',
+      x_blq_adm:'Admin.',
+      x_blq_adm_tt:'Administrative bulk closure (no work report)',
+      x_blq_todas_asignadas:'All the selected breakdowns already have a mechanic.',
+      x_blq_sin_mecanicos:'There are no active mechanics at the site of those breakdowns.',
+      x_blq_asignar_conf:'Breakdowns with no technician that will get a mechanic by rotation: {n} (selected: {total}). They will be marked “Auto” and stay open.',
+      x_blq_asignadas:'Assigned by rotation: {n}.',
+      x_blq_sin_mec_n:'No mechanic available at their site: {n}.',
+      x_blq_titulo:'Administrative bulk closure',
+      x_blq_resumen:'Breakdowns about to be closed: {n}',
+      x_blq_motivo:'Reason for closing',
+      x_blq_motivo_ph:'E.g. machines already running; breakdowns never closed at the time',
+      x_blq_opt_asignar:'Assign a mechanic by rotation to those that have none ({n}); marked “Auto”',
+      x_blq_nota:'They are closed under your name ({nombre}), with the current date and time, as an administrative closure. No work reports are created and no stock is deducted, and the duration is left blank: it does not count in the time indicators. The cleaning check stays pending; production signs it from their own account.',
+      x_blq_confirmar:'Close the selected ones ({n})',
+      x_blq_err_motivo:'Enter the reason for closing.',
+      x_blq_cerradas:'Breakdowns closed: {n}.',
+      x_blq_ya:'Already closed: {n}.',
+      x_blq_cierre:'Closure',
+      x_blq_cierre_adm:'Administrative (bulk)',
+      x_blq_rev_prod:'Cleaning check (production)',
+      x_blq_rev_pend:'Awaiting production sign-off',
+      x_blq_sql_titulo:'SQL · bulk closure',
+      x_blq_sql_falta:'Some columns are missing from the breakdowns table. Run this SQL once in Supabase › SQL Editor (Run) and try again. Nothing has been changed.',
+      x_prv_titulo:'🧹 Cleaning awaiting check',
+      x_prv_desc:'Breakdowns that maintenance closed in bulk. Check the area and sign the check for the ones you tick.',
+      x_prv_desc_mant:'Breakdowns closed in bulk, awaiting production to sign the check from their own account.',
+      x_prv_cerrada_el:'Closed on',
+      x_prv_firmar_n:'🧹 Sign check ({n})',
+      x_prv_ninguna:'Tick at least one breakdown.',
+      x_prv_dlg_resumen:'Cleaning checks you are about to sign: {n}. The result applies to all of them: if any area is not clean, untick it and sign it separately.',
+      x_prv_firmadas:'Checks signed: {n} ✓',
+      x_prv_ya:'Already signed: {n}.',
+      // ── v10.15: simulacros de avería ──
+      nav_simulacros:'Drills',
+      x_sim_subtitulo:'Breakdown drills: scheduled exercises carried out by the mechanic and checked by production. They do not count as breakdowns and are left out of reports and alerts.',
+      x_sim_sin_tabla:'The drills table is missing in the database. Run simulacros_setup.sql in Supabase › SQL Editor and reload.',
+      x_sim_ver_sql:'View the SQL',
+      x_sim_sql_titulo:'SQL for the drills table',
+      x_sim_sql_ayuda:'Copy and run in Supabase → SQL Editor → New query. Then reload.',
+      x_sim_gen_titulo:'Schedule drills',
+      x_sim_gen_desc:'The system spreads them at random across the machines and shifts of the week, assigns a mechanic by rotation and the production reviewer of the shift. Each drill is marked as done by whoever does it, and production signs the cleaning check.',
+      x_sim_centro:'Site',
+      x_sim_numero:'Number of drills',
+      x_sim_semana:'Week of',
+      x_sim_dias:'Days',
+      x_sim_dias_lv:'Monday to Friday',
+      x_sim_dias_ls:'Monday to Saturday',
+      x_sim_dias_todos:'Whole week',
+      x_sim_generar:'🎲 Generate proposal',
+      x_sim_err_num:'Enter how many drills (1 to 30).',
+      x_sim_err_semana:'Pick a day in the week you want to run them.',
+      x_sim_err_pasada:'There are no shifts left in that week: drills can only be scheduled from now on.',
+      x_sim_err_maquinas:'There are no machines registered at that site.',
+      x_sim_err_turnos:'No shift is active. Check ⚙ Reviewers and shifts.',
+      x_sim_aviso_sin_mec:'There are no active mechanics at this site: the drills will be left unassigned.',
+      x_sim_aviso_sin_rev:'No production reviewer set up for shift: {turnos}. Add them in ⚙ Reviewers and shifts.',
+      x_sim_prop_titulo:'Drill proposal · {centro}',
+      x_sim_prop_semana:'Week from {ini} to {fin}. Nothing is saved until you press "Schedule".',
+      x_sim_otra:'🎲 Another proposal',
+      x_sim_programar:'Schedule {n} drills',
+      x_sim_programados:'{n} drills scheduled ✓',
+      x_sim_col_cuando:'Scheduled',
+      x_sim_col_maquina:'Machine',
+      x_sim_col_fallo:'Simulated fault',
+      x_sim_col_mecanico:'Mechanic',
+      x_sim_col_hecho:'Done by',
+      x_sim_col_revisor:'Production reviewer',
+      x_sim_col_revision:'Cleaning check',
+      x_sim_col_estado:'Status',
+      x_sim_auto:'Automatic',
+      x_sim_manual:'Manually',
+      x_sim_auto_tt:'Assigned by the system (rotation)',
+      x_sim_manual_tt:'Assigned by a person',
+      x_sim_sin_asignar:'Unassigned',
+      x_sim_sin_revisor:'No reviewer',
+      x_sim_est_programado:'Scheduled',
+      x_sim_est_pendiente:'To be done',
+      x_sim_est_hecho:'Awaiting check',
+      x_sim_est_revisado:'Checked',
+      x_sim_est_anulado:'Cancelled',
+      x_sim_f_todos:'All statuses',
+      x_sim_vacio:'No drills',
+      x_sim_vacio_sub:'Schedule the first ones with the form above',
+      x_sim_pend_hacer:'To be done',
+      x_sim_pend_revisar:'Awaiting cleaning check',
+      x_sim_recientes:'Latest drills',
+      x_sim_nada_pend:'Nothing pending ✓',
+      x_sim_etiqueta:'DRILL',
+      x_sim_btn_hecho:'✓ Done',
+      x_sim_hecho_titulo:'Drill done',
+      x_sim_actuacion:'What you did',
+      x_sim_actuacion_ph:'Describe what you did during the drill…',
+      x_sim_duracion:'Duration (min)',
+      x_sim_hecho_nota:'It will be recorded under your name ({nombre}) with the current time.',
+      x_sim_err_actuacion:'Describe what you did.',
+      x_sim_hecho_ok:'Drill marked as done ✓',
+      x_sim_ya_no:'This drill is no longer pending. The list has been refreshed.',
+      x_sim_btn_revisar:'🧹 Check cleaning',
+      x_sim_rev_titulo:'Cleaning check',
+      x_sim_rev_quien:'Who checks',
+      x_sim_rev_otro:'Someone else…',
+      x_sim_rev_nombre_ph:'Full name',
+      x_sim_rev_limpia:'Has the area been left clean?',
+      x_sim_rev_obs:'Remarks',
+      x_sim_rev_nota:'It is signed by the person who checked the area. The current time and the account used to sign ({cuenta}) are recorded.',
+      x_sim_err_quien:'Enter who checks.',
+      x_sim_err_limpia:'State whether the area has been left clean.',
+      x_sim_err_obs:'If the area was not left clean, explain why under Remarks.',
+      x_sim_rev_ok:'Check recorded ✓',
+      x_sim_firmar:'Sign check',
+      x_sim_anular:'Cancel drill',
+      x_sim_anular_titulo:'Cancel a drill',
+      x_sim_motivo:'Reason',
+      x_sim_err_motivo:'Enter the reason.',
+      x_sim_anulado_ok:'Drill cancelled',
+      x_sim_reasignar:'Reassign',
+      x_sim_reasignar_titulo:'Reassign mechanic',
+      x_sim_reasignado_ok:'Mechanic reassigned (manual assignment)',
+      x_sim_excel:'⬇ Export to Excel',
+      x_sim_excel_vacio:'There are no drills to export',
+      x_sim_cfg:'⚙ Reviewers and shifts',
+      x_sim_cfg_titulo:'Production reviewers and shifts',
+      x_sim_cfg_turnos:'Shifts',
+      x_sim_cfg_de:'from',
+      x_sim_cfg_a:'to',
+      x_sim_cfg_revisores:'Production reviewers',
+      x_sim_cfg_revisores_desc:'Production staff who check the area is clean after the job. The system assigns each drill a reviewer from its shift; the one who signs is always the person who checks.',
+      x_sim_cfg_anadir:'Add reviewer',
+      x_sim_cfg_guardado:'Settings saved ✓',
+      x_sim_cfg_ninguno:'There are no reviewers at this site yet.',
+      x_sim_turno_manana:'Morning',
+      x_sim_turno_tarde:'Afternoon',
+      x_sim_turno_noche:'Night',
+      x_sim_turno_cualquiera:'Any',
+      x_sim_f1:'Product jam at the infeed',
+      x_sim_f2:'Photocell or presence sensor fault',
+      x_sim_f3:'Belt off-centre or broken',
+      x_sim_f4:'Compressed air leak',
+      x_sim_f5:'Oil leak in the gearbox',
+      x_sim_f6:'Abnormal noise in a motor bearing',
+      x_sim_f7:'Electrical protection tripped (thermal relay)',
+      x_sim_f8:'Emergency stop that will not reset',
+      x_sim_f9:'Slack chain',
+      x_sim_f10:'Communication fault with the control panel',
       // ── v10.13: integración Solved ──
       opt_pend_validar:'Pending validation', x_sv_enviar_validar:'✓ Send for validation', x_sv_enviada:'Sent for validation ✓ (Solved will close it once validated)',
       x_sv_resolver_desc:'This incident comes from Solved: marking it resolved sets it to "Pending validation" and Solved closes it once quality validates it.',
@@ -1731,6 +2086,157 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v10.16: cierre en bloque de averías y revisión de producción ──
+      x_blq_n:'المحدد: {n}',
+      x_blq_seleccionar:'☑ تحديد عدة',
+      x_blq_asignar:'👤 تعيين ميكانيكي (بالتناوب)',
+      x_blq_cerrar:'إغلاق جماعي…',
+      x_blq_quitar:'إنهاء التحديد',
+      x_blq_sel_todas:'تحديد كل الأعطال المفتوحة في القائمة',
+      x_blq_adm:'إداري',
+      x_blq_adm_tt:'إغلاق إداري جماعي (بدون تقرير عمل)',
+      x_blq_todas_asignadas:'كل الأعطال المحددة لها ميكانيكي بالفعل.',
+      x_blq_sin_mecanicos:'لا يوجد ميكانيكيون نشطون في مركز هذه الأعطال.',
+      x_blq_asignar_conf:'أعطال بلا فني سيُعيَّن لها ميكانيكي بالتناوب: {n} (المحدد: {total}). ستُوسم بـ«تلقائي» وتبقى مفتوحة.',
+      x_blq_asignadas:'عُيّنت بالتناوب: {n}.',
+      x_blq_sin_mec_n:'بلا ميكانيكي متاح في مركزها: {n}.',
+      x_blq_titulo:'إغلاق إداري جماعي',
+      x_blq_resumen:'الأعطال التي ستُغلق: {n}',
+      x_blq_motivo:'سبب الإغلاق',
+      x_blq_motivo_ph:'مثال: الآلات تعمل بالفعل؛ أعطال لم تُغلق في حينها',
+      x_blq_opt_asignar:'تعيين ميكانيكي بالتناوب لمن ليس له ميكانيكي ({n})؛ يُوسم بـ«تلقائي»',
+      x_blq_nota:'تُغلق باسمك ({nombre}) بتاريخ ووقت الآن كإغلاق إداري. لا تُنشأ تقارير عمل ولا يُخصم مخزون، وتبقى المدة بلا قيمة فلا تدخل في مؤشرات الوقت. مراجعة النظافة تبقى معلّقة ويوقّعها الإنتاج من حسابه.',
+      x_blq_confirmar:'إغلاق المحدد ({n})',
+      x_blq_err_motivo:'اكتب سبب الإغلاق.',
+      x_blq_cerradas:'الأعطال المغلقة: {n}.',
+      x_blq_ya:'كانت مغلقة بالفعل: {n}.',
+      x_blq_cierre:'الإغلاق',
+      x_blq_cierre_adm:'إداري جماعي',
+      x_blq_rev_prod:'مراجعة النظافة (الإنتاج)',
+      x_blq_rev_pend:'بانتظار توقيع الإنتاج',
+      x_blq_sql_titulo:'SQL · الإغلاق الجماعي',
+      x_blq_sql_falta:'هناك أعمدة ناقصة في جدول الأعطال. نفّذ هذا الـSQL مرة واحدة في Supabase › SQL Editor (Run) ثم أعد المحاولة. لم يتغيّر شيء.',
+      x_prv_titulo:'🧹 نظافة بانتظار المراجعة',
+      x_prv_desc:'أعطال أغلقتها الصيانة جماعيًا. تحقّق من المنطقة ووقّع مراجعة ما تحدده.',
+      x_prv_desc_mant:'أعطال أُغلقت جماعيًا بانتظار أن يوقّع الإنتاج المراجعة من حسابه.',
+      x_prv_cerrada_el:'أُغلق في',
+      x_prv_firmar_n:'🧹 توقيع المراجعة ({n})',
+      x_prv_ninguna:'حدّد عطلًا واحدًا على الأقل.',
+      x_prv_dlg_resumen:'مراجعات النظافة التي ستوقّعها: {n}. النتيجة تُطبَّق على الجميع: إن كانت منطقة غير نظيفة فألغِ تحديدها ووقّعها على حدة.',
+      x_prv_firmadas:'المراجعات الموقّعة: {n} ✓',
+      x_prv_ya:'كانت موقّعة بالفعل: {n}.',
+      // ── v10.15: simulacros de avería ──
+      nav_simulacros:'التمارين',
+      x_sim_subtitulo:'تمارين الأعطال: تدريبات مجدولة ينفذها الميكانيكي ويراجعها الإنتاج. لا تُحتسب كأعطال ولا تدخل في التقارير أو التنبيهات.',
+      x_sim_sin_tabla:'جدول التمارين غير موجود في قاعدة البيانات. شغّل simulacros_setup.sql في Supabase › SQL Editor ثم أعد التحميل.',
+      x_sim_ver_sql:'عرض SQL',
+      x_sim_sql_titulo:'SQL لجدول التمارين',
+      x_sim_sql_ayuda:'انسخ ونفّذ في Supabase → SQL Editor → New query. ثم أعد التحميل.',
+      x_sim_gen_titulo:'جدولة التمارين',
+      x_sim_gen_desc:'يوزّعها النظام عشوائيًا على آلات ونوبات الأسبوع، ويعيّن الميكانيكي بالتناوب ومراجِع الإنتاج للنوبة. يسجّل كل تمرين كمنجز من ينفّذه، ويوقّع الإنتاج على مراجعة النظافة.',
+      x_sim_centro:'المركز',
+      x_sim_numero:'عدد التمارين',
+      x_sim_semana:'أسبوع يوم',
+      x_sim_dias:'الأيام',
+      x_sim_dias_lv:'من الاثنين إلى الجمعة',
+      x_sim_dias_ls:'من الاثنين إلى السبت',
+      x_sim_dias_todos:'الأسبوع كله',
+      x_sim_generar:'🎲 إنشاء مقترح',
+      x_sim_err_num:'حدّد عدد التمارين (من 1 إلى 30).',
+      x_sim_err_semana:'اختر يومًا من الأسبوع الذي تريد تنفيذها فيه.',
+      x_sim_err_pasada:'لم تبقَ نوبات في ذلك الأسبوع: لا يمكن جدولة التمارين إلا من الآن فصاعدًا.',
+      x_sim_err_maquinas:'لا توجد آلات مسجلة في ذلك المركز.',
+      x_sim_err_turnos:'لا توجد نوبة مفعّلة. راجع ⚙ المراجعون والنوبات.',
+      x_sim_aviso_sin_mec:'لا يوجد ميكانيكيون نشطون في هذا المركز: ستبقى التمارين دون تعيين.',
+      x_sim_aviso_sin_rev:'لا يوجد مراجِع إنتاج معيَّن للنوبة: {turnos}. أضفهم في ⚙ المراجعون والنوبات.',
+      x_sim_prop_titulo:'مقترح التمارين · {centro}',
+      x_sim_prop_semana:'الأسبوع من {ini} إلى {fin}. لا يُحفظ شيء حتى تضغط "جدولة".',
+      x_sim_otra:'🎲 مقترح آخر',
+      x_sim_programar:'جدولة {n} تمارين',
+      x_sim_programados:'تمت جدولة {n} تمارين ✓',
+      x_sim_col_cuando:'الموعد',
+      x_sim_col_maquina:'الآلة',
+      x_sim_col_fallo:'العطل المحاكى',
+      x_sim_col_mecanico:'الميكانيكي',
+      x_sim_col_hecho:'نفّذه',
+      x_sim_col_revisor:'مراجِع الإنتاج',
+      x_sim_col_revision:'مراجعة النظافة',
+      x_sim_col_estado:'الحالة',
+      x_sim_auto:'تلقائي',
+      x_sim_manual:'يدوي',
+      x_sim_auto_tt:'عيّنه النظام (بالتناوب)',
+      x_sim_manual_tt:'عيّنه شخص',
+      x_sim_sin_asignar:'غير معيَّن',
+      x_sim_sin_revisor:'بدون مراجِع',
+      x_sim_est_programado:'مجدول',
+      x_sim_est_pendiente:'بانتظار التنفيذ',
+      x_sim_est_hecho:'بانتظار المراجعة',
+      x_sim_est_revisado:'تمت المراجعة',
+      x_sim_est_anulado:'ملغى',
+      x_sim_f_todos:'كل الحالات',
+      x_sim_vacio:'لا توجد تمارين',
+      x_sim_vacio_sub:'جدول أولى التمارين من النموذج أعلاه',
+      x_sim_pend_hacer:'بانتظار التنفيذ',
+      x_sim_pend_revisar:'بانتظار مراجعة النظافة',
+      x_sim_recientes:'آخر التمارين',
+      x_sim_nada_pend:'لا شيء معلّق ✓',
+      x_sim_etiqueta:'تمرين',
+      x_sim_btn_hecho:'✓ تم',
+      x_sim_hecho_titulo:'تم تنفيذ التمرين',
+      x_sim_actuacion:'ماذا فعلت',
+      x_sim_actuacion_ph:'صف ما قمت به أثناء التمرين…',
+      x_sim_duracion:'المدة (دقيقة)',
+      x_sim_hecho_nota:'سيُسجَّل باسمك ({nombre}) بالوقت الحالي.',
+      x_sim_err_actuacion:'صف ما قمت به.',
+      x_sim_hecho_ok:'تم تسجيل التمرين كمنجز ✓',
+      x_sim_ya_no:'هذا التمرين لم يعد معلّقًا. تم تحديث القائمة.',
+      x_sim_btn_revisar:'🧹 مراجعة النظافة',
+      x_sim_rev_titulo:'مراجعة النظافة',
+      x_sim_rev_quien:'من يراجع',
+      x_sim_rev_otro:'شخص آخر…',
+      x_sim_rev_nombre_ph:'الاسم الكامل',
+      x_sim_rev_limpia:'هل تُركت المنطقة نظيفة؟',
+      x_sim_rev_obs:'ملاحظات',
+      x_sim_rev_nota:'يوقّعها الشخص الذي تحقق من المنطقة. يُسجَّل الوقت الحالي والحساب المستخدم للتوقيع ({cuenta}).',
+      x_sim_err_quien:'حدّد من يراجع.',
+      x_sim_err_limpia:'حدّد هل تُركت المنطقة نظيفة.',
+      x_sim_err_obs:'إذا لم تُترك المنطقة نظيفة فاشرح السبب في الملاحظات.',
+      x_sim_rev_ok:'تم تسجيل المراجعة ✓',
+      x_sim_firmar:'توقيع المراجعة',
+      x_sim_anular:'إلغاء التمرين',
+      x_sim_anular_titulo:'إلغاء تمرين',
+      x_sim_motivo:'السبب',
+      x_sim_err_motivo:'حدّد السبب.',
+      x_sim_anulado_ok:'تم إلغاء التمرين',
+      x_sim_reasignar:'إعادة التعيين',
+      x_sim_reasignar_titulo:'إعادة تعيين الميكانيكي',
+      x_sim_reasignado_ok:'تمت إعادة تعيين الميكانيكي (تعيين يدوي)',
+      x_sim_excel:'⬇ تصدير إلى Excel',
+      x_sim_excel_vacio:'لا توجد تمارين للتصدير',
+      x_sim_cfg:'⚙ المراجعون والنوبات',
+      x_sim_cfg_titulo:'مراجعو الإنتاج والنوبات',
+      x_sim_cfg_turnos:'النوبات',
+      x_sim_cfg_de:'من',
+      x_sim_cfg_a:'إلى',
+      x_sim_cfg_revisores:'مراجعو الإنتاج',
+      x_sim_cfg_revisores_desc:'موظفو الإنتاج الذين يتحققون من نظافة المنطقة بعد التدخل. يعيّن النظام لكل تمرين مراجِعًا من نوبته؛ ومن يوقّع هو دائمًا الشخص الذي يتحقق.',
+      x_sim_cfg_anadir:'إضافة مراجِع',
+      x_sim_cfg_guardado:'تم حفظ الإعدادات ✓',
+      x_sim_cfg_ninguno:'لا يوجد مراجعون في هذا المركز بعد.',
+      x_sim_turno_manana:'الصباح',
+      x_sim_turno_tarde:'المساء',
+      x_sim_turno_noche:'الليل',
+      x_sim_turno_cualquiera:'أي نوبة',
+      x_sim_f1:'انحشار المنتج عند المدخل',
+      x_sim_f2:'عطل في الخلية الضوئية أو حساس الوجود',
+      x_sim_f3:'السير منحرف أو مقطوع',
+      x_sim_f4:'تسرّب هواء مضغوط',
+      x_sim_f5:'تسرّب زيت في علبة التخفيض',
+      x_sim_f6:'ضجيج غير طبيعي في محمل المحرك',
+      x_sim_f7:'فصل الحماية الكهربائية (المرحّل الحراري)',
+      x_sim_f8:'إيقاف الطوارئ لا يُعاد ضبطه',
+      x_sim_f9:'سلسلة مرتخية',
+      x_sim_f10:'عطل في الاتصال مع لوحة التحكم',
       // ── v10.13: integración Solved ──
       opt_pend_validar:'بانتظار التحقق', x_sv_enviar_validar:'✓ إرسال للتحقق', x_sv_enviada:'أُرسلت للتحقق ✓ (Solved سيغلقها بعد التحقق)',
       x_sv_resolver_desc:'هذه الحادثة قادمة من Solved: عند تعليمها كمحلولة تنتقل إلى "بانتظار التحقق" ويغلقها Solved بعد تحقق الجودة.',
@@ -2152,6 +2658,7 @@ const db = {
   plan_activos:    makeTable('plan_activos',    'id'),
   ordenes_trabajo: makeTable('ordenes_trabajo', 'id'),
   cae_datos:       makeTable('cae_datos',       'clave'),
+  simulacros:      makeTable('simulacros',      'id'),   // v10.15: tabla propia, separada de averias
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -2676,7 +3183,7 @@ const DataService = {
 
     // 3. Averías sin ningún parte (comparación estricta por string)
     const averiaConParte = new Set(partes.map(p => String(p.averia_id)));
-    const sinParte = averias.filter(a => !averiaConParte.has(String(a.id)));
+    const sinParte = averias.filter(a => !averiaConParte.has(String(a.id)) && !a.cierre_admin);   // v10.16: un cierre administrativo no lleva parte
 
     if (sinParte.length === 0) return { creados: 0, detalle: [] };
 
@@ -3376,7 +3883,7 @@ const Router = {
     const [base] = hash.split('/');
 
     // Producción: solo su vista de bloques
-    if (UserService.isProduccion() && base !== 'produccion') {
+    if (UserService.isProduccion() && base !== 'produccion' && base !== 'simulacros') {
       window.location.hash = 'produccion';
       return;
     }
@@ -3387,7 +3894,7 @@ const Router = {
     }
     // Roles sin privilegios solo pueden ver Averías y Partes
     const _priv = UserService.isAdmin() || UserService.isResponsable();
-    if (!_priv && !UserService.isProduccion() && base !== 'averias' && base !== 'partes' && base !== 'ordenes') {
+    if (!_priv && !UserService.isProduccion() && base !== 'averias' && base !== 'partes' && base !== 'ordenes' && base !== 'simulacros') {
       window.location.hash = 'averias';
       return;
     }
@@ -3400,7 +3907,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { produccion:t('x_prod_titulo'), centros:t('nav_centros'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
+    const titles = { produccion:t('x_prod_titulo'), centros:t('nav_centros'), simulacros:t('nav_simulacros'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -5543,6 +6050,9 @@ const AveriasPage = {
   _filtered: [],
   _prefillFromIncidencia: null,
   _incidenciaOrigen: null,   // v10.13: id de la incidencia desde la que se está creando la avería
+  _sel: new Set(),           // v10.16: averías marcadas para las acciones en bloque
+  _selOn: false,             // modo selección activo (casillas visibles)
+  _SQL_BLOQUE: "-- ═══════════════════════════════════════════════════════════════════════════════════════════\n-- averias_cierre_bloque.sql — Cierre en bloque y revisión de producción (GMAO v10.16)   11/11/2026\n-- Ejecutar ENTERO en Supabase → SQL Editor → Run. Idempotente: se puede repetir sin problema.\n--\n-- Solo AÑADE columnas a `averias`. No cambia ni borra ningún dato y no toca triggers ni avisos.\n--   · asignacion        'Auto' = el mecánico lo asignó el sistema por rotación · 'Manual' = lo cambió una persona\n--   · cierre_admin      true = cierre administrativo en bloque (sin parte de trabajo ni duración)\n--   · cerrado_por / cerrado_at   quién hizo ese cierre y cuándo\n--   · revisado_por / revisado_at / revisado_usuario / obs_revision\n--                       revisión de limpieza que firma producción desde su cuenta (el resultado va en `zona_limpia`)\n--\n-- Comprobar:  select id, estado, tecnico, asignacion, cierre_admin, cerrado_por, revisado_por, revisado_at, zona_limpia\n--             from public.averias where cierre_admin order by cerrado_at desc limit 20;\n-- ═══════════════════════════════════════════════════════════════════════════════════════════\n\nalter table public.averias add column if not exists asignacion       text;\nalter table public.averias add column if not exists cierre_admin     boolean;\nalter table public.averias add column if not exists cerrado_por      text;\nalter table public.averias add column if not exists cerrado_at       timestamptz;\nalter table public.averias add column if not exists revisado_por     text;\nalter table public.averias add column if not exists revisado_at      timestamptz;\nalter table public.averias add column if not exists revisado_usuario text;\nalter table public.averias add column if not exists obs_revision     text;\n\nnotify pgrst, 'reload schema';\n",
   _pendingFilter: null,
   _extraFilter: null,
 
@@ -5551,6 +6061,7 @@ const AveriasPage = {
     <div class="page-header">
       <div><h1>${t('nav_averias')}</h1><p class="page-subtitle" id="averias-count">${t('cargando')}</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${AveriasPage._puedeBloque() ? `<button class="btn btn-secondary" id="av-sel-btn" onclick="AveriasPage._selModo()">${t('x_blq_seleccionar')}</button>` : ''}
         <button class="btn btn-secondary" onclick="ConfigPage.exportAverias()">${t('btn_excel')}</button>
         ${UserService.isAdmin() ? `
         <button class="btn btn-secondary" onclick="document.getElementById('av-import-input').click()">${t('btn_importar')}</button>
@@ -5584,11 +6095,17 @@ const AveriasPage = {
       <span id="av-extra-filter-label" style="flex:1;color:var(--blue)"></span>
       <button onclick="AveriasPage._clearExtraFilter()" style="color:var(--blue);font-weight:700;font-size:16px;line-height:1;border:none;background:none;cursor:pointer" title="${t('x_quitar_filtro')}">×</button>
     </div>
+    ${AveriasPage._puedeBloque() ? `<div class="av-bulk" id="av-bulk">
+      <span class="av-bulk-n" id="av-bulk-n"></span>
+      <button class="btn btn-secondary btn-sm" id="av-bulk-asignar" onclick="AveriasPage.bulkAsignar()">${t('x_blq_asignar')}</button>
+      <button class="btn btn-primary btn-sm" id="av-bulk-cerrar" onclick="AveriasPage.openBulkClose()">${t('x_blq_cerrar')}</button>
+      <button class="btn btn-secondary btn-sm" id="av-bulk-salir" onclick="AveriasPage._selModo(false)">${t('x_blq_quitar')}</button>
+    </div>` : ''}
     <div class="card">
       <div class="table-wrap">
         <table class="table-clickable" id="av-table">
           <thead><tr id="av-thead">
-            <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('x_id')} <span id="av-sort-id"></span></th>
+            <th onclick="AveriasPage._setSort('id')"          style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${AveriasPage._puedeBloque() ? `<label class="av-chk-w" onclick="event.stopPropagation()" title="${t('x_blq_sel_todas')}"><input type="checkbox" id="av-chk-all" onchange="AveriasPage._selAll(this.checked)"></label>` : ''}${t('x_id')} <span id="av-sort-id"></span></th>
             <th onclick="AveriasPage._setSort('fecha_inicio')" style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_fecha')} <span id="av-sort-fecha_inicio"></span></th>
             <th class="col-sec" onclick="AveriasPage._setSort('hora_inicio')"  style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_hora')} <span id="av-sort-hora_inicio"></span></th>
             <th onclick="AveriasPage._setSort('almacen')"     style="cursor:pointer;user-select:none" title="${t('x_ordenar')}">${t('col_almacen')} <span id="av-sort-almacen"></span></th>
@@ -5606,6 +6123,7 @@ const AveriasPage = {
       </div>
     </div>`;
 
+    this._selOn = false; this._sel = new Set();   // v10.16: cada vez que se abre la pantalla, sin selección
     const almacenGlobal = getAlmacenFilter();
     const avAlmacenFilter = document.getElementById('av-f-almacen');
     if (almacenGlobal) {
@@ -5732,6 +6250,9 @@ const AveriasPage = {
   _renderTable() {
     const tbody = document.getElementById('av-tbody');
     if (!tbody) return;
+    const puede = this._puedeBloque();
+    this._sel = new Set(this._filtered.filter(a => a.estado !== 'Cerrada' && this._sel.has(a.id)).map(a => a.id));
+    this._selUI();
     if (this._filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="12">${UI.empty()}</td></tr>`; return; }
 
     // Ordenar
@@ -5761,19 +6282,152 @@ const AveriasPage = {
     const fotosSet = this._fotosSet || new Set();
     tbody.innerHTML = sorted.map(a => `
       <tr onclick="AveriasPage.openDetail('${UI.esc(a.id)}')">
-        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${UI.esc(a.id)}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--gray-muted);white-space:nowrap">${puede && a.estado !== 'Cerrada' ? `<label class="av-chk-w" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" data-id="${UI.esc(a.id)}"${this._sel.has(a.id) ? ' checked' : ''} onchange="AveriasPage._selToggle(this.dataset.id, this.checked)"></label>` : ''}${UI.esc(a.id)}</td>
         <td style="white-space:nowrap">${UI.formatDate(a.fecha_inicio, a.id)}</td>
         <td class="col-sec" style="white-space:nowrap;color:var(--gray-muted);font-size:12px">${a.hora_inicio ? a.hora_inicio.slice(0,5) : '—'}</td>
         <td>${UI.esc(a.almacen||'—')}</td>
         <td class="col-sec" style="color:var(--gray-muted);font-size:12px">${UI.esc(a.linea||'—')}</td>
         <td style="font-weight:500">${UI.esc(a.equipo||'—')}</td>
         <td class="col-truncate" style="max-width:220px">${UI.esc(a.descripcion||'—')}</td>
-        <td>${a.tecnico ? UI.esc(a.tecnico) : '<span class="td-empty">—</span>'}</td>
+        <td>${a.tecnico ? UI.esc(a.tecnico) + (a.asignacion === 'Auto' ? ` <span class="badge badge-gray" title="${t('x_sim_auto_tt')}">${t('x_sim_auto')}</span>` : '') : '<span class="td-empty">—</span>'}</td>
         <td>${UI.criticidadBadge(a.criticidad)}</td>
-        <td>${UI.estadoBadge(a.estado)}</td>
+        <td>${UI.estadoBadge(a.estado)}${a.cierre_admin ? ` <span class="badge badge-gray" title="${t('x_blq_adm_tt')}">${t('x_blq_adm')}</span>` : ''}</td>
         <td>${a.duracion ? UI.formatDuration(a.duracion) : '<span class="td-empty">—</span>'}</td>
         <td style="text-align:center">${fotosSet.has(a.id) ? '📷' : ''}</td>
       </tr>`).join('');
+  },
+
+  // ── v10.16: selección y acciones en bloque (Admin / Responsable) ─────────────────────────
+  // Asignar mecánico por rotación y cierre administrativo de varias averías abiertas a la vez. El cierre
+  // queda a nombre de quien lo hace, sin parte de trabajo ni duración, y la limpieza la firma producción.
+  _puedeBloque() { return UserService.isAdmin() || UserService.isResponsable(); },
+  // Modo selección: las casillas solo se ven mientras está activo (la lista normal no cambia)
+  _selModo(on) {
+    this._selOn = on === undefined ? !this._selOn : !!on;
+    if (!this._selOn) this._selAll(false); else this._selUI();
+  },
+  _selToggle(id, on) { if (on) this._sel.add(id); else this._sel.delete(id); this._selUI(); },
+  _selAll(on) {
+    this._sel = new Set(on ? this._filtered.filter(a => a.estado !== 'Cerrada').map(a => a.id) : []);
+    document.querySelectorAll('#av-tbody .av-chk').forEach(c => { c.checked = on; });
+    this._selUI();
+  },
+  _selUI() {
+    const bar = document.getElementById('av-bulk'); if (!bar) return;
+    const n = this._sel.size;
+    bar.classList.toggle('on', this._selOn);
+    document.getElementById('av-table')?.classList.toggle('sel-on', this._selOn);
+    document.getElementById('av-bulk-n').textContent = tf('x_blq_n', { n });
+    ['av-bulk-asignar', 'av-bulk-cerrar'].forEach(id => { document.getElementById(id).disabled = !n; });
+    const todas = document.getElementById('av-chk-all');
+    if (todas) { const ab = this._filtered.filter(a => a.estado !== 'Cerrada').length; todas.checked = ab > 0 && n === ab; }
+  },
+  _selAverias() { return this._data.filter(a => this._sel.has(a.id) && a.estado !== 'Cerrada' && UserService.canCloseAveria(a)); },
+  // Reparto por rotación: a cada avería sin técnico, el mecánico activo de su centro con menos averías abiertas
+  async _rotacion(averias) {
+    const mecs = (await DataService.getTecnicos(true)).filter(x => x.rol === 'Mecanico');
+    const carga = {};
+    this._data.forEach(a => { if (a.estado !== 'Cerrada' && a.tecnico) carga[a.tecnico] = (carga[a.tecnico] || 0) + 1; });
+    const plan = {};
+    averias.filter(a => !a.tecnico).forEach(a => {
+      const centro = normalizeAlmacen(a.almacen);
+      let mejor = '';
+      mecs.filter(m => normalizeAlmacen(m.almacen) === centro).forEach(m => { if (!mejor || (carga[m.nombre] || 0) < (carga[mejor] || 0)) mejor = m.nombre; });
+      if (mejor) { plan[a.id] = mejor; carga[mejor] = (carga[mejor] || 0) + 1; }
+    });
+    return plan;
+  },
+  // Si faltan las columnas nuevas (no se ha ejecutado averias_cierre_bloque.sql) se enseña el SQL
+  _errBloque(msg) {
+    if (/asignacion|cierre_admin|cerrado_por|cerrado_at|revisado_|obs_revision/i.test(msg || '')) return this.verSQLBloque();
+    toast(msg, 'error', 6000);
+  },
+  verSQLBloque() {
+    Modal.open(t('x_blq_sql_titulo'), `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_blq_sql_falta')}</p>
+      <textarea readonly id="blq-sql" style="width:100%;height:320px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical;direction:ltr">${UI.esc(this._SQL_BLOQUE)}</textarea>`,
+      `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.getElementById('blq-sql').value);toast('SQL ✓','success')">${t('x_copiar_sql')}</button>
+       <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
+  },
+  async bulkAsignar() {
+    const sel = this._selAverias(), sin = sel.filter(a => !a.tecnico);
+    if (!sin.length) return toast(t('x_blq_todas_asignadas'), 'error');
+    const plan = await this._rotacion(sin), n = Object.keys(plan).length;
+    if (!n) return toast(t('x_blq_sin_mecanicos'), 'error', 5000);
+    if (!await Modal.confirm(tf('x_blq_asignar_conf', { n, total: sel.length }), { title: t('x_blq_asignar'), danger: false })) return;
+    let ok = 0, err = '';
+    for (const s of sin) {
+      if (!plan[s.id]) continue;
+      const a = await DataService.getAveria(s.id);
+      if (!a || a.estado === 'Cerrada' || a.tecnico) continue;
+      const { data, error } = await sb.from('averias').update({ tecnico: plan[s.id], asignacion: 'Auto' }).eq('id', s.id).neq('estado', 'Cerrada').select('id');
+      if (error) { err = error.message; break; }
+      if (data && data.length) ok++;
+    }
+    if (err) return this._errBloque(err);
+    toast(tf('x_blq_asignadas', { n: ok }) + (sin.length > n ? ' ' + tf('x_blq_sin_mec_n', { n: sin.length - n }) : ''), 'success', 5000);
+    this._selModo(false);
+    await this._reload();
+  },
+  openBulkClose() {
+    const sel = this._selAverias(); if (!sel.length) return;
+    const esc = UI.esc, u = UserService.getUser(), sin = sel.filter(a => !a.tecnico).length;
+    Modal.open(t('x_blq_titulo'), `
+      <p style="font-size:13px;margin-bottom:10px">${tf('x_blq_resumen', { n: sel.length })}</p>
+      <div class="blq-list" id="blq-list">${sel.map(a => `<div class="blq-item">
+        <b>${esc(a.equipo || a.id_activo || '—')}</b>
+        <small>${esc(a.almacen || '')} · ${UI.formatDate(a.fecha_inicio, a.id)} · ${a.tecnico ? esc(a.tecnico) : t('x_sim_sin_asignar')}</small>
+        <small class="blq-id">${esc(a.id)}</small>
+      </div>`).join('')}</div>
+      <div class="form-field" style="margin-bottom:12px"><label>${t('x_blq_motivo')} *</label>
+        <textarea class="form-input" id="blq-motivo" rows="2" placeholder="${t('x_blq_motivo_ph')}"></textarea></div>
+      ${sin ? `<label class="blq-opt"><input type="checkbox" id="blq-asignar" checked> <span>${tf('x_blq_opt_asignar', { n: sin })}</span></label>` : ''}
+      <div class="blq-nota">${tf('x_blq_nota', { nombre: esc(u ? u.nombre : '') })}</div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="blq-ok" onclick="AveriasPage._saveBulkClose()">${tf('x_blq_confirmar', { n: sel.length })}</button>`);
+  },
+  async _saveBulkClose() {
+    if (this._saving) return;
+    const motivo = (document.getElementById('blq-motivo').value || '').trim();
+    if (!motivo) return toast(t('x_blq_err_motivo'), 'error');
+    const sel = this._selAverias(), btn = document.getElementById('blq-ok');
+    this._saving = true; if (btn) btn.disabled = true;
+    let ok = 0, ya = 0, err = '';
+    try {
+      const plan = document.getElementById('blq-asignar')?.checked ? await this._rotacion(sel) : {};
+      const now = new Date(), p2 = v => String(v).padStart(2, '0'), u = UserService.getUser(), nombre = u ? u.nombre : '';
+      const fecha = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}`, hora = `${p2(now.getHours())}:${p2(now.getMinutes())}`;
+      const nota = `Cierre administrativo en bloque por ${nombre} el ${fecha.split('-').reverse().join('/')} ${hora}. Motivo: ${motivo}. Sin parte de trabajo.`;
+      for (const s of sel) {
+        const a = await DataService.getAveria(s.id);
+        if (!a || a.estado === 'Cerrada') { ya++; continue; }
+        const cambios = {
+          estado: 'Cerrada', fecha_fin: fecha, hora_fin: hora + ':00', duracion: '',
+          solucion: (a.solucion ? a.solucion + ' · ' : '') + nota,
+          cierre_admin: true, cerrado_por: nombre, cerrado_at: now.toISOString(),
+          zona_limpia: null, revisado_por: null, revisado_at: null, revisado_usuario: null, obs_revision: null,
+        };
+        if (!a.tecnico && plan[a.id]) { cambios.tecnico = plan[a.id]; cambios.asignacion = 'Auto'; }
+        const { data, error } = await sb.from('averias').update(cambios).eq('id', a.id).neq('estado', 'Cerrada').select('id');
+        if (error) { err = error.message; break; }
+        if (data && data.length) ok++; else ya++;
+      }
+    } catch (e) { err = e.message || String(e); }
+    finally { this._saving = false; if (btn) btn.disabled = false; }
+    Modal.close();
+    if (err && !ok) return this._errBloque(err);
+    toast(tf('x_blq_cerradas', { n: ok }) + (ya ? ' ' + tf('x_blq_ya', { n: ya }) : '') + (err ? ' ⚠ ' + err : ''), err ? 'error' : 'success', 6000);
+    this._selModo(false);
+    App.updateBadges();
+    await this._reload();
+  },
+  // Ficha de una avería cerrada en bloque: quién la cerró y cómo está la revisión de producción
+  _revisionHtml(a) {
+    const esc = UI.esc;
+    const cierre = `<div class="detail-field"><label>${t('x_blq_cierre')}</label><p>${t('x_blq_cierre_adm')}${a.cerrado_por ? ' · ' + esc(a.cerrado_por) : ''}</p></div>`;
+    if (!a.revisado_at) return cierre + `<div class="detail-field"><label>${t('x_blq_rev_prod')}</label><p style="font-weight:600;color:var(--orange)">⏳ ${t('x_blq_rev_pend')}</p></div>`;
+    const limpia = a.zona_limpia !== false;
+    return cierre + `<div class="detail-field"><label>${t('x_blq_rev_prod')}</label><p><span style="font-weight:600;color:${limpia ? 'var(--green)' : 'var(--red)'}">🧹 ${limpia ? t('x_si') : t('x_no')}</span> · ${esc(a.revisado_por || '')} · ${SimulacrosPage._fechaHora(a.revisado_at)}${a.obs_revision ? `<br><small style="color:var(--gray-muted)">${esc(a.obs_revision)}</small>` : ''}</p></div>`;
   },
 
   async openDetail(id) {
@@ -5800,7 +6454,7 @@ const AveriasPage = {
                </div>`).join('')}
            </div>
          </div>`
-      : (a.tecnico ? `<div class="detail-field"><label>${t('x_tecnico_asignado')}</label><p>${UI.esc(a.tecnico)}</p></div>` : '');
+      : (a.tecnico ? `<div class="detail-field"><label>${t('x_tecnico_asignado')}</label><p>${UI.esc(a.tecnico)}${a.asignacion === 'Auto' ? ` <span class="badge badge-gray" title="${t('x_sim_auto_tt')}">${t('x_sim_auto')}</span>` : ''}</p></div>` : '');
 
     const fotosHtml = `<div class="detail-field full">
       <label>${t('x_fotos')}${fotos.length ? ` (${fotos.length})` : ''}</label>
@@ -5841,7 +6495,7 @@ const AveriasPage = {
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>${t('lbl_solucion')}</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>${t('x_materiales_utilizados')}</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
-        ${a.estado === 'Cerrada' ? `<div class="detail-field"><label>${t('x_zona_limpia_y_revisada')}</label><p style="font-weight:600;color:${a.zona_limpia !== false ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia !== false ? '✓ Sí' : '✗ No'}</p></div>` : ''}
+        ${a.estado === 'Cerrada' ? (a.cierre_admin ? AveriasPage._revisionHtml(a) : `<div class="detail-field"><label>${t('x_zona_limpia_y_revisada')}</label><p style="font-weight:600;color:${a.zona_limpia !== false ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia !== false ? '✓ Sí' : '✗ No'}</p></div>`) : ''}
         ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
@@ -6027,9 +6681,10 @@ const AveriasPage = {
         </div>
         <div class="form-field">
           <label>${t('x_zona_limpia_y_revisada')}</label>
-          <select class="form-input" id="ea-zona-limpia">
+          <select class="form-input" id="ea-zona-limpia"${a.cierre_admin ? ' disabled' : ''}>
             <option value="true"${a.zona_limpia !== false ? ' selected':''}>${t('x_si')}</option>
             <option value="false"${a.zona_limpia === false ? ' selected':''}>No</option>
+            ${a.cierre_admin && !a.revisado_at ? `<option value="" selected>${t('x_blq_rev_pend')}</option>` : ''}
           </select>
         </div>
       </form>`,
@@ -6064,8 +6719,10 @@ const AveriasPage = {
       solucion:    document.getElementById('ea-solucion').value.trim(),
       materiales:  document.getElementById('ea-materiales').value.trim(),
       coste:       parseFloat(document.getElementById('ea-coste').value) || 0,
-      zona_limpia: document.getElementById('ea-zona-limpia').value === 'true',
+      zona_limpia: a.cierre_admin ? a.zona_limpia : document.getElementById('ea-zona-limpia').value === 'true',
     };
+    if (a.asignacion === 'Auto' && updated.tecnico !== a.tecnico) updated.asignacion = updated.tecnico ? 'Manual' : '';   // v10.16
+    if (a.cierre_admin && updated.estado !== 'Cerrada') updated.cierre_admin = false;                                     // reabierta
     try {
       await DataService.saveAveria(updated);
       Modal.close();
@@ -7135,6 +7792,7 @@ const AveriasPage = {
     await DataService.saveAveria({
       ...a, estado:'Cerrada', solucion,
       tecnico: tecnicoPrincipal,
+      ...(a.asignacion === 'Auto' && tecnicoPrincipal !== a.tecnico ? { asignacion: 'Manual' } : {}),
       materiales: materialesCombinados,
       coste: AveriasPage._repuestosSeleccionados.reduce((s,r) => s + (r.precio_unidad||0)*r.cantidad, 0),
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
@@ -9977,12 +10635,17 @@ const ConfigPage = {
     averias.sort((a, b) => (a.fecha_inicio || '').localeCompare(b.fecha_inicio || ''));
     const cols = ['id','id_activo','almacen','zona','linea','equipo','tipo','criticidad','estado',
                   'descripcion','tecnico','fecha_inicio','hora_inicio','fecha_fin','hora_fin',
-                  'duracion','solucion','materiales','coste','zona_limpia'];
+                  'duracion','solucion','materiales','coste','zona_limpia',
+                  'asignacion','cierre_admin','cerrado_por','revisado_por','revisado_at','obs_revision'];   // v10.16
     const headers = ['ID','Activo','Almacén','Zona','Línea','Equipo','Tipo','Criticidad','Estado',
                      'Descripción','Técnico','Fecha inicio','Hora inicio','Fecha fin','Hora fin',
-                     'Duración (min)','Solución','Materiales','Coste (€)','Zona limpia'];
+                     'Duración (min)','Solución','Materiales','Coste (€)','Zona limpia',
+                     'Asignación','Cierre','Cerrado por','Revisado por','Revisado el','Obs. revisión'];
     const rows = averias.map(av => cols.map(c => {
-      if (c === 'zona_limpia') return av.zona_limpia === false ? 'No' : 'Sí';
+      if (c === 'zona_limpia') return av.cierre_admin && !av.revisado_at ? 'Pendiente' : (av.zona_limpia === false ? 'No' : 'Sí');
+      if (c === 'asignacion') return av.tecnico ? (av.asignacion || 'Manual') : '';
+      if (c === 'cierre_admin') return av.cierre_admin ? 'Administrativo' : '';
+      if (c === 'revisado_at') return av.revisado_at ? SimulacrosPage._fechaHora(av.revisado_at) : '';
       return av[c] ?? '';
     }));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -10596,7 +11259,7 @@ const App = {
     });
     if (isProd) {
       document.querySelectorAll('.nav-item[data-route]').forEach(el => {
-        if (el.dataset.route !== 'produccion') el.style.display = 'none';
+        if (el.dataset.route !== 'produccion' && el.dataset.route !== 'simulacros') el.style.display = 'none';
       });
       ProduccionPage.startReminder();
     } else {
@@ -10652,6 +11315,7 @@ const App = {
       if (bP) { bP.textContent = pend.length; bP.style.display = pend.length > 0 ? '' : 'none'; }
     } catch (_) {}
     try { await CentrosPage.updateBadge(); } catch (_) {}   // v10.11
+    try { await SimulacrosPage.updateBadge(); } catch (_) {}   // v10.15
     NavGroups.refreshDots();
   },
 
@@ -13163,6 +13827,8 @@ const ProduccionPage = {
   _host: null,   // v10.11: CentrosPage cuando la navegación de máquinas se usa desde el panel de centros
   _ASK_KEY: 'gmao_prod_last_ask',
   _ASK_EVERY_MS: 15 * 60 * 1000,
+  _porRevisar: [],        // v10.16: averías cerradas en bloque, a falta de la firma de producción
+  _revNo: new Set(),      // las que el usuario ha desmarcado
 
   _almacen() {
     if (this._host) return this._host._sel;
@@ -13187,6 +13853,7 @@ const ProduccionPage = {
   _setDatos(alm, activos, averias, tecnicos) {
     this._activos  = activos.filter(a => a.zona && a.visible_produccion !== false);   // v10.7: solo las marcadas como visibles para producción
     this._abiertas = averias.filter(a => a.estado === 'Abierta' || a.estado === 'En curso');
+    this._porRevisar = averias.filter(a => a.estado === 'Cerrada' && a.cierre_admin === true && !a.revisado_at);
     // Técnicos asignables: mecánicos/responsables del centro (o de todos si Admin sin centro)
     this._tecnicos = tecnicos
       .filter(tec => ['Mecanico','Responsable'].includes(tec.rol))
@@ -13206,7 +13873,7 @@ const ProduccionPage = {
     if (document.getElementById('modal-overlay')?.classList.contains('open')) return;
     try {
       await this._load();
-      this._renderLevel(); this._renderOpenList(); this._updateBadge();
+      this._renderLevel(); this._renderOpenList(); this._renderRevisar(); this._updateBadge();
       const el = document.getElementById('prod-last-refresh');
       if (el) el.textContent = t('x_prod_actualizado') + ' ' + new Date().toTimeString().slice(0,5);
     } catch (e) { console.warn('[Produccion autoRefresh]', e); }
@@ -13239,9 +13906,11 @@ const ProduccionPage = {
       <div style="margin-top:28px">
         <h3 style="font-size:15px;margin-bottom:10px">${t('x_prod_averias_abiertas')} · ${UI.esc(alm)} <span id="prod-open-count" class="badge badge-red"></span></h3>
         <div id="prod-open-list" class="prod-open-list"></div>
-      </div>`;
+      </div>
+      <div id="prod-rev" style="margin-top:28px"></div>`;
     this._renderLevel();
     this._renderOpenList();
+    this._renderRevisar();
     this._updateBadge();
     this._startAutoRefresh();
   },
@@ -13352,9 +14021,90 @@ const ProduccionPage = {
     if (this._host) { await this._host.refresh(); return; }
     if (window.location.hash.slice(1) !== 'produccion') return;
     await this._load();
-    this._renderLevel(); this._renderOpenList(); this._updateBadge();
+    this._renderLevel(); this._renderOpenList(); this._renderRevisar(); this._updateBadge();
   },
   _btnTxt() { return UserService.isProduccion() ? t('x_prod_avisar_mant') : t('x_cen_registrar'); },
+
+  // ── v10.16: limpieza pendiente de revisar (averías cerradas en bloque por mantenimiento) ──
+  // La firma producción desde su cuenta: marca las que ha comprobado y las firma todas de una vez.
+  _renderRevisar() {
+    const el = document.getElementById('prod-rev'); if (!el) return;
+    const lista = this._porRevisar || [];
+    if (!lista.length) { el.innerHTML = ''; return; }
+    const esc = UI.esc, firma = UserService.isProduccion();
+    this._revNo = new Set([...this._revNo].filter(id => lista.some(a => a.id === id)));
+    el.innerHTML = `
+      <h3 style="font-size:15px;margin-bottom:4px">${t('x_prv_titulo')} <span class="badge badge-orange" id="prod-rev-count">${lista.length}</span></h3>
+      <p style="font-size:12px;color:var(--gray-muted);margin-bottom:10px">${t(firma ? 'x_prv_desc' : 'x_prv_desc_mant')}</p>
+      <div class="prod-open-list" id="prod-rev-list">${lista.map(a => `
+        <label class="prod-open-item revisar">
+          ${firma ? `<input type="checkbox" class="prv-chk" data-id="${esc(a.id)}"${this._revNo.has(a.id) ? '' : ' checked'} onchange="ProduccionPage._revToggle(this.dataset.id, this.checked)">` : ''}
+          <div class="txt">
+            <b>${esc(a.equipo || '—')} <small style="display:inline;color:var(--gray-muted)">· ${esc(a.zona || '')}${a.linea ? ' · L' + esc(String(a.linea)) : ''}</small></b>
+            <small title="${esc(a.descripcion || '')}">${esc(a.descripcion || '')}</small>
+            <small>${t('x_prv_cerrada_el')} ${UI.formatDate(a.fecha_fin)} ${esc((a.hora_fin || '').slice(0, 5))}${a.cerrado_por ? ' · ' + esc(a.cerrado_por) : ''}</small>
+          </div>
+        </label>`).join('')}</div>
+      ${firma ? `<div class="prod-big-actions" style="margin-top:10px"><button class="btn btn-primary" id="prv-btn" onclick="ProduccionPage.openRevisar()"></button></div>` : ''}`;
+    this._revBtn();
+  },
+  _revSel() { return (this._porRevisar || []).filter(a => !this._revNo.has(a.id)); },
+  _revBtn() { const b = document.getElementById('prv-btn'); if (b) { const n = this._revSel().length; b.textContent = tf('x_prv_firmar_n', { n }); b.disabled = !n; } },
+  _revToggle(id, on) { if (on) this._revNo.delete(id); else this._revNo.add(id); this._revBtn(); },
+  async openRevisar() {
+    if (!UserService.isProduccion()) return;
+    const sel = this._revSel();
+    if (!sel.length) return toast(t('x_prv_ninguna'), 'error');
+    await SimulacrosPage._loadCfg();
+    const esc = UI.esc, u = UserService.getUser();
+    const nombres = [...new Set(SimulacrosPage._revisoresDe(normalizeAlmacen(this._almacen()), ''))].sort();
+    Modal.open(t('x_sim_rev_titulo'), `
+      <p style="font-size:13px;margin-bottom:14px">${tf('x_prv_dlg_resumen', { n: sel.length })}</p>
+      <div class="form-grid">
+        <div class="form-field"><label>${t('x_sim_rev_quien')} *</label>
+          ${nombres.length ? `<select class="form-input" id="prv-quien" onchange="document.getElementById('prv-otro-w').style.display = this.value === '__otro__' ? '' : 'none'">
+            <option value=""></option>
+            ${nombres.map(nm => `<option>${esc(nm)}</option>`).join('')}
+            <option value="__otro__">${t('x_sim_rev_otro')}</option>
+          </select>` : ''}
+          <div id="prv-otro-w"${nombres.length ? ' style="display:none"' : ''}><input class="form-input" id="prv-otro" placeholder="${t('x_sim_rev_nombre_ph')}"></div></div>
+        <div class="form-field"><label>${t('x_sim_rev_limpia')} *</label>
+          <select class="form-input" id="prv-limpia"><option value=""></option><option value="true">${t('x_si')}</option><option value="false">${t('x_no')}</option></select></div>
+        <div class="form-field full"><label>${t('x_sim_rev_obs')}</label>
+          <textarea class="form-input" id="prv-obs" rows="2"></textarea></div>
+        <div class="form-field full" style="font-size:12px;color:var(--gray-muted)">${tf('x_sim_rev_nota', { cuenta: esc(u ? u.nombre : '') })}</div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="prv-ok" onclick="ProduccionPage._saveRevisar()">${tf('x_prv_firmar_n', { n: sel.length })}</button>`);
+  },
+  async _saveRevisar() {
+    if (this._saving || !UserService.isProduccion()) return;
+    const q = document.getElementById('prv-quien');
+    const quien = (q && q.value && q.value !== '__otro__' ? q.value : (document.getElementById('prv-otro').value || '')).trim();
+    const limpia = document.getElementById('prv-limpia').value;
+    const obs = (document.getElementById('prv-obs').value || '').trim();
+    if (!quien) return toast(t('x_sim_err_quien'), 'error');
+    if (!limpia) return toast(t('x_sim_err_limpia'), 'error');
+    if (limpia === 'false' && !obs) return toast(t('x_sim_err_obs'), 'error');
+    const sel = this._revSel(), btn = document.getElementById('prv-ok'), u = UserService.getUser();
+    this._saving = true; if (btn) btn.disabled = true;
+    let ok = 0, err = '';
+    try {
+      for (const a of sel) {
+        const { data, error } = await sb.from('averias').update({
+          revisado_por: quien, revisado_usuario: u ? u.nombre : '', revisado_at: new Date().toISOString(), zona_limpia: limpia === 'true', obs_revision: obs,
+        }).eq('id', a.id).eq('cierre_admin', true).is('revisado_at', null).select('id');
+        if (error) { err = error.message; break; }
+        if (data && data.length) ok++;
+      }
+    } catch (e) { err = e.message || String(e); }
+    finally { this._saving = false; if (btn) btn.disabled = false; }
+    if (err && !ok) return toast(err, 'error', 6000);
+    Modal.close();
+    toast(tf('x_prv_firmadas', { n: ok }) + (ok < sel.length ? ' ' + tf('x_prv_ya', { n: sel.length - ok }) : ''), err ? 'error' : 'success', 5000);
+    this._revNo = new Set();
+    await this._afterChange();
+  },
 
   // ── Alta rápida de avería desde una máquina ──────────────────────
   openNew(id_activo) {
@@ -13730,10 +14480,608 @@ const CentrosPage = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PAGE: SIMULACROS (v10.15) — simulacros de avería programados
+// Viven en su propia tabla (`simulacros`), nunca en `averias`: no entran en indicadores, informes, correo
+// diario ni avisos. Se crean programados (de ahora en adelante); los marca como hechos quien los hace y la
+// limpieza la firma producción. Las horas de cada paso las pone el servidor (simulacros_setup.sql).
+// ═══════════════════════════════════════════════════════════════════
+const SimulacrosPage = {
+  _data: [],
+  _todos: [],
+  _cfg: null,
+  _prop: null,
+  _sinTabla: '',
+  _TURNOS_DEF: [
+    { nombre: 'Mañana', ini: '06:00', fin: '14:00', activo: true },
+    { nombre: 'Tarde',  ini: '14:00', fin: '22:00', activo: true },
+    { nombre: 'Noche',  ini: '22:00', fin: '06:00', activo: false },
+  ],
+  _N_FALLOS: 10,
+  _SQL: "-- ═══════════════════════════════════════════════════════════════════════════════════════════\n-- simulacros_setup.sql — Simulacros de avería (GMAO v10.15)                       11/11/2026\n-- Ejecutar ENTERO en Supabase → SQL Editor → Run. Idempotente: se puede repetir sin problema.\n--\n-- Qué crea:\n--   · Tabla `simulacros`, SEPARADA de `averias`: un simulacro nunca entra en indicadores, informes,\n--     correo diario ni avisos de Telegram, porque esos solo leen `averias`.\n--   · Reglas en la propia base de datos (trigger), para que el registro sea siempre el de lo que pasó:\n--       - un simulacro se crea \"Programado\", de ahora en adelante y sin datos de ejecución;\n--       - solo avanza Programado → Hecho → Revisado (o Programado → Anulado);\n--       - no se puede marcar \"Hecho\" antes de su hora programada;\n--       - la hora de \"Hecho\", \"Revisado\" y \"Anulado\" la pone el servidor en el momento en que ocurre,\n--         y lo ya firmado no se puede cambiar después.\n--   · La lista de revisores de producción y los turnos se guardan en `cae_datos`\n--     (clave `simulacros_config`); no necesita tabla.\n--\n-- Comprobar:  select id, almacen, fecha_prog, hora_prog, estado, tecnico, hecho_por, hecho_at, revisado_por, revisado_at\n--             from public.simulacros order by fecha_prog desc, hora_prog desc limit 20;\n-- ═══════════════════════════════════════════════════════════════════════════════════════════\n\ncreate table if not exists public.simulacros (\n  id                text primary key,                     -- SIM-AAAAMMDD-HHMM-xx\n  almacen           text not null,\n  zona              text,\n  linea             text,\n  equipo            text,\n  id_activo         text,\n  descripcion       text not null,                        -- fallo que se simula\n  fecha_prog        text not null,                        -- AAAA-MM-DD (hora de Madrid, como el resto de la app)\n  hora_prog         text not null,                        -- HH:MM\n  turno             text,\n  estado            text not null default 'Programado',   -- Programado | Hecho | Revisado | Anulado\n  tecnico           text,                                 -- mecánico asignado\n  asignacion        text,                                 -- Auto (reparto del sistema) | Manual (lo eligió una persona)\n  revisor           text,                                 -- revisor de producción asignado\n  hecho_por         text,\n  hecho_at          timestamptz,\n  actuacion         text,\n  duracion_min      integer,\n  revisado_por      text,\n  revisado_at       timestamptz,\n  revisado_usuario  text,                                 -- cuenta de la app desde la que se firmó la revisión\n  zona_limpia       boolean,\n  obs_revision      text,\n  creado_por        text,\n  creado_at         timestamptz not null default now(),\n  anulado_por       text,\n  anulado_at        timestamptz,\n  motivo_anulacion  text,\n  constraint simulacros_estado_ck check (estado in ('Programado', 'Hecho', 'Revisado', 'Anulado')),\n  constraint simulacros_fecha_ck  check (fecha_prog ~ '^\\d{4}-\\d{2}-\\d{2}$' and hora_prog ~ '^\\d{2}:\\d{2}$')\n);\ncreate index if not exists simulacros_almacen_estado_ix on public.simulacros (almacen, estado);\n\nalter table public.simulacros enable row level security;\ndrop policy if exists \"anon_all\" on public.simulacros;\ncreate policy \"anon_all\" on public.simulacros for all using (true) with check (true);\n\n-- Reglas de alta y de cambio de estado\ncreate or replace function public.simulacros_reglas() returns trigger\nlanguage plpgsql as $$\ndeclare\n  v_ahora text := to_char(now() at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI');\nbegin\n  if tg_op = 'INSERT' then\n    if new.estado <> 'Programado' or new.hecho_por is not null or new.hecho_at is not null\n       or new.revisado_por is not null or new.revisado_at is not null or new.anulado_at is not null then\n      raise exception 'Un simulacro se crea programado: lo marcan como hecho y revisado las personas que lo hacen.';\n    end if;\n    if (new.fecha_prog || ' ' || new.hora_prog) < to_char((now() - interval '5 minutes') at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI') then\n      raise exception 'Un simulacro no se puede programar en el pasado (% %).', new.fecha_prog, new.hora_prog;\n    end if;\n    new.creado_at := now();\n    return new;\n  end if;\n\n  -- UPDATE\n  if new.id <> old.id or new.almacen <> old.almacen or new.creado_at <> old.creado_at then\n    raise exception 'No se puede cambiar el identificador, el centro ni la fecha de alta de un simulacro.';\n  end if;\n  if new.estado is distinct from old.estado then\n    if old.estado = 'Programado' and new.estado = 'Hecho' then\n      if (new.fecha_prog || ' ' || new.hora_prog) > v_ahora then\n        raise exception 'Este simulacro está programado para el % a las %: todavía no se puede marcar como hecho.', new.fecha_prog, new.hora_prog;\n      end if;\n      if coalesce(trim(new.hecho_por), '') = '' then raise exception 'Falta quién ha hecho el simulacro.'; end if;\n      new.hecho_at := now();\n    elsif old.estado = 'Hecho' and new.estado = 'Revisado' then\n      if coalesce(trim(new.revisado_por), '') = '' then raise exception 'Falta quién ha revisado la limpieza.'; end if;\n      if new.zona_limpia is null then raise exception 'Falta indicar si la zona ha quedado limpia.'; end if;\n      new.revisado_at := now();\n    elsif old.estado = 'Programado' and new.estado = 'Anulado' then\n      new.anulado_at := now();\n    else\n      raise exception 'Cambio de estado no permitido: % → %.', old.estado, new.estado;\n    end if;\n  elsif old.estado = 'Programado' then\n    -- reprogramar o reasignar: nunca hacia el pasado\n    if (new.fecha_prog <> old.fecha_prog or new.hora_prog <> old.hora_prog) and (new.fecha_prog || ' ' || new.hora_prog) < v_ahora then\n      raise exception 'Un simulacro no se puede reprogramar hacia el pasado.';\n    end if;\n  end if;\n  -- Lo ya firmado no se cambia\n  if old.hecho_at is not null then\n    new.hecho_por := old.hecho_por; new.hecho_at := old.hecho_at; new.actuacion := old.actuacion; new.duracion_min := old.duracion_min;\n    new.fecha_prog := old.fecha_prog; new.hora_prog := old.hora_prog; new.tecnico := old.tecnico; new.asignacion := old.asignacion;\n  end if;\n  if old.revisado_at is not null then\n    new.revisado_por := old.revisado_por; new.revisado_at := old.revisado_at; new.revisado_usuario := old.revisado_usuario;\n    new.zona_limpia := old.zona_limpia; new.obs_revision := old.obs_revision;\n  end if;\n  if old.anulado_at is not null then\n    new.anulado_por := old.anulado_por; new.anulado_at := old.anulado_at; new.motivo_anulacion := old.motivo_anulacion;\n  end if;\n  return new;\nend $$;\n\ndrop trigger if exists simulacros_reglas on public.simulacros;\ncreate trigger simulacros_reglas\n  before insert or update on public.simulacros\n  for each row execute function public.simulacros_reglas();\n",
+
+  isOpen() { return window.location.hash.slice(1) === 'simulacros' && !!document.getElementById('sim-list'); },
+  _esPriv() { return UserService.isAdmin() || UserService.isResponsable(); },
+  _puedeHacer() { return UserService.isAdmin() || UserService.isResponsable() || UserService.isMecanico(); },
+  _centros() { return [...document.querySelectorAll('#global-almacen-filter option')].map(o => normalizeAlmacen(o.value)).filter(Boolean); },
+  // Centro al que está limitada la vista ('' = todos): el del usuario o, para Admin, el del filtro global
+  _limite() {
+    const eff = UserService.getEffectiveAlmacen();
+    if (eff && eff !== 'Todos') return eff;
+    return normalizeAlmacen(document.getElementById('global-almacen-filter')?.value || '');
+  },
+  _p2(n) { return String(n).padStart(2, '0'); },
+  _ymd(d) { return `${d.getFullYear()}-${this._p2(d.getMonth() + 1)}-${this._p2(d.getDate())}`; },
+  _hm(min) { return `${this._p2(Math.floor(min / 60))}:${this._p2(min % 60)}`; },
+  _min(hm) { const m = String(hm || '').match(/^(\d{1,2}):(\d{2})/); return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : 0; },
+  _ahora() { const d = new Date(); return `${this._ymd(d)} ${this._p2(d.getHours())}:${this._p2(d.getMinutes())}`; },
+  _toca(s) { return s.estado === 'Programado' && `${s.fecha_prog} ${s.hora_prog}` <= this._ahora(); },
+  _loc() { return ({ es: 'es-ES', en: 'en-GB', ar: 'ar-EG-u-nu-latn' })[I18N._lang] || 'es-ES'; },
+  _cuando(s) {
+    const d = new Date(`${s.fecha_prog}T12:00:00`);
+    const dia = isNaN(d.getTime()) ? s.fecha_prog : d.toLocaleDateString(this._loc(), { weekday: 'short', day: '2-digit', month: '2-digit' });
+    return `${dia} · ${s.hora_prog}`;
+  },
+  _fechaHora(iso) {
+    if (!iso) return '';
+    const d = new Date(iso); if (isNaN(d.getTime())) return String(iso);
+    return `${this._p2(d.getDate())}/${this._p2(d.getMonth() + 1)}/${d.getFullYear()} ${this._p2(d.getHours())}:${this._p2(d.getMinutes())}`;
+  },
+  _maquina(s) {
+    const linea = String(s.linea || '').trim();
+    return [s.zona, linea ? (/^\d+$/.test(linea) ? 'L' + linea : linea) : '', s.equipo].filter(Boolean).join(' · ');
+  },
+  _rnd(n) { return Math.floor(Math.random() * n); },
+  _baraja(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = this._rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; },
+
+  // ── Datos ────────────────────────────────────────────────────────
+  async _load() {
+    this._sinTabla = '';
+    let filas = [];
+    try { filas = await db.simulacros.toArray(); }
+    catch (e) { this._sinTabla = e.message || 'error'; }
+    this._todos = filas;
+    const lim = this._limite();
+    if (lim) filas = filas.filter(s => normalizeAlmacen(s.almacen) === lim);
+    this._data = filas.slice().sort((a, b) => `${b.fecha_prog} ${b.hora_prog}`.localeCompare(`${a.fecha_prog} ${a.hora_prog}`));
+  },
+  async _loadCfg() {
+    let cfg = null;
+    try {
+      const r = await db.cae_datos.get('simulacros_config');   // v10.16: en cae_datos (texto); metadata.value es booleana
+      if (r && r.valor) cfg = JSON.parse(r.valor);
+    } catch (_) {}
+    cfg = cfg || {};
+    const turnos = this._TURNOS_DEF.map(d => Object.assign({}, d, (cfg.turnos || []).find(x => x.nombre === d.nombre) || {}));
+    this._cfg = { turnos, revisores: cfg.revisores || {} };
+    return this._cfg;
+  },
+  _revisoresDe(centro, turno) {
+    return ((this._cfg && this._cfg.revisores[centro]) || [])
+      .filter(r => r && r.nombre && (!turno || r.turno === turno || r.turno === 'Cualquiera'))
+      .map(r => r.nombre);
+  },
+
+  // ── Pantalla ─────────────────────────────────────────────────────
+  async render() {
+    await Promise.all([this._load(), this._loadCfg()]);
+    const priv = this._esPriv(), esc = UI.esc;
+    const hoy = this._ymd(new Date());
+    const lim = this._limite();
+    const eff = UserService.getEffectiveAlmacen(), fijo = !!eff && eff !== 'Todos';
+    const centros = this._centros();
+    const centroDef = lim || localStorage.getItem('gmao_sim_centro') || centros[0] || '';
+    document.getElementById('content').innerHTML = `
+      <div class="page-header">
+        <div><h1>${t('nav_simulacros')}</h1><p class="page-subtitle">${t('x_sim_subtitulo')}</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${UserService.isAdmin() ? `<button class="btn btn-secondary btn-sm" id="sim-btn-cfg" onclick="SimulacrosPage.openConfig()">${t('x_sim_cfg')}</button>` : ''}
+          ${priv ? `<button class="btn btn-secondary btn-sm" id="sim-btn-excel" onclick="SimulacrosPage.exportExcel()">${t('x_sim_excel')}</button>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="SimulacrosPage.render()">${t('x_prod_actualizar')}</button>
+        </div>
+      </div>
+      ${this._sinTabla ? `
+      <div class="card" id="sim-sin-tabla" style="margin-bottom:16px;border-left:3px solid var(--orange)">
+        <p style="font-size:13px;margin-bottom:10px">${t('x_sim_sin_tabla')}</p>
+        ${UserService.isAdmin() ? `<button class="btn btn-secondary btn-sm" onclick="SimulacrosPage.verSQL()">${t('x_sim_ver_sql')}</button>` : ''}
+      </div>` : ''}
+      ${priv && !this._sinTabla ? `
+      <div class="card" id="sim-gen" style="margin-bottom:16px">
+        <div class="card-header"><span class="card-title">${t('x_sim_gen_titulo')}</span></div>
+        <p style="font-size:13px;color:var(--gray-muted);margin-bottom:14px">${t('x_sim_gen_desc')}</p>
+        <div class="sim-gen-grid">
+          <div class="form-field"><label>${t('x_sim_centro')}</label>
+            <select class="form-input" id="sim-g-centro"${fijo ? ' disabled' : ''}>
+              ${centros.map(c => `<option${c === centroDef ? ' selected' : ''}>${esc(c)}</option>`).join('')}
+            </select></div>
+          <div class="form-field"><label>${t('x_sim_numero')}</label>
+            <input class="form-input" type="number" id="sim-g-num" min="1" max="30" step="1" value="5"></div>
+          <div class="form-field"><label>${t('x_sim_semana')}</label>
+            <input class="form-input" type="date" id="sim-g-semana" min="${hoy}" value="${hoy}"></div>
+          <div class="form-field"><label>${t('x_sim_dias')}</label>
+            <select class="form-input" id="sim-g-dias">
+              <option value="lv">${t('x_sim_dias_lv')}</option><option value="ls">${t('x_sim_dias_ls')}</option><option value="todos">${t('x_sim_dias_todos')}</option>
+            </select></div>
+          <div class="form-field"><button class="btn btn-primary" id="sim-g-btn" onclick="SimulacrosPage.generar()">${t('x_sim_generar')}</button></div>
+        </div>
+      </div>` : ''}
+      <div id="sim-list"></div>`;
+    this._renderList();
+    this._updateBadge();
+  },
+
+  _estado(s) {
+    if (s.estado === 'Programado') {
+      return this._toca(s) ? `<span class="badge badge-orange">${t('x_sim_est_pendiente')}</span>` : `<span class="badge badge-gray">${t('x_sim_est_programado')}</span>`;
+    }
+    if (s.estado === 'Hecho') return `<span class="badge badge-yellow">${t('x_sim_est_hecho')}</span>`;
+    if (s.estado === 'Revisado') return `<span class="badge badge-green">${t('x_sim_est_revisado')}</span>`;
+    return `<span class="badge badge-gray"><s>${t('x_sim_est_anulado')}</s></span>`;
+  },
+  _asig(s) {
+    if (!s.tecnico) return `<span style="color:var(--gray-muted)">${t('x_sim_sin_asignar')}</span>`;
+    const auto = s.asignacion === 'Auto';
+    return `${UI.esc(s.tecnico)} <span class="badge badge-gray" title="${t(auto ? 'x_sim_auto_tt' : 'x_sim_manual_tt')}">${t(auto ? 'x_sim_auto' : 'x_sim_manual')}</span>`;
+  },
+  _hechoTxt(s) {
+    if (!s.hecho_por) return '—';
+    return `${UI.esc(s.hecho_por)}<br><small style="color:var(--gray-muted)">${this._fechaHora(s.hecho_at)}</small>`;
+  },
+  _revTxt(s) {
+    if (s.revisado_por) {
+      return `${UI.esc(s.revisado_por)} <span class="badge badge-${s.zona_limpia ? 'green' : 'red'}">🧹 ${s.zona_limpia ? t('x_si') : t('x_no')}</span><br><small style="color:var(--gray-muted)">${this._fechaHora(s.revisado_at)}</small>`;
+    }
+    return s.revisor ? `<span style="color:var(--gray-muted)">${UI.esc(s.revisor)}</span>` : `<span style="color:var(--gray-muted)">${t('x_sim_sin_revisor')}</span>`;
+  },
+  _acciones(s) {
+    const id = UI.esc(JSON.stringify(s.id)), b = [];
+    if (this._toca(s) && this._puedeHacer()) b.push(`<button class="btn btn-primary btn-sm" onclick="SimulacrosPage.openHecho(${id})">${t('x_sim_btn_hecho')}</button>`);
+    if (s.estado === 'Hecho' && UserService.isProduccion()) b.push(`<button class="btn btn-primary btn-sm" onclick="SimulacrosPage.openRevisar(${id})">${t('x_sim_btn_revisar')}</button>`);
+    if (s.estado === 'Programado' && this._esPriv()) {
+      b.push(`<button class="btn btn-secondary btn-sm" onclick="SimulacrosPage.openReasignar(${id})">${t('x_sim_reasignar')}</button>`);
+      b.push(`<button class="btn btn-secondary btn-sm" onclick="SimulacrosPage.openAnular(${id})">${t('x_sim_anular')}</button>`);
+    }
+    return b.join(' ');
+  },
+  _filtradas() {
+    const est = document.getElementById('sim-f-estado')?.value || '';
+    return this._data.filter(s => !est || (est === 'Pendiente' ? this._toca(s) : s.estado === est));
+  },
+  _card(s) {
+    const esc = UI.esc, u = UserService.getUser();
+    const mio = s.tecnico && u && s.tecnico === u.nombre;
+    return `<div class="sim-card${mio ? ' mio' : ''}">
+      <div><span class="sim-tag">${t('x_sim_etiqueta')}</span> <span class="sim-card-when">${esc(this._cuando(s))}${s.turno ? ' · ' + esc(tv('x_sim_turno_', s.turno)) : ''}</span></div>
+      <div class="sim-card-maq">${this._limite() ? '' : `<small style="font-weight:400;color:var(--gray-muted)">${esc(s.almacen)}</small><br>`}${esc(this._maquina(s)) || esc(s.almacen)}</div>
+      <div class="sim-card-desc">${esc(s.descripcion)}</div>
+      <div class="sim-card-meta">${t('x_sim_col_mecanico')}: ${this._asig(s)}</div>
+      ${s.hecho_por ? `<div class="sim-card-meta">${t('x_sim_col_hecho')}: ${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}</div>` : ''}
+      ${s.revisado_por ? `<div class="sim-card-meta">${t('x_sim_col_revision')}: ${esc(s.revisado_por)} · ${this._fechaHora(s.revisado_at)} · 🧹 ${s.zona_limpia ? t('x_si') : t('x_no')}</div>`
+        : (s.revisor ? `<div class="sim-card-meta">${t('x_sim_col_revisor')}: ${esc(s.revisor)}</div>` : '')}
+      ${s.estado === 'Anulado' && s.motivo_anulacion ? `<div class="sim-card-meta">${esc(s.motivo_anulacion)}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${this._estado(s)} ${this._acciones(s)}</div>
+    </div>`;
+  },
+  _renderList() {
+    const el = document.getElementById('sim-list'); if (!el) return;
+    if (this._sinTabla) { el.innerHTML = ''; return; }
+    const esc = UI.esc;
+    if (!this._esPriv()) {
+      // Mecánico: lo que le toca hacer. Producción: lo que tiene que revisar.
+      const prod = UserService.isProduccion();
+      const pend = this._data.filter(s => prod ? s.estado === 'Hecho' : this._toca(s))
+        .sort((a, b) => `${a.fecha_prog} ${a.hora_prog}`.localeCompare(`${b.fecha_prog} ${b.hora_prog}`));
+      const rec = this._data.filter(s => prod ? s.estado === 'Revisado' : (s.estado === 'Hecho' || s.estado === 'Revisado')).slice(0, 10);
+      el.innerHTML = `
+        <div class="sim-sec">${t(prod ? 'x_sim_pend_revisar' : 'x_sim_pend_hacer')} (${pend.length})</div>
+        ${pend.length ? `<div class="sim-cards" id="sim-pend">${pend.map(s => this._card(s)).join('')}</div>`
+          : `<div class="card" id="sim-pend" style="margin-bottom:22px;color:var(--gray-muted);font-size:13px">${t('x_sim_nada_pend')}</div>`}
+        ${rec.length ? `<div class="sim-sec">${t('x_sim_recientes')}</div><div class="sim-cards" id="sim-rec">${rec.map(s => this._card(s)).join('')}</div>` : ''}`;
+      return;
+    }
+    const filas = this._filtradas();
+    const fAct = document.getElementById('sim-f-estado')?.value || '';
+    const opt = (v, k) => `<option value="${v}"${v === fAct ? ' selected' : ''}>${t(k)}</option>`;
+    const verCentro = !this._limite();
+    el.innerHTML = `
+      <div class="card">
+        <div class="toolbar">
+          <select class="filter-select" id="sim-f-estado" onchange="SimulacrosPage._renderList()">
+            ${opt('', 'x_sim_f_todos')}${opt('Programado', 'x_sim_est_programado')}${opt('Pendiente', 'x_sim_est_pendiente')}${opt('Hecho', 'x_sim_est_hecho')}${opt('Revisado', 'x_sim_est_revisado')}${opt('Anulado', 'x_sim_est_anulado')}
+          </select>
+          <span id="sim-count" style="font-size:12px;color:var(--gray-muted)">${filas.length}</span>
+        </div>
+        ${filas.length ? `<div class="table-wrap sim-desk"><table id="sim-table"><thead><tr>
+            <th>${t('x_sim_col_cuando')}</th><th>${t('x_sim_col_maquina')}</th><th>${t('x_sim_col_fallo')}</th><th>${t('x_sim_col_mecanico')}</th>
+            <th>${t('x_sim_col_hecho')}</th><th>${t('x_sim_col_revision')}</th><th>${t('x_sim_col_estado')}</th><th></th>
+          </tr></thead><tbody id="sim-tbody">${filas.map(s => `<tr>
+            <td style="white-space:nowrap"><strong>${esc(this._cuando(s))}</strong>${s.turno ? `<br><small style="color:var(--gray-muted)">${esc(tv('x_sim_turno_', s.turno))}</small>` : ''}</td>
+            <td>${verCentro ? `<small style="color:var(--gray-muted)">${esc(s.almacen)}</small><br>` : ''}${esc(this._maquina(s))}</td>
+            <td><span class="sim-tag">${t('x_sim_etiqueta')}</span> ${esc(s.descripcion)}${s.actuacion ? `<br><small style="color:var(--gray-muted)">${esc(s.actuacion)}</small>` : ''}${s.estado === 'Anulado' && s.motivo_anulacion ? `<br><small style="color:var(--gray-muted)">${esc(s.motivo_anulacion)}</small>` : ''}</td>
+            <td>${this._asig(s)}</td>
+            <td>${this._hechoTxt(s)}</td>
+            <td>${this._revTxt(s)}${s.obs_revision ? `<br><small style="color:var(--gray-muted)">${esc(s.obs_revision)}</small>` : ''}</td>
+            <td>${this._estado(s)}</td>
+            <td><div class="sim-acc">${this._acciones(s)}</div></td>
+          </tr>`).join('')}</tbody></table></div>
+          <div class="sim-cards sim-movil" id="sim-cards">${filas.map(s => this._card(s)).join('')}</div>`
+          : UI.empty(t('x_sim_vacio'), t('x_sim_vacio_sub'))}
+      </div>`;
+  },
+
+  // ── Generador ────────────────────────────────────────────────────
+  // Huecos (día + turno) de la semana elegida que todavía quedan por delante
+  _huecos(dia, dias, turnos) {
+    const lunes = new Date(`${dia}T12:00:00`);
+    lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+    const nd = dias === 'todos' ? 7 : dias === 'ls' ? 6 : 5;
+    const ahora = new Date(), hoy = this._ymd(ahora);
+    const minAhora = Math.ceil((ahora.getHours() * 60 + ahora.getMinutes() + 10) / 5) * 5;
+    const huecos = [];
+    for (let i = 0; i < nd; i++) {
+      const d = new Date(lunes); d.setDate(lunes.getDate() + i);
+      const f = this._ymd(d);
+      if (f < hoy) continue;
+      turnos.filter(tu => tu.activo).forEach(tu => {
+        let ini = this._min(tu.ini), fin = this._min(tu.fin);
+        if (fin <= ini) fin = 24 * 60;
+        if (f === hoy) ini = Math.max(ini, minAhora);
+        if (fin - ini >= 10) huecos.push({ fecha: f, turno: tu.nombre, ini, fin });
+      });
+    }
+    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+    return { lunes: this._ymd(lunes), domingo: this._ymd(domingo), huecos };
+  },
+  // Devuelve el nombre con menos simulacros acumulados (y le suma uno): reparto por rotación
+  _siguiente(nombres, cuenta) {
+    let mejor = '';
+    nombres.forEach(nm => { if (!mejor || (cuenta[nm] || 0) < (cuenta[mejor] || 0)) mejor = nm; });
+    if (mejor) cuenta[mejor] = (cuenta[mejor] || 0) + 1;
+    return mejor;
+  },
+  _proponer({ centro, n, dia, dias, activos, tecnicos }) {
+    const turnos = this._cfg.turnos;
+    if (!turnos.some(tu => tu.activo)) return { error: 'x_sim_err_turnos' };
+    const { lunes, domingo, huecos } = this._huecos(dia, dias, turnos);
+    if (!huecos.length) return { error: 'x_sim_err_pasada' };
+    let maq = activos.filter(a => normalizeAlmacen(a.almacen) === centro && a.estado !== 'Baja' && (a.equipo || a.nombre));
+    const visibles = maq.filter(a => a.visible_produccion !== false);
+    if (visibles.length) maq = visibles;
+    if (!maq.length) return { error: 'x_sim_err_maquinas' };
+    maq = this._baraja(maq);
+    const mecanicos = this._baraja(tecnicos.filter(x => x.rol === 'Mecanico' && x.activo !== false && normalizeAlmacen(x.almacen) === centro).map(x => x.nombre));
+    const vivos = this._todos.filter(s => s.estado !== 'Anulado' && normalizeAlmacen(s.almacen) === centro);
+    const cMec = {}, cRev = {};
+    vivos.forEach(s => { if (s.tecnico) cMec[s.tecnico] = (cMec[s.tecnico] || 0) + 1; if (s.revisor) cRev[s.revisor] = (cRev[s.revisor] || 0) + 1; });
+    const orden = this._baraja(huecos), usados = new Set(), sinRev = new Set(), filas = [];
+    for (let i = 0; i < n; i++) {
+      const h = orden[i % orden.length];
+      let hora = '';
+      for (let k = 0; k < 20; k++) {
+        hora = this._hm(h.ini + 5 * this._rnd(Math.floor((h.fin - h.ini) / 5)));
+        if (!usados.has(`${h.fecha} ${hora}`)) break;
+      }
+      usados.add(`${h.fecha} ${hora}`);
+      const a = maq[i % maq.length];
+      const revs = this._baraja(this._revisoresDe(centro, h.turno));
+      if (!revs.length) sinRev.add(h.turno);
+      const tecnico = this._siguiente(mecanicos, cMec);
+      filas.push({
+        fecha_prog: h.fecha, hora_prog: hora, turno: h.turno,
+        almacen: centro, zona: a.zona || '', linea: a.linea || '', equipo: a.equipo || a.nombre || '', id_activo: a.id_activo || '',
+        descripcion: t('x_sim_f' + (1 + this._rnd(this._N_FALLOS))),
+        tecnico, asignacion: tecnico ? 'Auto' : '', revisor: this._siguiente(revs, cRev),
+      });
+    }
+    filas.sort((x, y) => `${x.fecha_prog} ${x.hora_prog}`.localeCompare(`${y.fecha_prog} ${y.hora_prog}`));
+    const avisos = [];
+    if (!mecanicos.length) avisos.push(t('x_sim_aviso_sin_mec'));
+    if (sinRev.size) avisos.push(tf('x_sim_aviso_sin_rev', { turnos: [...sinRev].map(x => tv('x_sim_turno_', x)).join(', ') }));
+    return { centro, lunes, domingo, filas, avisos, mecanicos };
+  },
+  async generar() {
+    const centro = normalizeAlmacen(document.getElementById('sim-g-centro').value);
+    const n = parseInt(document.getElementById('sim-g-num').value, 10);
+    const dia = document.getElementById('sim-g-semana').value;
+    const dias = document.getElementById('sim-g-dias').value;
+    if (!(n >= 1 && n <= 30)) return toast(t('x_sim_err_num'), 'error');
+    if (!dia) return toast(t('x_sim_err_semana'), 'error');
+    const btn = document.getElementById('sim-g-btn'); if (btn) btn.disabled = true;
+    try {
+      if (!this._gen || this._gen.centro !== centro) {
+        const [activos, tecnicos] = await Promise.all([db.activos.toArray(), db.tecnicos.toArray()]);
+        this._gen = { centro, activos, tecnicos };
+      }
+      Object.assign(this._gen, { n, dia, dias });
+      localStorage.setItem('gmao_sim_centro', centro);
+      const prop = this._proponer(this._gen);
+      if (prop.error) return toast(t(prop.error), 'error', 5000);
+      this._prop = prop;
+      this._renderPropuesta();
+    } finally { if (btn) btn.disabled = false; }
+  },
+  _renderPropuesta() {
+    const p = this._prop, esc = UI.esc;
+    const f = d => d.slice(8, 10) + '/' + d.slice(5, 7);
+    Modal.open(tf('x_sim_prop_titulo', { centro: p.centro }), `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:10px">${tf('x_sim_prop_semana', { ini: f(p.lunes), fin: f(p.domingo) })}</p>
+      ${p.avisos.map(a => `<div class="sim-aviso">⚠ ${esc(a)}</div>`).join('')}
+      <div class="table-wrap"><table class="sim-prop"><thead><tr>
+        <th>${t('x_sim_col_cuando')}</th><th>${t('x_sim_col_maquina')} / ${t('x_sim_col_fallo')}</th><th>${t('x_sim_col_mecanico')}</th><th>${t('x_sim_col_revisor')}</th>
+      </tr></thead><tbody id="sim-prop-tbody">${p.filas.map((s, i) => `<tr>
+        <td style="white-space:nowrap"><strong>${esc(this._cuando(s))}</strong><br><small style="color:var(--gray-muted)">${esc(tv('x_sim_turno_', s.turno))}</small></td>
+        <td>${esc(this._maquina(s))}<br><small style="color:var(--gray-muted)">${esc(s.descripcion)}</small></td>
+        <td data-l="${t('x_sim_col_mecanico')}"><select class="form-input" onchange="SimulacrosPage._propMec(${i}, this.value)">
+              <option value="">${t('x_sim_sin_asignar')}</option>
+              ${p.mecanicos.slice().sort().map(m => `<option${m === s.tecnico ? ' selected' : ''}>${esc(m)}</option>`).join('')}
+            </select>
+            <span class="badge badge-gray" id="sim-prop-asig-${i}">${s.tecnico ? t(s.asignacion === 'Auto' ? 'x_sim_auto' : 'x_sim_manual') : ''}</span></td>
+        <td data-l="${t('x_sim_col_revisor')}">${s.revisor ? esc(s.revisor) : `<span style="color:var(--gray-muted)">${t('x_sim_sin_revisor')}</span>`}</td>
+      </tr>`).join('')}</tbody></table></div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-secondary" id="sim-prop-otra" onclick="SimulacrosPage.generar()">${t('x_sim_otra')}</button>
+       <button class="btn btn-primary" id="sim-prop-ok" onclick="SimulacrosPage.programar()">${tf('x_sim_programar', { n: p.filas.length })}</button>`);
+  },
+  _propMec(i, nombre) {
+    const s = this._prop && this._prop.filas[i]; if (!s) return;
+    s.tecnico = nombre; s.asignacion = nombre ? 'Manual' : '';
+    const b = document.getElementById('sim-prop-asig-' + i); if (b) b.textContent = nombre ? t('x_sim_manual') : '';
+  },
+  async programar() {
+    const p = this._prop; if (!p || !p.filas.length) return;
+    const btn = document.getElementById('sim-prop-ok'); if (btn) btn.disabled = true;
+    const u = UserService.getUser(), ids = new Set();
+    const filas = p.filas.map(s => {
+      let id;
+      do { id = `SIM-${s.fecha_prog.replace(/-/g, '')}-${s.hora_prog.replace(':', '')}-${Math.random().toString(36).slice(2, 4)}`; } while (ids.has(id));
+      ids.add(id);
+      return Object.assign({ id, estado: 'Programado', creado_por: u ? u.nombre : '' }, s);
+    });
+    const { error } = await sb.from('simulacros').insert(filas);
+    if (error) { if (btn) btn.disabled = false; return toast(error.message, 'error', 6000); }
+    this._prop = null;
+    Modal.close();
+    toast(tf('x_sim_programados', { n: filas.length }), 'success');
+    await this.render();
+  },
+
+  // ── Hecho (lo marca quien lo ha hecho, con su usuario) ───────────
+  _resumen(s) {
+    const esc = UI.esc;
+    return `<div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;border-left:3px solid var(--orange)">
+      <span class="sim-tag">${t('x_sim_etiqueta')}</span> <strong>${esc(this._maquina(s)) || esc(s.almacen)}</strong> · ${esc(this._cuando(s))}<br>
+      <span style="color:var(--gray-muted)">${esc(s.descripcion)}</span>
+    </div>`;
+  },
+  openHecho(id) {
+    const s = this._data.find(x => x.id === id); if (!s || !this._toca(s) || !this._puedeHacer()) return;
+    const u = UserService.getUser();
+    Modal.open(t('x_sim_hecho_titulo'), `${this._resumen(s)}
+      <div class="form-grid">
+        <div class="form-field full"><label>${t('x_sim_actuacion')} *</label>
+          <textarea class="form-input" id="sim-h-act" rows="3" placeholder="${t('x_sim_actuacion_ph')}"></textarea></div>
+        <div class="form-field"><label>${t('x_sim_duracion')}</label>
+          <input class="form-input" type="number" id="sim-h-dur" min="0" step="1"></div>
+        <div class="form-field full" style="font-size:12px;color:var(--gray-muted)">${tf('x_sim_hecho_nota', { nombre: UI.esc(u ? u.nombre : '') })}</div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-h-ok" onclick="SimulacrosPage._saveHecho(${UI.esc(JSON.stringify(id))})">${t('x_sim_btn_hecho')}</button>`);
+  },
+  async _saveHecho(id) {
+    const act = (document.getElementById('sim-h-act').value || '').trim();
+    if (!act) return toast(t('x_sim_err_actuacion'), 'error');
+    const dur = parseInt(document.getElementById('sim-h-dur').value, 10);
+    const u = UserService.getUser();
+    const ok = await this._cambiar(id, 'Programado', {
+      estado: 'Hecho', hecho_por: u ? u.nombre : '', hecho_at: new Date().toISOString(), actuacion: act, duracion_min: dur >= 0 ? dur : null,
+    }, 'sim-h-ok');
+    if (ok) toast(t('x_sim_hecho_ok'), 'success');
+  },
+  // Cambia de estado solo si el simulacro sigue en el estado esperado (por si otro lo ha hecho mientras tanto)
+  async _cambiar(id, estadoActual, cambios, btnId) {
+    const btn = btnId && document.getElementById(btnId); if (btn) btn.disabled = true;
+    const { data, error } = await sb.from('simulacros').update(cambios).eq('id', id).eq('estado', estadoActual).select('id');
+    if (error) { if (btn) btn.disabled = false; toast(error.message, 'error', 6000); return false; }
+    Modal.close();
+    if (!data || !data.length) toast(t('x_sim_ya_no'), 'error', 5000);
+    await this.render();
+    try { App.updateBadges(); } catch (_) {}
+    return !!(data && data.length);
+  },
+
+  // ── Revisión de limpieza (la firma producción) ───────────────────
+  openRevisar(id) {
+    const s = this._data.find(x => x.id === id); if (!s || s.estado !== 'Hecho' || !UserService.isProduccion()) return;
+    const esc = UI.esc, u = UserService.getUser();
+    const nombres = [...new Set(this._revisoresDe(normalizeAlmacen(s.almacen), ''))].sort();
+    Modal.open(t('x_sim_rev_titulo'), `${this._resumen(s)}
+      <div class="detail-field" style="margin-bottom:14px"><label>${t('x_sim_col_hecho')}</label>
+        <p>${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}</p></div>
+      <div class="form-grid">
+        <div class="form-field"><label>${t('x_sim_rev_quien')} *</label>
+          ${nombres.length ? `<select class="form-input" id="sim-r-quien" onchange="document.getElementById('sim-r-otro-w').style.display = this.value === '__otro__' ? '' : 'none'">
+            <option value=""></option>
+            ${nombres.map(nm => `<option${nm === s.revisor ? ' selected' : ''}>${esc(nm)}</option>`).join('')}
+            <option value="__otro__">${t('x_sim_rev_otro')}</option>
+          </select>` : ''}
+          <div id="sim-r-otro-w"${nombres.length ? ' style="display:none"' : ''}><input class="form-input" id="sim-r-otro" placeholder="${t('x_sim_rev_nombre_ph')}"></div></div>
+        <div class="form-field"><label>${t('x_sim_rev_limpia')} *</label>
+          <select class="form-input" id="sim-r-limpia"><option value=""></option><option value="true">${t('x_si')}</option><option value="false">${t('x_no')}</option></select></div>
+        <div class="form-field full"><label>${t('x_sim_rev_obs')}</label>
+          <textarea class="form-input" id="sim-r-obs" rows="2"></textarea></div>
+        <div class="form-field full" style="font-size:12px;color:var(--gray-muted)">${tf('x_sim_rev_nota', { cuenta: esc(u ? u.nombre : '') })}</div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-r-ok" onclick="SimulacrosPage._saveRevisar(${esc(JSON.stringify(id))})">${t('x_sim_firmar')}</button>`);
+  },
+  async _saveRevisar(id) {
+    const sel = document.getElementById('sim-r-quien');
+    const quien = (sel && sel.value && sel.value !== '__otro__' ? sel.value : (document.getElementById('sim-r-otro').value || '')).trim();
+    const limpia = document.getElementById('sim-r-limpia').value;
+    const obs = (document.getElementById('sim-r-obs').value || '').trim();
+    if (!quien) return toast(t('x_sim_err_quien'), 'error');
+    if (!limpia) return toast(t('x_sim_err_limpia'), 'error');
+    if (limpia === 'false' && !obs) return toast(t('x_sim_err_obs'), 'error');
+    const u = UserService.getUser();
+    const ok = await this._cambiar(id, 'Hecho', {
+      estado: 'Revisado', revisado_por: quien, revisado_usuario: u ? u.nombre : '', revisado_at: new Date().toISOString(),
+      zona_limpia: limpia === 'true', obs_revision: obs,
+    }, 'sim-r-ok');
+    if (ok) toast(t('x_sim_rev_ok'), 'success');
+  },
+
+  // ── Anular / reasignar (solo mientras está programado) ───────────
+  openAnular(id) {
+    const s = this._data.find(x => x.id === id); if (!s || s.estado !== 'Programado' || !this._esPriv()) return;
+    Modal.open(t('x_sim_anular_titulo'), `${this._resumen(s)}
+      <div class="form-field"><label>${t('x_sim_motivo')} *</label><input class="form-input" id="sim-a-motivo"></div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-danger" id="sim-a-ok" onclick="SimulacrosPage._saveAnular(${UI.esc(JSON.stringify(id))})">${t('x_sim_anular')}</button>`);
+  },
+  async _saveAnular(id) {
+    const motivo = (document.getElementById('sim-a-motivo').value || '').trim();
+    if (!motivo) return toast(t('x_sim_err_motivo'), 'error');
+    const u = UserService.getUser();
+    const ok = await this._cambiar(id, 'Programado', { estado: 'Anulado', anulado_por: u ? u.nombre : '', anulado_at: new Date().toISOString(), motivo_anulacion: motivo }, 'sim-a-ok');
+    if (ok) toast(t('x_sim_anulado_ok'), 'success');
+  },
+  async openReasignar(id) {
+    const s = this._data.find(x => x.id === id); if (!s || s.estado !== 'Programado' || !this._esPriv()) return;
+    const centro = normalizeAlmacen(s.almacen);
+    const mecs = (await db.tecnicos.toArray()).filter(x => x.rol === 'Mecanico' && x.activo !== false && normalizeAlmacen(x.almacen) === centro).map(x => x.nombre).sort();
+    Modal.open(t('x_sim_reasignar_titulo'), `${this._resumen(s)}
+      <div class="form-field"><label>${t('x_sim_col_mecanico')}</label>
+        <select class="form-input" id="sim-m-mec"><option value="">${t('x_sim_sin_asignar')}</option>
+          ${mecs.map(m => `<option${m === s.tecnico ? ' selected' : ''}>${UI.esc(m)}</option>`).join('')}</select></div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-m-ok" onclick="SimulacrosPage._saveReasignar(${UI.esc(JSON.stringify(id))})">${t('save')}</button>`);
+  },
+  async _saveReasignar(id) {
+    const nombre = document.getElementById('sim-m-mec').value;
+    const ok = await this._cambiar(id, 'Programado', { tecnico: nombre, asignacion: nombre ? 'Manual' : '' }, 'sim-m-ok');
+    if (ok) toast(t('x_sim_reasignado_ok'), 'success');
+  },
+
+  // ── Excel ────────────────────────────────────────────────────────
+  exportExcel() {
+    const filas = this._filtradas();
+    if (!filas.length) return toast(t('x_sim_excel_vacio'), 'error');
+    const est = { Programado: 'Programado', Hecho: 'Hecho (pendiente de revisar)', Revisado: 'Revisado', Anulado: 'Anulado' };
+    const cab = ['Tipo', 'ID', 'Centro', 'Fecha programada', 'Hora programada', 'Turno', 'Zona', 'Línea', 'Máquina', 'Fallo simulado', 'Estado',
+      'Mecánico asignado', 'Asignación', 'Hecho por', 'Hecho el', 'Actuación', 'Duración (min)',
+      'Revisor asignado', 'Revisado por', 'Revisado el', 'Zona limpia', 'Observaciones de la revisión', 'Cuenta que firma la revisión',
+      'Programado por', 'Programado el', 'Anulado por', 'Anulado el', 'Motivo de anulación'];
+    const datos = filas.slice().reverse().map(s => ['SIMULACRO', s.id, s.almacen, s.fecha_prog, s.hora_prog, s.turno || '', s.zona || '', s.linea || '', s.equipo || '', s.descripcion || '', est[s.estado] || s.estado,
+      s.tecnico || '', s.asignacion || '', s.hecho_por || '', this._fechaHora(s.hecho_at), s.actuacion || '', s.duracion_min == null ? '' : s.duracion_min,
+      s.revisor || '', s.revisado_por || '', this._fechaHora(s.revisado_at), s.revisado_por ? (s.zona_limpia ? 'Sí' : 'No') : '', s.obs_revision || '', s.revisado_usuario || '',
+      s.creado_por || '', this._fechaHora(s.creado_at), s.anulado_por || '', this._fechaHora(s.anulado_at), s.motivo_anulacion || '']);
+    const ws = XLSX.utils.aoa_to_sheet([cab, ...datos]);
+    ws['!cols'] = cab.map((c, i) => ({ wch: [9, 15, 15, 14].includes(i) ? 34 : Math.max(12, c.length + 2) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Simulacros');
+    XLSX.writeFile(wb, `Simulacros_GMAO_${this._ymd(new Date())}.xlsx`);
+  },
+
+  // ── Configuración: turnos y revisores de producción (solo Admin) ─
+  async openConfig() {
+    if (!UserService.isAdmin()) return;
+    await this._loadCfg();
+    this._cfgEdit = JSON.parse(JSON.stringify(this._cfg));
+    const centros = this._centros();
+    this._cfgCentro = centros.includes(this._cfgCentro) ? this._cfgCentro : (this._limite() || centros[0] || '');
+    this._renderConfig();
+  },
+  _renderConfig() {
+    const c = this._cfgEdit, esc = UI.esc, centro = this._cfgCentro;
+    const revs = c.revisores[centro] || [];
+    const optTurno = v => ['Mañana', 'Tarde', 'Noche', 'Cualquiera'].map(x => `<option value="${x}"${x === v ? ' selected' : ''}>${esc(tv('x_sim_turno_', x))}</option>`).join('');
+    Modal.open(t('x_sim_cfg_titulo'), `
+      <div class="sim-sec">${t('x_sim_cfg_turnos')}</div>
+      ${c.turnos.map((tu, i) => `<div class="sim-cfg-row">
+        <label class="sim-cfg-turno"><input type="checkbox" id="sim-c-act-${i}"${tu.activo ? ' checked' : ''}> ${esc(tv('x_sim_turno_', tu.nombre))}</label>
+        <span>${t('x_sim_cfg_de')}</span><input type="time" class="form-input" id="sim-c-ini-${i}" value="${esc(tu.ini)}">
+        <span>${t('x_sim_cfg_a')}</span><input type="time" class="form-input" id="sim-c-fin-${i}" value="${esc(tu.fin)}">
+      </div>`).join('')}
+      <div class="sim-sec" style="margin-top:18px">${t('x_sim_cfg_revisores')}</div>
+      <p style="font-size:12px;color:var(--gray-muted);margin-bottom:10px">${t('x_sim_cfg_revisores_desc')}</p>
+      <div class="sim-cfg-row"><span>${t('x_sim_centro')}</span>
+        <select class="form-input" id="sim-c-centro" onchange="SimulacrosPage._cfgCentroCambia(this.value)">
+          ${this._centros().map(x => `<option${x === centro ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <div id="sim-c-revs">${revs.map((r, i) => `<div class="sim-cfg-row">
+        <input class="form-input" id="sim-c-nom-${i}" value="${esc(r.nombre)}" placeholder="${t('x_sim_rev_nombre_ph')}">
+        <select class="form-input" id="sim-c-tur-${i}">${optTurno(r.turno || 'Cualquiera')}</select>
+        <button class="btn btn-secondary btn-sm" onclick="SimulacrosPage._cfgQuitar(${i})">✕</button>
+      </div>`).join('') || `<p style="font-size:12px;color:var(--gray-muted);margin-bottom:8px">${t('x_sim_cfg_ninguno')}</p>`}</div>
+      <button class="btn btn-secondary btn-sm" id="sim-c-add" onclick="SimulacrosPage._cfgAnadir()">${t('x_sim_cfg_anadir')}</button>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-c-ok" onclick="SimulacrosPage._cfgGuardar()">${t('save')}</button>`);
+  },
+  // Pasa lo escrito en el diálogo a la copia en edición
+  _cfgLeer() {
+    const c = this._cfgEdit;
+    c.turnos.forEach((tu, i) => {
+      const a = document.getElementById('sim-c-act-' + i); if (!a) return;
+      tu.activo = a.checked;
+      tu.ini = document.getElementById('sim-c-ini-' + i).value || tu.ini;
+      tu.fin = document.getElementById('sim-c-fin-' + i).value || tu.fin;
+    });
+    const revs = [];
+    for (let i = 0; document.getElementById('sim-c-nom-' + i); i++) {
+      revs.push({ nombre: document.getElementById('sim-c-nom-' + i).value.trim(), turno: document.getElementById('sim-c-tur-' + i).value });
+    }
+    c.revisores[this._cfgCentro] = revs;
+  },
+  _cfgCentroCambia(centro) { this._cfgLeer(); this._cfgCentro = normalizeAlmacen(centro); this._renderConfig(); },
+  _cfgAnadir() {
+    this._cfgLeer();
+    this._cfgEdit.revisores[this._cfgCentro].push({ nombre: '', turno: 'Mañana' });
+    this._renderConfig();
+    const ins = document.querySelectorAll('#sim-c-revs input'); if (ins.length) ins[ins.length - 1].focus();
+  },
+  _cfgQuitar(i) { this._cfgLeer(); this._cfgEdit.revisores[this._cfgCentro].splice(i, 1); this._renderConfig(); },
+  async _cfgGuardar() {
+    this._cfgLeer();
+    const c = this._cfgEdit, revisores = {};
+    Object.keys(c.revisores).forEach(k => { const l = (c.revisores[k] || []).filter(r => r.nombre); if (l.length) revisores[k] = l; });
+    const valor = { turnos: c.turnos.map(tu => ({ nombre: tu.nombre, ini: tu.ini, fin: tu.fin, activo: !!tu.activo })), revisores };
+    try {
+      await db.cae_datos.put({ clave: 'simulacros_config', valor: JSON.stringify(valor), actualizado: new Date().toISOString() });
+    } catch (e) { return toast(e.message, 'error', 6000); }
+    Modal.close();
+    toast(t('x_sim_cfg_guardado'), 'success');
+    await this.render();
+  },
+  verSQL() {
+    Modal.open(t('x_sim_sql_titulo'), `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_sim_sql_ayuda')}</p>
+      <textarea readonly id="sim-sql" style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical;direction:ltr">${UI.esc(this._SQL)}</textarea>`,
+      `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.getElementById('sim-sql').value);toast('SQL ✓','success')">${t('x_copiar_sql')}</button>
+       <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
+  },
+
+  // ── Contador del menú: lo que tiene pendiente quien mira ─────────
+  _updateBadge() {
+    const b = document.getElementById('badge-simulacros'); if (!b) return;
+    let n = 0;
+    if (!this._sinTabla) {
+      if (UserService.isProduccion()) n = this._data.filter(s => s.estado === 'Hecho').length;
+      else n = this._data.filter(s => this._toca(s)).length + (this._esPriv() ? this._data.filter(s => s.estado === 'Hecho').length : 0);
+    }
+    b.textContent = n; b.style.display = n > 0 ? '' : 'none';
+  },
+  // Lo llama App.updateBadges (también sin estar en la pantalla)
+  async updateBadge() {
+    if (!document.getElementById('badge-simulacros')) return;
+    if (!this.isOpen()) await this._load();
+    this._updateBadge();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
 Router.register('produccion',      async () => ProduccionPage.render());
 Router.register('centros',         async () => CentrosPage.render());
+Router.register('simulacros',      async () => SimulacrosPage.render());
 Router.register('dashboard',       async () => DashboardPage.render());
 Router.register('partes-analisis', async () => PartesAnalisisPage.render());
 Router.register('activos',         async () => ActivosPage.render());
