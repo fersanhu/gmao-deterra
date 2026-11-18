@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="sk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -708,6 +708,7 @@ html[dir="rtl"] .modal-footer{flex-direction:row-reverse}
 .sim-prop select{min-width:140px;margin-bottom:4px}
 .sim-prop th,.sim-prop td{padding:8px 10px}
 .modal:has(.sim-prop){width:780px}
+.sim-i-err{background:var(--red-bg,#fdecea);color:var(--red)}
 .sim-movil{display:none}
 @media (max-width:768px){.sim-desk{display:none}.sim-movil{display:grid;margin-bottom:0}.sim-prop,.sim-prop tbody{display:block;min-width:0;width:100%}.sim-prop thead{display:none}.sim-prop tr{display:block;padding:10px 0;border-bottom:1px solid var(--border)}.sim-prop td{display:block;padding:2px 0;border:0}.sim-prop td[data-l]::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-muted);margin-top:8px}.sim-prop select{width:100%;min-width:0;box-sizing:border-box;margin-top:4px}}
 .sim-acc{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
@@ -832,6 +833,154 @@ th:last-child{border-top-right-radius:var(--radius)}
 .cae-leyenda>span{display:inline-flex;align-items:center;gap:6px}
 .cae-falta{color:var(--gray-muted,#888);font-size:12px}
 @media(max-width:560px){.cae-emph{grid-template-columns:1fr}.cae-cifras{justify-content:flex-start}}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   v11.4 · ASPECTO — capa de estilo según el sistema de diseño de Deterra: plano,
+   esquinas rectas, sin sombras ni degradados, verde dominante y semáforo con texto.
+   Actúa con <html class="sk">. Los iconos de línea los pone el módulo Iconos.
+   ══════════════════════════════════════════════════════════════════════════════ */
+html.sk{
+  --radius:0px; --shadow:none; --shadow-md:none;
+  --gray-muted:#6b6b6b; --gray-light:#ECECEC; --border:#DADADA;
+  --sk-line:#C9C9C9; --sk-tint:#E3EEE6; --sk-r:2px;
+}
+/* Esquinas rectas y sin sombras en toda la app (incluidos los estilos escritos en línea) */
+html.sk *,html.sk *::before,html.sk *::after{border-radius:0!important;box-shadow:none!important}
+html.sk .btn,html.sk input,html.sk select,html.sk textarea,html.sk .modal,html.sk .confirm-box,html.sk .toast,
+html.sk .form-input,html.sk .search-box,html.sk .filter-select,html.sk .almacen-select{border-radius:var(--sk-r)!important}
+html.sk input[type="radio"],html.sk .nav-group-dot,html.sk .loader,html.sk .sk-dot{border-radius:50%!important}
+html.sk .almacen-card:hover,html.sk .user-card:hover,html.sk .prod-block:hover{transform:none}
+html.sk :focus-visible{outline:2px solid #275D3A;outline-offset:1px}
+html.sk input[type="checkbox"],html.sk input[type="radio"]{accent-color:#275D3A}
+
+/* Iconos de línea (sustituyen a los emojis) y marcas de estado */
+html.sk .ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align:-.16em;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;stroke-linejoin:miter}
+html.sk .sk-m{display:inline-block;width:.6em;height:.6em;margin-inline-end:.15em;vertical-align:.02em;background:#9a9a9a}
+html.sk .sk-m.r{background:#C20019} html.sk .sk-m.o{background:#E87146} html.sk .sk-m.y{background:#E0B400}
+html.sk .sk-m.g{background:#275D3A} html.sk .sk-m.w{background:#fff;outline:1px solid #9a9a9a;outline-offset:-1px}
+html.sk .nav-item svg,html.sk .nav-group-ico,html.sk .kpi-icon svg,html.sk .btn svg{stroke-linecap:square;stroke-linejoin:miter}
+
+/* ── Marco: menú, barra superior, cabecera de página ── */
+html.sk #sidebar{border-inline-end:1px solid #1e4a2c}
+html.sk .nav-group-header{font-size:11px;letter-spacing:.4px;padding:10px 20px}
+html.sk .nav-item{padding:9px 20px;transition:none}
+html.sk .nav-group-items .nav-item{padding-inline-start:34px}
+html.sk .nav-item.active{background:rgba(255,255,255,.12)}
+html.sk .sidebar-user-avatar,html.sk .topbar-avatar,html.sk .user-avatar{border-radius:var(--sk-r)!important}
+html.sk .topbar-avatar{background:var(--sk-tint)!important;color:#275D3A!important}
+html.sk .sidebar-user-avatar{background:rgba(255,255,255,.16)!important;color:#fff!important}
+html.sk #topbar{box-shadow:none;height:52px}
+html.sk #topbar-title{font-size:13px;font-weight:500;color:var(--gray-muted)}
+html.sk #content{padding:22px 28px}
+html.sk .page-header{margin-bottom:14px}
+html.sk .page-header h1{font-size:22px;font-weight:600;color:#275D3A;letter-spacing:-.1px}
+html.sk .page-subtitle{font-size:12.5px}
+html.sk .lang-btn{font-size:11px!important;font-weight:600;letter-spacing:.5px;padding:3px 7px;border:1px solid transparent;color:inherit;opacity:.75}
+html.sk .lang-btn:hover,html.sk .lang-btn.active{opacity:1;border-color:currentColor;background:none}
+html.sk .lang-switcher-sidebar .lang-btn{color:#fff}
+
+/* ── Botones ── */
+html.sk .btn{padding:6px 14px;min-height:34px;gap:7px;font-size:13px;font-weight:500;transition:none;border:1px solid transparent;line-height:1}
+html.sk .btn-sm{min-height:28px;padding:4px 10px;font-size:12px}
+html.sk .modal-footer .btn{min-height:34px}
+html.sk .btn-primary{background:#275D3A;color:#fff;border-color:#275D3A}
+html.sk .btn-primary:hover{background:#1e4a2c;border-color:#1e4a2c}
+html.sk .btn-secondary{background:#fff;color:#464646;border-color:var(--sk-line)}
+html.sk .btn-secondary:hover{border-color:#464646;background:#fff}
+html.sk .btn-danger{background:#fff;color:#C20019;border-color:#C20019}
+html.sk .btn-danger:hover,html.sk .confirm-box .btn-danger{background:#C20019;color:#fff}
+html.sk .btn:disabled{opacity:.45}
+html.sk .btn.sk-solo{width:28px;min-height:28px;height:28px;padding:0;justify-content:center;background:none;border-color:transparent;color:#464646}
+html.sk .btn.sk-solo:hover{border-color:var(--sk-line);background:#fff}
+html.sk .btn-danger.sk-solo{color:#C20019}
+html.sk .btn-danger.sk-solo:hover{border-color:#C20019;background:#fff;color:#C20019}
+
+/* ── Campos ── */
+html.sk .form-input,html.sk .search-box,html.sk .filter-select,html.sk .almacen-select,html.sk .pbi-select{border:1px solid var(--sk-line);background:#fff;transition:none;min-height:34px;padding:6px 10px;font-size:13px}
+html.sk textarea.form-input{padding:8px 10px}
+html.sk .form-input:focus,html.sk .search-box:focus,html.sk .filter-select:focus,html.sk .almacen-select:focus{border-color:#275D3A;outline:2px solid rgba(39,93,58,.18);outline-offset:0}
+html.sk .form-field label,html.sk .detail-field label{font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--gray-muted)}
+html.sk .detail-field p{font-size:14px}
+html.sk .form-section-label{text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:#275D3A}
+html.sk .form-section{border-top-width:1px}
+
+/* ── Tarjetas y tablas (TablaCorporativa: cabecera verde, filas alternas, líneas gris) ── */
+html.sk .card{padding:16px 18px;border:1px solid var(--border)}
+html.sk .card-title{font-size:15px;font-weight:600;color:#464646}
+html.sk th{font-size:12.5px;font-weight:700;text-transform:none;letter-spacing:0;padding:8px 12px}
+html.sk td{padding:8px 12px;border-bottom:1px solid var(--gray-light)}
+@media(min-width:769px){
+  html.sk tbody tr:nth-child(even) td{background:#F6F6F6}
+  html.sk tbody tr:hover td{background:var(--sk-tint)}
+}
+html.sk td[style*="monospace"],html.sk td [style*="monospace"],html.sk .mono,html.sk code{font-family:inherit!important;font-variant-numeric:tabular-nums;letter-spacing:0}
+html.sk #av-tbody td:first-child{font-family:inherit;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--gray-muted)}
+
+/* ── Estados: marca cuadrada de color + texto (en lugar de píldoras pastel) ── */
+html.sk .badge{background:none!important;padding:0;gap:6px;font-size:12.5px;font-weight:500;color:#464646!important}
+html.sk .badge::before{content:'';width:8px;height:8px;flex:none;background:#9a9a9a}
+html.sk .badge-red{font-weight:600}
+html.sk .badge-red::before{background:#C20019} html.sk .badge-orange::before{background:#E87146}
+html.sk .badge-green::before{background:#275D3A} html.sk .badge-yellow::before{background:#E0B400}
+html.sk .badge-blue::before{background:#799F51} html.sk .badge-gray::before{background:#B4B4B4}
+html.sk .user-rol-badge,html.sk .prod-block-tipo{background:none!important;padding:0;color:var(--gray-muted)!important;font-weight:500;letter-spacing:0}
+
+/* ── Indicadores ── */
+html.sk .kpi-card{border:1px solid var(--border);padding:16px 18px;gap:12px;transition:none}
+html.sk .kpi-icon{width:auto;height:auto;background:none!important;padding-top:5px}
+html.sk .kpi-icon svg{width:20px;height:20px}
+html.sk .kpi-value{font-size:30px;font-weight:600}
+html.sk .kpi-label{font-size:13px;text-transform:none;letter-spacing:0;color:#464646}
+html.sk .chart-pill,html.sk .pa-togbtn{transition:none;padding:4px 10px}
+html.sk .pbi-slicer-bar{border-left-width:1px}
+html.sk .pbi-slicer-bar .pbi-slicer-label,html.sk .pbi-ctrl-label{text-transform:none;letter-spacing:0;font-size:12px;font-weight:500}
+
+/* ── Mapa de calor: cabeceras sobre claro, sin efecto al pasar ── */
+html.sk .heatmap-table th{background:none;color:#464646;text-transform:none;letter-spacing:0;font-size:12px}
+html.sk .heatmap-table td{border-bottom:none}
+html.sk .heatmap-cell:hover{transform:none}
+html.sk .heatmap-table tbody td.heatmap-cell.zero{background:#F6F6F6;color:#B4B4B4}
+
+/* ── Pestañas de Configuración: subrayadas ── */
+html.sk .cfg-tabs{gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+html.sk .cfg-tab{border:none;border-bottom:2px solid transparent;background:none;padding:9px 14px;font-weight:500;color:var(--gray-muted);margin-bottom:-1px}
+html.sk .cfg-tab:hover{color:#275D3A}
+html.sk .cfg-tab.active{background:none;color:#275D3A;border-bottom-color:#275D3A;font-weight:600}
+
+/* ── Ventanas y avisos ── */
+html.sk .modal{border:1px solid #9a9a9a}
+html.sk .modal-header{padding:14px 20px}
+html.sk .modal-title{font-size:16px;font-weight:600;color:#275D3A}
+html.sk .modal-body{padding:18px 20px}
+html.sk .modal-footer{padding:12px 20px;background:#F6F6F6}
+html.sk .modal-close{transition:none}
+html.sk .confirm-box{border:1px solid #9a9a9a;border-top:3px solid #275D3A}
+html.sk .toast{padding:10px 16px;font-weight:500}
+html.sk #import-diff-modal>div{background:#fff!important;color:#464646!important;border:1px solid #9a9a9a}
+html.sk #import-diff-modal>div>div:nth-of-type(2)>div{background:#fff}
+
+/* ── Entrada: fondo liso, panel recto con la banda tricolor ── */
+html.sk #screen-users,html.sk #screen-import{background:#F6F6F6!important}
+html.sk .users-card,html.sk .setup-card{border:1px solid var(--border);position:relative}
+html.sk .users-card::before{content:'';display:block;height:4px;background:var(--tricolor)}
+html.sk .almacen-card,html.sk .user-card{border:1px solid var(--sk-line);transition:none;align-items:flex-start;text-align:start;padding:16px 16px 14px;gap:4px}
+html.sk .almacen-card:hover,html.sk .user-card:hover{border-color:#275D3A;background:#fff;outline:1px solid #275D3A}
+html.sk .almacen-card-name{font-weight:600;font-size:16px;color:#275D3A}
+
+/* ── Producción ── */
+html.sk .prod-block{border:1px solid var(--sk-line);transition:none;min-height:92px;padding:16px 14px;align-items:flex-start;text-align:start}
+html.sk .prod-block:hover{border-color:#275D3A;background:#fff;outline:1px solid #275D3A}
+html.sk .prod-block-name{font-weight:600}
+html.sk .prod-block.alert{background:#fff;border-color:#C20019;border-top-width:3px}
+html.sk .prod-block-badge{top:10px;right:10px;height:20px;line-height:20px}
+html[dir="rtl"].sk .prod-block-badge{right:auto;left:10px}
+html.sk .prod-open-item{border-left-width:3px}
+
+@media(max-width:768px){
+  html.sk .modal-footer{align-items:stretch}
+  html.sk .modal-footer .btn{min-height:40px}
+  html.sk #content{padding:16px}
+}
 </style>
 </head>
 <body>
@@ -880,9 +1029,9 @@ th:last-child{border-top-right-radius:var(--radius)}
     <div class="users-header">
       <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 664.891 185.951'%3E%3Cdefs%3E%3CclipPath id='clip-0'%3E%3Cpath d='M 582 66 L 664.75 66 L 664.75 147 L 582 147 Z M 582 66'/%3E%3C/clipPath%3E%3CclipPath id='clip-1'%3E%3Cpath d='M 0.03 0 L 163 0 L 163 185.9 L 0.03 185.9 Z M 0.03 0'/%3E%3C/clipPath%3E%3C/defs%3E%3Cpath fill='%23275D3A' d='M 239.46 127.79 C 251.96 127.79 261.9 118.6 261.9 106.55 C 261.9 94.5 251.96 85.16 239.46 85.16 C 226.96 85.16 216.87 94.5 216.87 106.55 C 216.87 118.6 226.96 127.79 239.46 127.79 M 200.58 106.55 C 200.58 84.41 217.45 66.34 239.59 66.34 C 250.73 66.34 259.01 71.61 264.43 79.29 L 264.43 51.22 L 283.26 51.22 L 283.26 144.35 L 264.43 144.35 L 264.43 133.66 C 259.01 141.34 250.73 146.61 239.59 146.61 C 217.45 146.61 200.58 128.69 200.58 106.55'/%3E%3Cpath fill='%23275D3A' d='M 349.88 100.07 C 347.62 90.29 339.64 83.96 330.15 83.96 C 319.76 83.96 312.08 90.59 309.67 100.07 Z M 289.94 106.55 C 289.94 84.41 308.01 66.34 330.15 66.34 C 352.29 66.34 368.41 84.56 367.95 107.75 C 367.95 110.31 367.65 112.88 367.2 115.29 L 310.27 115.29 C 313.13 123.57 320.36 128.99 331.66 128.99 C 340.09 128.99 345.82 124.92 349.43 121.16 L 362.08 131.7 C 355.61 141.64 345.21 146.61 331.66 146.61 C 307.41 146.61 289.94 128.69 289.94 106.55'/%3E%3Cpath fill='%23275D3A' d='M 375.36 116.34 L 375.36 52.18 L 394.18 52.18 L 394.18 68.6 L 409.69 68.6 L 409.69 86.37 L 394.18 86.37 L 394.18 111.67 C 394.18 122.06 396.29 127.18 408.49 126.58 L 408.49 145.25 C 387.4 146.31 375.36 139.38 375.36 116.34'/%3E%3Cpath fill='%23275D3A' d='M 472.04 100.07 C 469.78 90.29 461.8 83.96 452.31 83.96 C 441.92 83.96 434.24 90.59 431.83 100.07 Z M 412.1 106.55 C 412.1 84.41 430.17 66.34 452.31 66.34 C 474.45 66.34 490.56 84.56 490.11 107.75 C 490.11 110.31 489.81 112.88 489.36 115.29 L 432.43 115.29 C 435.29 123.57 442.52 128.99 453.82 128.99 C 462.25 128.99 467.97 124.92 471.59 121.16 L 484.24 131.7 C 477.76 141.64 467.37 146.61 453.82 146.61 C 429.57 146.61 412.1 128.69 412.1 106.55'/%3E%3Cpath fill='%23275D3A' d='M 496.79 68.6 L 515.77 68.6 L 515.77 79.89 C 519.39 72.51 526.01 67.54 537 67.54 L 537 86.97 C 525.41 85.31 515.77 89.68 515.77 106.55 L 515.77 144.35 L 496.79 144.35 Z M 496.79 68.6'/%3E%3Cpath fill='%23275D3A' d='M 543.45 68.6 L 562.43 68.6 L 562.43 79.89 C 566.04 72.51 572.67 67.54 583.66 67.54 L 583.66 86.97 C 572.07 85.31 562.43 89.68 562.43 106.55 L 562.43 144.35 L 543.45 144.35 Z M 543.45 68.6'/%3E%3Cg clip-path='url(%23clip-0)'%3E%3Cpath fill='%23275D3A' d='M 620.95 127.79 C 633.45 127.79 643.39 118.6 643.39 106.55 C 643.39 94.5 633.45 85.16 620.95 85.16 C 608.45 85.16 598.51 94.5 598.51 106.55 C 598.51 118.6 608.45 127.79 620.95 127.79 M 582.07 106.55 C 582.07 84.41 598.93 66.34 621.07 66.34 C 632.22 66.34 640.5 71.61 645.92 79.29 L 645.92 68.6 L 664.75 68.6 L 664.75 144.35 L 645.92 144.35 L 645.92 133.66 C 640.5 141.34 632.22 146.61 621.07 146.61 C 598.93 146.61 582.07 128.69 582.07 106.55'/%3E%3C/g%3E%3Cg clip-path='url(%23clip-1)'%3E%3Cpath fill='%23275D3A' d='M 16.18 137.31 L 76.38 171.81 C 79.46 173.57 83.24 173.59 86.33 171.86 L 151.51 135.24 L 151.51 58.32 C 151.51 54.75 149.62 51.45 146.54 49.63 L 86.41 14.28 C 83.25 12.43 79.34 12.43 76.19 14.28 L 16.08 49.63 C 13 51.45 11.11 54.75 11.11 58.32 L 11.11 128.57 C 11.11 132.18 13.05 135.52 16.18 137.31 M 76.46 184.61 L 4.95 143.63 C 1.91 141.89 0.03 138.65 0.03 135.14 L 0.03 51.82 C 0.03 48.36 1.87 45.15 4.86 43.39 L 76.34 1.35 C 79.4 -0.45 83.2 -0.45 86.26 1.35 L 157.77 43.39 C 160.75 45.15 162.59 48.36 162.59 51.82 L 162.59 135.96 C 162.59 139.5 160.68 142.76 157.6 144.49 L 86.12 184.65 C 83.12 186.33 79.45 186.32 76.46 184.61'/%3E%3C/g%3E%3Cpath fill='%23E87246' d='M 83.68 83.1 C 85.54 85.59 87.17 88.11 88.65 90.63 C 104.37 87.79 120.64 89.3 135.64 95.09 L 135.64 59.51 C 117.73 61.09 93.75 65.2 75.5 74.35 C 78.43 76.88 81.19 79.76 83.68 83.1'/%3E%3Cpath fill='%23C20019' d='M 90.22 95.43 C 101.29 115.05 101.66 134.61 100.73 145.21 L 130.97 128.22 C 133.86 126.6 135.64 123.55 135.64 120.24 L 135.64 100.1 C 121.15 94.54 105.46 92.95 90.22 95.43'/%3E%3Cpath fill='%23275D3A' d='M 95.57 148.11 C 96.68 137.54 95.91 125.91 93.07 115.06 C 89.64 102 84.4 92.42 77.21 83.27 C 64.25 66.75 41.52 62.08 26.98 60.15 L 26.98 119.68 C 26.98 122.96 28.73 125.99 31.59 127.62 L 76.8 153.54 C 79.6 155.14 83.03 155.16 85.84 153.58 Z M 95.57 148.11'/%3E%3C/svg%3E" alt="Deterra" style="height:44px;object-fit:contain;margin-bottom:10px">
       <div class="lang-picker">
-        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">🇪🇸</button>
-        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
-        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
+        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">ES</button>
+        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">EN</button>
+        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">AR</button>
       </div>
       <h2 id="users-step-title" data-i18n="step1_title">¿En qué centro trabajas?</h2>
       <p id="users-step-sub" data-i18n="step1_sub">Selecciona tu centro de trabajo para continuar</p>
@@ -1051,11 +1200,11 @@ th:last-child{border-top-right-radius:var(--radius)}
     </nav>
     <div class="sidebar-bottom">
       <div class="lang-switcher-sidebar">
-        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">🇪🇸</button>
-        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">🇬🇧</button>
-        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">🇸🇦</button>
+        <button class="lang-btn" title="Español"  onclick="I18N.setLang('es')">ES</button>
+        <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">EN</button>
+        <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">AR</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v10.16</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v11.4</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1112,6 +1261,191 @@ th:last-child{border-top-right-radius:var(--radius)}
 <div id="toast-container"></div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════
+// v11.4 · ASPECTO
+// Iconos: los símbolos (emojis) que la app usa como icono se pintan como iconos de
+// línea propios, o se quitan si eran adorno. Se hace en un solo sitio, al pintar,
+// así que vale para toda la app y para lo que se añada después. No cambia datos:
+// no toca campos de texto, valores de desplegables, Excel ni mensajes.
+// Gráficos: estilo corporativo (sin cuadrícula ni redondeos, leyenda abajo,
+// etiquetas de datos del color de su serie).
+// ═══════════════════════════════════════════════════════════════════
+const Iconos = (function () {
+  // Dibujos propios (24×24, trazo)
+  const P = {
+    edit: '<path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 4v5h-5"/>',
+    lock: '<path d="M5 11h14v9H5zM8 11V8a4 4 0 0 1 8 0v3"/>',
+    unlock: '<path d="M5 11h14v9H5zM8 11V8a4 4 0 0 1 7.6-1.7"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    checksq: '<path d="M4 4h16v16H4z"/><path d="M8 12.5l3 3 5-6"/>',
+    square: '<path d="M4 4h16v16H4z"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/>',
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5M16 5a3.5 3.5 0 0 1 0 6.5M18 14.8c2.1.7 3.5 2.3 3.5 5.2"/>',
+    wrench: '<path d="M15.5 3.5a5 5 0 0 0-4.3 7.3L3.5 18.5l2 2 7.7-7.7a5 5 0 0 0 7.3-4.3l-3 1.5-2.5-2.5z"/>',
+    sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+    chart: '<path d="M4 4v16h16M8 16v-5M12 16V8M16 16v-3"/>',
+    clipboard: '<path d="M6 5h12v16H6zM9 5V3h6v2M9 10h6M9 14h6"/>',
+    plug: '<path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0zM12 17v4"/>',
+    factory: '<path d="M3 21V10l6 4v-4l6 4V5h6v16zM8 17h2M13 17h2"/>',
+    download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+    upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
+    eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/>',
+    eyeoff: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM4 4l16 16"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    box: '<path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8"/>',
+    search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+    file: '<path d="M7 3h7l4 4v14H7zM14 3v4h4"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    save: '<path d="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>',
+  };
+  const NS = 'http://www.w3.org/2000/svg';
+  const sprite = document.createElementNS(NS, 'svg');
+  sprite.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden'); sprite.setAttribute('aria-hidden', 'true');
+  sprite.innerHTML = Object.keys(P).map(k => `<symbol id="sk-${k}" viewBox="0 0 24 24">${P[k]}</symbol>`).join('');
+  document.body.appendChild(sprite);
+
+  // Qué se hace con cada símbolo: i = icono · m = marca de color · x = texto · z = se quita (adorno).
+  // ZC = adorno que también puede escribir una persona: solo se quita al principio de un texto o en textos cortos.
+  const I = n => ({ c: 'i', v: n }), M = n => ({ c: 'm', v: n }), X = s => ({ c: 'x', v: s }), Z = { c: 'z' }, ZC = { c: 'z', suave: true };
+  const MAPA = {
+    '✏': I('edit'), '🗑': I('trash'), '🔄': I('refresh'), '🔒': I('lock'), '🔓': I('unlock'), '🔑': I('key'),
+    '✅': I('check'), '✔': I('check'), '✓': I('check'), '☑': I('checksq'), '⬜': I('square'),
+    '❌': I('x'), '✕': I('x'), '✗': I('x'), '✖': I('x'), '➕': I('plus'),
+    '⚠': I('alert'), '🚨': I('alert'), '📷': I('camera'), '👤': I('user'), '👷': I('users'), '👥': I('users'),
+    '🔧': I('wrench'), '🛠': I('wrench'), '⚙': I('sliders'), '📊': I('chart'), '📋': I('clipboard'), '🔌': I('plug'),
+    '🏭': I('factory'), '🏢': I('factory'), '⬇': I('download'), '📥': I('download'), '⬆': I('upload'), '📤': I('upload'),
+    '👁': I('eye'), '🙈': I('eyeoff'), '⏰': I('clock'), '🕒': I('clock'), '⏱': I('clock'), '⏳': I('clock'),
+    '📦': I('box'), '🔍': I('search'), '📄': I('file'), '➡': I('arrow'), '💾': I('save'),
+    '🔴': M('r'), '🟠': M('o'), '🟡': M('y'), '🟢': M('g'), '⚪': M('w'),
+    '🇪🇸': X('ES'), '🇬🇧': X('EN'), '🇸🇦': X('AR'),
+    '🧹': Z, '🤖': Z, '🎲': Z, '✨': ZC, '✈': ZC, '⚡': ZC, '🌊': ZC, '🌿': ZC, '☀': ZC, '🍊': ZC,
+  };
+  const RE = /(🇪🇸|🇬🇧|🇸🇦|[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{23E9}-\u{23FA}])️?/gu;
+  const HAY = /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{23E9}-\u{23FA}]/u;
+  const SOLO_TEXTO = { OPTION: 1, TITLE: 1 }, FUERA = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, svg: 1 };
+  const ADORNO = '.almacen-card,.user-card,.prod-block-ico,.placeholder-icon,.empty-state';
+
+  const svg = n => { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'ico'); s.setAttribute('aria-hidden', 'true'); const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#sk-' + n); s.appendChild(u); return s; };
+
+  function texto(nodo) {
+    const v = nodo.nodeValue; if (!v || !HAY.test(v)) return;
+    const padre = nodo.parentNode; if (!padre || FUERA[padre.nodeName] || (padre.closest && padre.closest('svg,script,style,textarea,[contenteditable]'))) return;
+    const plano = SOLO_TEXTO[padre.nodeName], enMarca = padre.closest && padre.closest('.badge'), adorno = padre.closest && padre.closest(ADORNO);
+    const corto = v.trim().length <= 48;
+    const frag = document.createDocumentFragment(); let ult = 0, m, quita = false; RE.lastIndex = 0;
+    const pon = s => { if (quita) s = s.replace(/^[  ]+/, ''); quita = false; if (s) frag.appendChild(document.createTextNode(s)); };
+    while ((m = RE.exec(v))) {
+      const que = MAPA[m[1]]; if (!que) continue;                                   // no es un icono de la app: se deja como está
+      // En mitad de un texto largo lo ha escrito una persona (una descripción, una nota): se respeta
+      if (que.suave && !plano && !adorno && !corto && v.slice(0, m.index).trim()) continue;
+      pon(v.slice(ult, m.index)); ult = m.index + m[0].length;
+      if (plano || adorno || que.c === 'z' || (enMarca && (que.c === 'm' || que.v === 'check' || que.v === 'checksq' || que.v === 'square'))) quita = true;
+      else if (que.c === 'i') frag.appendChild(svg(que.v));
+      else if (que.c === 'm') { const s = document.createElement('span'); s.className = 'sk-m ' + que.v; frag.appendChild(s); }
+      else frag.appendChild(document.createTextNode(que.v));
+    }
+    if (!ult) return;
+    pon(v.slice(ult));
+    if (plano) {
+      if (padre.nodeName === 'OPTION' && !padre.hasAttribute('value')) padre.setAttribute('value', padre.text);   // el valor del desplegable no cambia
+      nodo.nodeValue = frag.textContent; return;
+    }
+    padre.replaceChild(frag, nodo);
+    const boton = padre.closest ? padre.closest('.btn') : null;                   // botón que se queda solo con el icono (lápiz, papelera…)
+    if (boton && !boton.textContent.trim() && boton.querySelector('.ico')) boton.classList.add('sk-solo');
+    if (adorno && padre.nodeType === 1 && !padre.textContent.trim() && !padre.children.length) padre.hidden = true;
+  }
+  function aplicar(raiz) {
+    if (!raiz) return;
+    if (raiz.nodeType === 3) return texto(raiz);
+    if (raiz.nodeType !== 1 || FUERA[raiz.nodeName]) return;
+    const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT), lista = []; let n;
+    while ((n = w.nextNode())) if (HAY.test(n.nodeValue)) lista.push(n);
+    lista.forEach(texto);
+    (raiz.matches && raiz.matches('[placeholder],[title]') ? [raiz] : []).concat([...raiz.querySelectorAll('[placeholder],[title]')]).forEach(e => {
+      ['placeholder', 'title'].forEach(a => { const x = e.getAttribute(a); if (x && HAY.test(x)) e.setAttribute(a, x.replace(RE, '').replace(/\s{2,}/g, ' ').trim()); });
+    });
+  }
+  aplicar(document.body);
+  new MutationObserver(muts => {
+    for (const mu of muts) {
+      if (mu.type === 'characterData') texto(mu.target);
+      else mu.addedNodes.forEach(aplicar);
+    }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  return { aplicar, svg };
+})();
+
+// Gráficos con el estilo corporativo de Deterra
+(function () {
+  if (!window.Chart || !Chart.register) return;
+  const FUENTE = "'MADE CARVING','Poppins','Segoe UI',Arial,sans-serif";
+  Chart.defaults.font.family = FUENTE; Chart.defaults.color = '#464646';
+  // color opaco y legible para la etiqueta de un dato (el de su serie, salvo que sea demasiado claro)
+  const tinta = c => {
+    let r, g, b; const s = String(c || '');
+    let m = s.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+    if (m) { r = +m[1]; g = +m[2]; b = +m[3]; }
+    else if ((m = s.match(/^#([0-9a-f]{6})/i))) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+    else return '#464646';
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#464646' : `rgb(${r},${g},${b})`;
+  };
+  Chart.register({
+    id: 'deterra',
+    beforeUpdate(ch) {
+      const o = ch.options, sc = o.scales || {}, horiz = o.indexAxis === 'y', eCat = horiz ? 'y' : 'x', eVal = horiz ? 'x' : 'y';
+      const ds = ch.data.datasets || [], barras = ds.filter(d => (d.type || ch.config.type) === 'bar');
+      ds.forEach(d => { if (d.borderRadius) d.borderRadius = 0; if (d.tension) d.tension = 0; });          // barras rectas, líneas sin suavizar
+      const lg = o.plugins && o.plugins.legend;
+      if (lg) { lg.position = 'bottom'; lg.labels.usePointStyle = true; lg.labels.pointStyle = 'rect'; lg.labels.boxWidth = 9; lg.labels.boxHeight = 9; }
+      const apilado = !!((sc[eVal] && sc[eVal].stacked) || (sc[eCat] && sc[eCat].stacked));
+      const n = ((ch.data.labels || []).length) * Math.max(1, barras.length);
+      ch.$etiquetas = barras.length > 0 && barras.length === ds.length && !apilado && n <= (horiz ? 60 : 26);   // caben las etiquetas de datos
+      [eCat, eVal].forEach(id => { if (sc[id] && sc[id].grid) sc[id].grid.display = false; });           // sin cuadrícula
+      if (sc[eCat]) {
+        if (sc[eCat].border) { sc[eCat].border.display = true; sc[eCat].border.color = '#DADADA'; }
+        if (sc[eCat].ticks) { sc[eCat].ticks.color = '#799F51'; if (!sc[eCat].ticks.font || !sc[eCat].ticks.font.weight) sc[eCat].ticks.font = { size: 11, weight: 600 }; }
+      }
+      if (sc[eVal]) {
+        if (sc[eVal].border) sc[eVal].border.display = false;
+        if (sc[eVal].ticks) { sc[eVal].ticks.display = !ch.$etiquetas; sc[eVal].ticks.color = '#868686'; }
+      }
+      if (ch.$etiquetas) {                                                                               // hueco para la etiqueta de la barra más larga
+        const p = o.layout.padding, base = typeof p === 'number' ? { top: p, right: p, bottom: p, left: p } : Object.assign({ top: 0, right: 0, bottom: 0, left: 0 }, p || {});
+        if (horiz) base.right = Math.max(base.right || 0, 44); else base.top = Math.max(base.top || 0, 18);
+        o.layout.padding = base;
+      }
+    },
+    afterDatasetsDraw(ch) {
+      if (!ch.$etiquetas) return;
+      const horiz = ch.options.indexAxis === 'y', eVal = horiz ? 'x' : 'y';
+      const F = (Chart.Ticks && Chart.Ticks.formatters) || {};
+      let cfg = ((((ch.config.options || {}).scales || {})[eVal] || {}).ticks || {}).callback;          // unidad del eje (h, €, %), si la app la pone
+      if (cfg === F.numeric || cfg === F.values || cfg === F.logarithmic) cfg = null;                     // formato por defecto de Chart.js: no sirve aquí
+      const fmt = v => { const x = Math.round(v * 10) / 10, liso = String(x).replace('.', ','); if (!cfg) return liso; try { return String(cfg(x)); } catch (e) { return liso; } };
+      const ctx = ch.ctx; ctx.save(); ctx.font = `600 11px ${FUENTE}`;
+      (ch.data.datasets || []).forEach((d, di) => {
+        const meta = ch.getDatasetMeta(di); if (!meta || meta.hidden) return;
+        meta.data.forEach((el, i) => {
+          const v = +d.data[i]; if (!v || !isFinite(v)) return;
+          ctx.fillStyle = tinta(Array.isArray(d.backgroundColor) ? d.backgroundColor[i] : d.backgroundColor);
+          if (horiz) { ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(fmt(v), el.x + 5, el.y); }
+          else { ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(fmt(v), el.x, el.y - 3); }
+        });
+      });
+      ctx.restore();
+    }
+  });
+})();
+</script>
+<script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════════
 // I18N — Internacionalización / Internationalization / التدويل
@@ -1162,6 +1496,14 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v11.3: Excel con todos los campos, de ida y vuelta ──
+      x_rev_registrado:'Registrado por',
+      x_imp_elim_sin_marcar:' no están en el Excel. Vienen sin marcar: solo se borran de la base de datos los que marques.',
+      // ── v11.2: revisor en cada cierre y zona limpia ──
+      x_lim_sin_dato:'Sin dato',
+      x_prod_confirm_limpia:'¿La máquina "{eq}" ya funciona y la zona ha quedado limpia y revisada? Se cerrará la avería {id} y quedarás como quien lo ha revisado.',
+      x_prod_si_limpia:'Sí, funciona y está limpia',
+      x_prod_revision_limpia:'Al pulsar «Ya funciona» confirmas también que la zona ha quedado limpia y revisada.',
       // ── v10.16: cierre en bloque de averías y revisión de producción ──
       x_blq_n:'Seleccionadas: {n}',
       x_blq_seleccionar:'☑ Seleccionar varias',
@@ -1209,24 +1551,24 @@ const I18N = {
       x_sim_sql_titulo:'SQL de la tabla de simulacros',
       x_sim_sql_ayuda:'Copia y ejecuta en Supabase → SQL Editor → New query. Recarga después.',
       x_sim_gen_titulo:'Programar simulacros',
-      x_sim_gen_desc:'El sistema los reparte al azar entre las máquinas y los turnos de la semana, asigna mecánico por rotación y el revisor de producción del turno. Cada simulacro lo marca como hecho quien lo hace y la limpieza la firma producción.',
+      x_sim_gen_desc:'El sistema los reparte al azar entre las máquinas y los turnos del periodo elegido, asigna mecánico por rotación y el revisor de producción del turno. Cada simulacro lo marca como hecho quien lo hace y la limpieza la firma producción.',
       x_sim_centro:'Centro',
       x_sim_numero:'Nº de simulacros',
-      x_sim_semana:'Semana del',
+      x_sim_semana:'Semana o mes del día',
       x_sim_dias:'Días',
       x_sim_dias_lv:'Lunes a viernes',
       x_sim_dias_ls:'Lunes a sábado',
       x_sim_dias_todos:'Toda la semana',
       x_sim_generar:'🎲 Generar propuesta',
-      x_sim_err_num:'Indica cuántos simulacros (de 1 a 30).',
+      x_sim_err_num:'Indica cuántos simulacros (de 1 a 100).',
       x_sim_err_semana:'Elige un día de la semana en la que quieres hacerlos.',
-      x_sim_err_pasada:'En esa semana ya no quedan turnos por delante: los simulacros solo se pueden programar de ahora en adelante.',
+      x_sim_err_pasada:'En ese periodo ya no quedan turnos por delante: los simulacros solo se pueden programar de ahora en adelante.',
       x_sim_err_maquinas:'No hay máquinas dadas de alta en ese centro.',
       x_sim_err_turnos:'No hay ningún turno activo. Revísalo en ⚙ Revisores y turnos.',
       x_sim_aviso_sin_mec:'No hay mecánicos activos en este centro: los simulacros quedarán sin asignar.',
       x_sim_aviso_sin_rev:'Sin revisor de producción configurado para el turno: {turnos}. Añádelos en ⚙ Revisores y turnos.',
       x_sim_prop_titulo:'Propuesta de simulacros · {centro}',
-      x_sim_prop_semana:'Semana del {ini} al {fin}. Nada queda guardado hasta que pulses "Programar".',
+      x_sim_prop_semana:'Del {ini} al {fin}. Nada queda guardado hasta que pulses "Programar".',
       x_sim_otra:'🎲 Otra propuesta',
       x_sim_programar:'Programar {n} simulacros',
       x_sim_programados:'{n} simulacros programados ✓',
@@ -1289,6 +1631,49 @@ const I18N = {
       x_sim_reasignado_ok:'Mecánico reasignado (asignación manual)',
       x_sim_excel:'⬇ Exportar a Excel',
       x_sim_excel_vacio:'No hay simulacros que exportar',
+      x_sim_periodo:'Periodo',
+      x_sim_per_semana:'Una semana',
+      x_sim_per_mes:'Un mes entero',
+      x_sim_blq_btn:'✔ Marcar hechos ({n})',
+      x_sim_blq_titulo:'Marcar simulacros como hechos',
+      x_sim_blq_nota_conf:'Simulacros que ya han pasado de hora y tienen técnico asignado. Cada uno quedará «hecho por» su técnico y «confirmado por» ti ({nombre}), con la hora de ahora.',
+      x_sim_blq_nota_mio:'Tus simulacros pendientes. Quedarán registrados a tu nombre ({nombre}) con la hora de ahora.',
+      x_sim_blq_todos:'Todos',
+      x_sim_blq_actuacion:'Actuación realizada',
+      x_sim_blq_duracion:'Duración (min), solo si se ha medido',
+      x_sim_blq_ok_btn:'Marcar como hechos ({n})',
+      x_sim_blq_ninguno:'Marca al menos un simulacro',
+      x_sim_blq_hechos:'{n} simulacros marcados como hechos',
+      x_sim_blq_parcial:'{n} marcados como hechos; {m} ya no estaban pendientes',
+      x_sim_blq_sql_falta:'Para confirmar simulacros en nombre del técnico hay que actualizar las reglas en Supabase: copia este SQL en SQL Editor y pulsa Run (se puede repetir sin problema). Después vuelve a intentarlo.',
+      x_sim_conf_por:'Confirmado por {nombre}',
+      x_sim_imp_btn:'⬆ Registrar realizados (Excel)',
+      x_sim_imp_titulo:'Registrar simulacros ya realizados',
+      x_sim_imp_desc:'Para simulacros que ya se hicieron y no se programaron aquí. Rellena la plantilla con los datos reales (una fila por simulacro) y súbela. Cada uno entra como «Hecho» con su fecha real, marcado «a posteriori» con tu nombre y la fecha de hoy, y queda pendiente de la revisión de limpieza de producción.',
+      x_sim_imp_cols:'Columnas: Centro, Fecha (dd/mm/aaaa), Hora (hh:mm), Zona, Línea, Máquina, Fallo simulado, Hecho por, Actuación, Duración (min). Son obligatorias todas menos Zona, Línea y Duración. Solo fechas pasadas.',
+      x_sim_imp_plantilla:'⬇ Descargar plantilla',
+      x_sim_imp_prev_titulo:'Simulacros realizados: comprobar antes de registrar',
+      x_sim_imp_resumen:'{ok} para registrar · {err} con errores (no se registran)',
+      x_sim_imp_nota:'Se registran a nombre de {nombre}, marcados «a posteriori» con la fecha de hoy. Una vez registrados no se pueden modificar.',
+      x_sim_imp_registrar:'Registrar {n} simulacros',
+      x_sim_imp_ok:'{n} simulacros registrados a posteriori',
+      x_sim_imp_fila:'Fila {n}',
+      x_sim_imp_col_cuando:'Fecha y hora reales',
+      x_sim_imp_e_vacio:'El Excel no tiene filas',
+      x_sim_imp_e_cols:'Faltan columnas en el Excel: {cols}',
+      x_sim_imp_e_centro:'centro no reconocido',
+      x_sim_imp_e_centro_otro:'el centro no es el tuyo',
+      x_sim_imp_e_fecha:'fecha no válida',
+      x_sim_imp_e_hora:'hora no válida',
+      x_sim_imp_e_futuro:'la fecha no es pasada',
+      x_sim_imp_e_falta:'falta «{campo}»',
+      x_sim_imp_e_dur:'duración no válida',
+      x_sim_imp_e_dup:'ya está registrado (mismo centro, fecha, hora y máquina)',
+      x_sim_imp_a_mec:'no está en la lista de técnicos',
+      x_sim_imp_a_maq:'máquina no encontrada en Activos',
+      x_sim_imp_sql_falta:'Para registrar simulacros ya realizados hay que actualizar las reglas en Supabase: copia este SQL en SQL Editor y pulsa Run (se puede repetir sin problema). Después vuelve a subir el Excel.',
+      x_sim_post:'A posteriori',
+      x_sim_post_tt:'Registrado el {fecha} por {nombre}',
       x_sim_cfg:'⚙ Revisores y turnos',
       x_sim_cfg_titulo:'Revisores de producción y turnos',
       x_sim_cfg_turnos:'Turnos',
@@ -1624,6 +2009,14 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v11.3: Excel con todos los campos, de ida y vuelta ──
+      x_rev_registrado:'Recorded by',
+      x_imp_elim_sin_marcar:' are not in the Excel file. They come unticked: only the ones you tick are deleted from the database.',
+      // ── v11.2: revisor en cada cierre y zona limpia ──
+      x_lim_sin_dato:'No data',
+      x_prod_confirm_limpia:'Is machine "{eq}" working again and has the area been left clean and checked? Breakdown {id} will be closed and you will be recorded as the person who checked it.',
+      x_prod_si_limpia:'Yes, working and clean',
+      x_prod_revision_limpia:'By pressing “Working again” you also confirm that the area has been left clean and checked.',
       // ── v10.16: cierre en bloque de averías y revisión de producción ──
       x_blq_n:'Selected: {n}',
       x_blq_seleccionar:'☑ Select several',
@@ -1671,24 +2064,24 @@ const I18N = {
       x_sim_sql_titulo:'SQL for the drills table',
       x_sim_sql_ayuda:'Copy and run in Supabase → SQL Editor → New query. Then reload.',
       x_sim_gen_titulo:'Schedule drills',
-      x_sim_gen_desc:'The system spreads them at random across the machines and shifts of the week, assigns a mechanic by rotation and the production reviewer of the shift. Each drill is marked as done by whoever does it, and production signs the cleaning check.',
+      x_sim_gen_desc:'The system spreads them at random across the machines and shifts of the chosen period, assigns a mechanic by rotation and the production reviewer of the shift. Each drill is marked as done by whoever does it, and production signs the cleaning check.',
       x_sim_centro:'Site',
       x_sim_numero:'Number of drills',
-      x_sim_semana:'Week of',
+      x_sim_semana:'Week or month of',
       x_sim_dias:'Days',
       x_sim_dias_lv:'Monday to Friday',
       x_sim_dias_ls:'Monday to Saturday',
       x_sim_dias_todos:'Whole week',
       x_sim_generar:'🎲 Generate proposal',
-      x_sim_err_num:'Enter how many drills (1 to 30).',
+      x_sim_err_num:'Enter how many drills (1 to 100).',
       x_sim_err_semana:'Pick a day in the week you want to run them.',
-      x_sim_err_pasada:'There are no shifts left in that week: drills can only be scheduled from now on.',
+      x_sim_err_pasada:'There are no shifts left in that period: drills can only be scheduled from now on.',
       x_sim_err_maquinas:'There are no machines registered at that site.',
       x_sim_err_turnos:'No shift is active. Check ⚙ Reviewers and shifts.',
       x_sim_aviso_sin_mec:'There are no active mechanics at this site: the drills will be left unassigned.',
       x_sim_aviso_sin_rev:'No production reviewer set up for shift: {turnos}. Add them in ⚙ Reviewers and shifts.',
       x_sim_prop_titulo:'Drill proposal · {centro}',
-      x_sim_prop_semana:'Week from {ini} to {fin}. Nothing is saved until you press "Schedule".',
+      x_sim_prop_semana:'From {ini} to {fin}. Nothing is saved until you press "Schedule".',
       x_sim_otra:'🎲 Another proposal',
       x_sim_programar:'Schedule {n} drills',
       x_sim_programados:'{n} drills scheduled ✓',
@@ -1751,6 +2144,49 @@ const I18N = {
       x_sim_reasignado_ok:'Mechanic reassigned (manual assignment)',
       x_sim_excel:'⬇ Export to Excel',
       x_sim_excel_vacio:'There are no drills to export',
+      x_sim_periodo:'Period',
+      x_sim_per_semana:'One week',
+      x_sim_per_mes:'A whole month',
+      x_sim_blq_btn:'✔ Mark as done ({n})',
+      x_sim_blq_titulo:'Mark drills as done',
+      x_sim_blq_nota_conf:'Drills whose time has passed and that have a mechanic assigned. Each one will be “done by” its mechanic and “confirmed by” you ({nombre}), with the current time.',
+      x_sim_blq_nota_mio:'Your pending drills. They will be recorded under your name ({nombre}) with the current time.',
+      x_sim_blq_todos:'All',
+      x_sim_blq_actuacion:'Action carried out',
+      x_sim_blq_duracion:'Duration (min), only if measured',
+      x_sim_blq_ok_btn:'Mark as done ({n})',
+      x_sim_blq_ninguno:'Select at least one drill',
+      x_sim_blq_hechos:'{n} drills marked as done',
+      x_sim_blq_parcial:'{n} marked as done; {m} were no longer pending',
+      x_sim_blq_sql_falta:'To confirm drills on behalf of the mechanic, the rules in Supabase must be updated: copy this SQL into SQL Editor and press Run (it can be repeated safely). Then try again.',
+      x_sim_conf_por:'Confirmed by {nombre}',
+      x_sim_imp_btn:'⬆ Record completed drills (Excel)',
+      x_sim_imp_titulo:'Record drills already carried out',
+      x_sim_imp_desc:'For drills that were carried out but not scheduled here. Fill in the template with the real data (one row per drill) and upload it. Each one is entered as “Done” with its real date, flagged “after the fact” with your name and today’s date, and stays pending the production cleaning check.',
+      x_sim_imp_cols:'Columns: Centro, Fecha (dd/mm/yyyy), Hora (hh:mm), Zona, Línea, Máquina, Fallo simulado, Hecho por, Actuación, Duración (min). All are required except Zona, Línea and Duración. Past dates only.',
+      x_sim_imp_plantilla:'⬇ Download template',
+      x_sim_imp_prev_titulo:'Completed drills: check before recording',
+      x_sim_imp_resumen:'{ok} to record · {err} with errors (not recorded)',
+      x_sim_imp_nota:'They are recorded under the name of {nombre}, flagged “after the fact” with today’s date. Once recorded they cannot be changed.',
+      x_sim_imp_registrar:'Record {n} drills',
+      x_sim_imp_ok:'{n} drills recorded after the fact',
+      x_sim_imp_fila:'Row {n}',
+      x_sim_imp_col_cuando:'Actual date and time',
+      x_sim_imp_e_vacio:'The Excel file has no rows',
+      x_sim_imp_e_cols:'Columns missing in the Excel file: {cols}',
+      x_sim_imp_e_centro:'site not recognised',
+      x_sim_imp_e_centro_otro:'the site is not yours',
+      x_sim_imp_e_fecha:'invalid date',
+      x_sim_imp_e_hora:'invalid time',
+      x_sim_imp_e_futuro:'the date is not in the past',
+      x_sim_imp_e_falta:'“{campo}” is missing',
+      x_sim_imp_e_dur:'invalid duration',
+      x_sim_imp_e_dup:'already recorded (same site, date, time and machine)',
+      x_sim_imp_a_mec:'not in the technicians list',
+      x_sim_imp_a_maq:'machine not found in Assets',
+      x_sim_imp_sql_falta:'To record drills already carried out, the rules in Supabase must be updated: copy this SQL into SQL Editor and press Run (it can be repeated safely). Then upload the Excel file again.',
+      x_sim_post:'After the fact',
+      x_sim_post_tt:'Recorded on {fecha} by {nombre}',
       x_sim_cfg:'⚙ Reviewers and shifts',
       x_sim_cfg_titulo:'Production reviewers and shifts',
       x_sim_cfg_turnos:'Shifts',
@@ -2086,6 +2522,14 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v11.3: Excel con todos los campos, de ida y vuelta ──
+      x_rev_registrado:'سجّله',
+      x_imp_elim_sin_marcar:' غير موجودة في ملف Excel. تظهر بدون تحديد: لا يُحذف من قاعدة البيانات إلا ما تحدده.',
+      // ── v11.2: revisor en cada cierre y zona limpia ──
+      x_lim_sin_dato:'لا توجد بيانات',
+      x_prod_confirm_limpia:'هل الآلة "{eq}" تعمل الآن وهل تُركت المنطقة نظيفة ومراجَعة؟ سيُغلق العطل {id} وسيُسجَّل اسمك كمن راجعها.',
+      x_prod_si_limpia:'نعم، تعمل ونظيفة',
+      x_prod_revision_limpia:'بالضغط على «تعمل الآن» تؤكد أيضًا أن المنطقة تُركت نظيفة ومراجَعة.',
       // ── v10.16: cierre en bloque de averías y revisión de producción ──
       x_blq_n:'المحدد: {n}',
       x_blq_seleccionar:'☑ تحديد عدة',
@@ -2133,24 +2577,24 @@ const I18N = {
       x_sim_sql_titulo:'SQL لجدول التمارين',
       x_sim_sql_ayuda:'انسخ ونفّذ في Supabase → SQL Editor → New query. ثم أعد التحميل.',
       x_sim_gen_titulo:'جدولة التمارين',
-      x_sim_gen_desc:'يوزّعها النظام عشوائيًا على آلات ونوبات الأسبوع، ويعيّن الميكانيكي بالتناوب ومراجِع الإنتاج للنوبة. يسجّل كل تمرين كمنجز من ينفّذه، ويوقّع الإنتاج على مراجعة النظافة.',
+      x_sim_gen_desc:'يوزّعها النظام عشوائيًا على آلات ونوبات الفترة المختارة، ويعيّن الميكانيكي بالتناوب ومراجِع الإنتاج للنوبة. يسجّل كل تمرين كمنجز من ينفّذه، ويوقّع الإنتاج على مراجعة النظافة.',
       x_sim_centro:'المركز',
       x_sim_numero:'عدد التمارين',
-      x_sim_semana:'أسبوع يوم',
+      x_sim_semana:'أسبوع أو شهر يوم',
       x_sim_dias:'الأيام',
       x_sim_dias_lv:'من الاثنين إلى الجمعة',
       x_sim_dias_ls:'من الاثنين إلى السبت',
       x_sim_dias_todos:'الأسبوع كله',
       x_sim_generar:'🎲 إنشاء مقترح',
-      x_sim_err_num:'حدّد عدد التمارين (من 1 إلى 30).',
+      x_sim_err_num:'حدّد عدد التمارين (من 1 إلى 100).',
       x_sim_err_semana:'اختر يومًا من الأسبوع الذي تريد تنفيذها فيه.',
-      x_sim_err_pasada:'لم تبقَ نوبات في ذلك الأسبوع: لا يمكن جدولة التمارين إلا من الآن فصاعدًا.',
+      x_sim_err_pasada:'لم تبقَ نوبات في تلك الفترة: لا يمكن جدولة التمارين إلا من الآن فصاعدًا.',
       x_sim_err_maquinas:'لا توجد آلات مسجلة في ذلك المركز.',
       x_sim_err_turnos:'لا توجد نوبة مفعّلة. راجع ⚙ المراجعون والنوبات.',
       x_sim_aviso_sin_mec:'لا يوجد ميكانيكيون نشطون في هذا المركز: ستبقى التمارين دون تعيين.',
       x_sim_aviso_sin_rev:'لا يوجد مراجِع إنتاج معيَّن للنوبة: {turnos}. أضفهم في ⚙ المراجعون والنوبات.',
       x_sim_prop_titulo:'مقترح التمارين · {centro}',
-      x_sim_prop_semana:'الأسبوع من {ini} إلى {fin}. لا يُحفظ شيء حتى تضغط "جدولة".',
+      x_sim_prop_semana:'من {ini} إلى {fin}. لا يُحفظ شيء حتى تضغط "جدولة".',
       x_sim_otra:'🎲 مقترح آخر',
       x_sim_programar:'جدولة {n} تمارين',
       x_sim_programados:'تمت جدولة {n} تمارين ✓',
@@ -2213,6 +2657,49 @@ const I18N = {
       x_sim_reasignado_ok:'تمت إعادة تعيين الميكانيكي (تعيين يدوي)',
       x_sim_excel:'⬇ تصدير إلى Excel',
       x_sim_excel_vacio:'لا توجد تمارين للتصدير',
+      x_sim_periodo:'الفترة',
+      x_sim_per_semana:'أسبوع واحد',
+      x_sim_per_mes:'شهر كامل',
+      x_sim_blq_btn:'✔ تسجيل كمنجزة ({n})',
+      x_sim_blq_titulo:'تسجيل التمارين كمنجزة',
+      x_sim_blq_nota_conf:'تمارين حان وقتها ولها ميكانيكي معيَّن. يُسجَّل كل تمرين «أنجزه» الميكانيكي المعيَّن و«أكّده» أنت ({nombre}) بالوقت الحالي.',
+      x_sim_blq_nota_mio:'تمارينك المعلّقة. ستُسجَّل باسمك ({nombre}) بالوقت الحالي.',
+      x_sim_blq_todos:'الكل',
+      x_sim_blq_actuacion:'الإجراء المنفَّذ',
+      x_sim_blq_duracion:'المدة (دقيقة)، فقط إذا قيست',
+      x_sim_blq_ok_btn:'تسجيل كمنجزة ({n})',
+      x_sim_blq_ninguno:'حدّد تمرينًا واحدًا على الأقل',
+      x_sim_blq_hechos:'تم تسجيل {n} تمرين كمنجز',
+      x_sim_blq_parcial:'سُجّل {n} كمنجز؛ {m} لم تعد معلّقة',
+      x_sim_blq_sql_falta:'لتأكيد التمارين باسم الميكانيكي يجب تحديث القواعد في Supabase: انسخ هذا SQL إلى SQL Editor واضغط Run (يمكن تكراره دون مشكلة). ثم حاول من جديد.',
+      x_sim_conf_por:'أكّده {nombre}',
+      x_sim_imp_btn:'⬆ تسجيل التمارين المنجزة (Excel)',
+      x_sim_imp_titulo:'تسجيل تمارين سبق تنفيذها',
+      x_sim_imp_desc:'للتمارين التي نُفّذت فعلًا ولم تُجدول هنا. املأ القالب بالبيانات الحقيقية (صف لكل تمرين) ثم ارفعه. يُسجَّل كل تمرين كـ«منجز» بتاريخه الحقيقي، مع علامة «تسجيل لاحق» باسمك وتاريخ اليوم، ويبقى بانتظار مراجعة النظافة من الإنتاج.',
+      x_sim_imp_cols:'الأعمدة: Centro، Fecha (dd/mm/yyyy)، Hora (hh:mm)، Zona، Línea، Máquina، Fallo simulado، Hecho por، Actuación، Duración (min). كلها إلزامية ما عدا Zona و Línea و Duración. تواريخ ماضية فقط.',
+      x_sim_imp_plantilla:'⬇ تنزيل القالب',
+      x_sim_imp_prev_titulo:'التمارين المنجزة: تحقّق قبل التسجيل',
+      x_sim_imp_resumen:'{ok} للتسجيل · {err} بها أخطاء (لن تُسجَّل)',
+      x_sim_imp_nota:'تُسجَّل باسم {nombre} مع علامة «تسجيل لاحق» بتاريخ اليوم. لا يمكن تعديلها بعد التسجيل.',
+      x_sim_imp_registrar:'تسجيل {n} تمرين',
+      x_sim_imp_ok:'تم تسجيل {n} تمرين لاحقًا',
+      x_sim_imp_fila:'الصف {n}',
+      x_sim_imp_col_cuando:'التاريخ والوقت الفعليان',
+      x_sim_imp_e_vacio:'ملف Excel لا يحتوي على صفوف',
+      x_sim_imp_e_cols:'أعمدة ناقصة في ملف Excel: {cols}',
+      x_sim_imp_e_centro:'المركز غير معروف',
+      x_sim_imp_e_centro_otro:'المركز ليس مركزك',
+      x_sim_imp_e_fecha:'تاريخ غير صالح',
+      x_sim_imp_e_hora:'وقت غير صالح',
+      x_sim_imp_e_futuro:'التاريخ ليس في الماضي',
+      x_sim_imp_e_falta:'«{campo}» ناقص',
+      x_sim_imp_e_dur:'مدة غير صالحة',
+      x_sim_imp_e_dup:'مسجَّل مسبقًا (نفس المركز والتاريخ والوقت والآلة)',
+      x_sim_imp_a_mec:'غير موجود في قائمة الفنيين',
+      x_sim_imp_a_maq:'الآلة غير موجودة في الأصول',
+      x_sim_imp_sql_falta:'لتسجيل تمارين سبق تنفيذها يجب تحديث القواعد في Supabase: انسخ هذا SQL إلى SQL Editor واضغط Run (يمكن تكراره دون مشكلة). ثم ارفع ملف Excel من جديد.',
+      x_sim_post:'تسجيل لاحق',
+      x_sim_post_tt:'سُجّل في {fecha} بواسطة {nombre}',
       x_sim_cfg:'⚙ المراجعون والنوبات',
       x_sim_cfg_titulo:'مراجعو الإنتاج والنوبات',
       x_sim_cfg_turnos:'النوبات',
@@ -5243,6 +5730,9 @@ const DashboardPage = {
 // ═══════════════════════════════════════════════════════════════════
 // UTILIDAD: modal de validación de cambios al importar Excel
 // ═══════════════════════════════════════════════════════════════════
+// v11.3: nombre de cabecera de Excel sin acentos ni mayúsculas, para localizar una columna por su nombre
+const _xlNorm = v => String(v ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
 function _showImportDiff(title, changes, labels, onApply) {
   document.getElementById('import-diff-modal')?.remove();
 
@@ -5288,7 +5778,7 @@ function _showImportDiff(title, changes, labels, onApply) {
     return `
     <div style="border:1px solid ${borderColor};border-radius:8px;padding:10px 12px;margin-bottom:8px;${bgExtra}">
       <label style="display:flex;gap:10px;cursor:pointer;align-items:flex-start">
-        <input type="checkbox" class="diff-cb" data-idx="${i}" checked style="margin-top:3px;flex-shrink:0">
+        <input type="checkbox" class="diff-cb" data-idx="${i}"${ch.type === 'deleted' ? '' : ' checked'} style="margin-top:3px;flex-shrink:0">
         <div>
           <strong style="font-size:13px">${ch.id}</strong>
           <span style="font-size:11px;margin-left:8px;font-weight:700;color:${badgeColor}">${badgeText}</span>
@@ -5309,9 +5799,9 @@ function _showImportDiff(title, changes, labels, onApply) {
           style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-muted);line-height:1">✕</button>
       </div>
       <p style="font-size:13px;margin-bottom:10px">${sumParts}</p>
-      ${nDel ? `<p style="font-size:12px;color:#C20019;margin-bottom:10px;padding:8px 12px;background:rgba(194,0,25,.08);border-radius:6px;border:1px solid rgba(229,115,115,.25)">${t('x_los_elementos_marcados_como')} <strong>ELIMINAR</strong> no están en el Excel y serán borrados de la base de datos.</p>` : ''}
+      ${nDel ? `<p style="font-size:12px;color:#C20019;margin-bottom:10px;padding:8px 12px;background:rgba(194,0,25,.08);border-radius:6px;border:1px solid rgba(229,115,115,.25)">${t('x_los_elementos_marcados_como')} <strong>ELIMINAR</strong>${t('x_imp_elim_sin_marcar')}</p>` : ''}
       <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:12px">
-        <input type="checkbox" id="diff-sel-all" checked
+        <input type="checkbox" id="diff-sel-all"${nDel ? '' : ' checked'}
           onchange="document.querySelectorAll('#import-diff-modal .diff-cb').forEach(cb=>cb.checked=this.checked)">
         ${t('x_seleccionar_todos')}
       </label>
@@ -5579,16 +6069,17 @@ const ActivosPage = {
     activos.sort((a, b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.equipo||'').localeCompare(b.equipo||''));
     const cabecera = ['ID Activo','Num','Almacén','Zona','Código Zona','Línea','Tipo Máquina','Equipo',
       'Estado','Año','Proveedor','Matrícula','Potencia Motor','Ancho','Largo','Protección','Observaciones','Visible Producción',
-      'Impacto','Personas paradas','A quién para'];
+      'Impacto','Personas paradas','A quién para','Fecha instalación'];   // v11.3: todos los campos
     const filas = activos.map(a => [
       a.id_activo, a.num||'', a.almacen, a.zona, a.codigo_zona, a.linea,
       a.tipo_maquina, a.equipo, a.estado, a.anio||'', a.proveedor,
       a.matricula, a.potencia_motor, a.ancho, a.largo, a.proteccion, a.observaciones, a.visible_produccion === false ? 'No' : 'Sí',
       a.criticidad_prod || '', a.personas_paradas == null ? '' : a.personas_paradas, a.alcance_parada || '',
+      a.fecha_instalacion ? String(a.fecha_instalacion).slice(0, 10) : '',
     ]);
     const ws = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
     // Anchos de columna
-    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30,10,10,10,12].map(w=>({wch:w}));
+    ws['!cols'] = [18,6,10,12,12,10,14,16,12,6,14,12,14,8,8,10,30,10,10,10,12,14].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Activos');
     XLSX.writeFile(wb, `Activos_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -5606,9 +6097,9 @@ const ActivosPage = {
       linea:'Línea', tipo_maquina:'Tipo máquina', equipo:'Equipo', estado:'Estado', anio:'Año',
       proveedor:'Proveedor', matricula:'Matrícula', potencia_motor:'Potencia motor',
       ancho:'Ancho', largo:'Largo', proteccion:'Protección', observaciones:'Observaciones', visible_produccion:'Visible producción',
-      criticidad_prod:'Impacto', personas_paradas:'Personas paradas', alcance_parada:'A quién para'
+      criticidad_prod:'Impacto', personas_paradas:'Personas paradas', alcance_parada:'A quién para', fecha_instalacion:'Fecha instalación'
     };
-    const OPCIONALES = ['visible_produccion', 'criticidad_prod', 'personas_paradas', 'alcance_parada'];   // si el Excel no las trae, se conserva el valor actual
+    const OPCIONALES = ['visible_produccion', 'criticidad_prod', 'personas_paradas', 'alcance_parada', 'fecha_instalacion'];   // si el Excel no las trae, se conserva el valor actual
     try {
       toast('Leyendo Excel...', 'info');
       const buffer = await file.arrayBuffer();
@@ -5620,6 +6111,9 @@ const ActivosPage = {
       const [, ...dataRows] = rows;
       const _s = v => (v === null || v === undefined) ? '' : String(v).trim();
       const _i = v => { const n = parseInt(v); return isNaN(n) ? null : n; };
+      // v11.3: "Fecha instalación", por nombre de cabecera (dd/mm/aaaa o aaaa-mm-dd; vacía = sin fecha)
+      const iFI = rows[0].findIndex(h => _xlNorm(h) === 'fecha instalacion');
+      const _fecha = v => { const x = _s(v); let m = x.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/); if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; m = x.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[1]}-${m[2]}-${m[3]}` : (x || null); };
       const imported = dataRows.filter(r => r[0]).map(r => ({
         id_activo:     _s(r[0]),
         num:           _i(r[1]),
@@ -5644,6 +6138,7 @@ const ActivosPage = {
         ...(r.length > 18 && UI.cpNivelNorm(_s(r[18])) ? { criticidad_prod: UI.cpNivelNorm(_s(r[18])) } : {}),
         ...(r.length > 19 && _s(r[19]) !== '' ? { personas_paradas: Math.max(0, parseInt(_s(r[19]), 10) || 0) } : {}),
         ...(r.length > 20 && UI.cpAlcanceNorm(_s(r[20])) ? { alcance_parada: UI.cpAlcanceNorm(_s(r[20])) } : {}),
+        ...(iFI >= 0 ? { fecha_instalacion: _fecha(r[iFI]) } : {}),
       }));
       const existentes = await db.activos.toArray();
       const exMap = new Map(existentes.map(a => [a.id_activo, a]));
@@ -5655,7 +6150,7 @@ const ActivosPage = {
           changes.push({ id: imp.id_activo, type:'new', fields:[], record: imp });
         } else {
           const fields = Object.keys(LABELS).filter(k => k !== 'id_activo' && !(OPCIONALES.includes(k) && imp[k] === undefined)).reduce((acc, k) => {
-            const ov = String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
+            const ov = k === 'fecha_instalacion' ? String(ex[k] ?? '').slice(0, 10) : String(ex[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
           }, []);
@@ -6297,6 +6792,29 @@ const AveriasPage = {
       </tr>`).join('');
   },
 
+  // ── v11.2: quién confirma la limpieza al cerrar, y limpieza en tres estados (Sí / No / Sin dato) ──
+  // Al cerrar se guarda como revisor quien confirma la zona en ese momento. Si faltan las columnas de revisión
+  // (averias_cierre_bloque.sql sin ejecutar), se guarda sin ellas.
+  async _guardarCierre(averia, revisor) {
+    if (!revisor) return DataService.saveAveria(averia);
+    try {
+      await DataService.saveAveria({ ...averia, revisado_por: revisor, revisado_usuario: revisor, revisado_at: new Date().toISOString() });
+    } catch (e) {
+      if (/revisado_/i.test(e.message || '')) await DataService.saveAveria(averia); else throw e;
+    }
+  },
+  // v11.3: quién registró la revisión, cuando no es quien la firma (p. ej. cargada desde Excel)
+  _regRev(a) {
+    return a.revisado_usuario && a.revisado_usuario !== a.revisado_por ? `<br><small style="color:var(--gray-muted)">${t('x_rev_registrado')}: ${UI.esc(a.revisado_usuario)}</small>` : '';
+  },
+  _limpiezaHtml(a) {
+    const esc = UI.esc;
+    const valor = a.zona_limpia === true ? `<span style="font-weight:600;color:var(--green)">✓ ${t('x_si')}</span>`
+      : a.zona_limpia === false ? `<span style="font-weight:600;color:var(--red)">✗ ${t('x_no')}</span>`
+      : `<span style="color:var(--gray-muted)">${t('x_lim_sin_dato')}</span>`;
+    return `<p>${valor}${a.revisado_por ? ` · ${esc(a.revisado_por)}${a.revisado_at ? ' · ' + SimulacrosPage._fechaHora(a.revisado_at) : ''}` : ''}${a.obs_revision ? `<br><small style="color:var(--gray-muted)">${esc(a.obs_revision)}</small>` : ''}${AveriasPage._regRev(a)}</p>`;
+  },
+
   // ── v10.16: selección y acciones en bloque (Admin / Responsable) ─────────────────────────
   // Asignar mecánico por rotación y cierre administrativo de varias averías abiertas a la vez. El cierre
   // queda a nombre de quien lo hace, sin parte de trabajo ni duración, y la limpieza la firma producción.
@@ -6427,7 +6945,7 @@ const AveriasPage = {
     const cierre = `<div class="detail-field"><label>${t('x_blq_cierre')}</label><p>${t('x_blq_cierre_adm')}${a.cerrado_por ? ' · ' + esc(a.cerrado_por) : ''}</p></div>`;
     if (!a.revisado_at) return cierre + `<div class="detail-field"><label>${t('x_blq_rev_prod')}</label><p style="font-weight:600;color:var(--orange)">⏳ ${t('x_blq_rev_pend')}</p></div>`;
     const limpia = a.zona_limpia !== false;
-    return cierre + `<div class="detail-field"><label>${t('x_blq_rev_prod')}</label><p><span style="font-weight:600;color:${limpia ? 'var(--green)' : 'var(--red)'}">🧹 ${limpia ? t('x_si') : t('x_no')}</span> · ${esc(a.revisado_por || '')} · ${SimulacrosPage._fechaHora(a.revisado_at)}${a.obs_revision ? `<br><small style="color:var(--gray-muted)">${esc(a.obs_revision)}</small>` : ''}</p></div>`;
+    return cierre + `<div class="detail-field"><label>${t('x_blq_rev_prod')}</label><p><span style="font-weight:600;color:${limpia ? 'var(--green)' : 'var(--red)'}">🧹 ${limpia ? t('x_si') : t('x_no')}</span> · ${esc(a.revisado_por || '')} · ${SimulacrosPage._fechaHora(a.revisado_at)}${a.obs_revision ? `<br><small style="color:var(--gray-muted)">${esc(a.obs_revision)}</small>` : ''}${AveriasPage._regRev(a)}</p></div>`;
   },
 
   async openDetail(id) {
@@ -6495,7 +7013,7 @@ const AveriasPage = {
         ${partesHtml}
         ${a.solucion ? `<div class="detail-field full"><label>${t('lbl_solucion')}</label><p>${UI.esc(a.solucion)}</p></div>` : ''}
         ${a.materiales ? `<div class="detail-field full"><label>${t('x_materiales_utilizados')}</label><p>${UI.esc(a.materiales)}${a.coste ? ` — <strong>${a.coste}€</strong>` : ''}</p></div>` : ''}
-        ${a.estado === 'Cerrada' ? (a.cierre_admin ? AveriasPage._revisionHtml(a) : `<div class="detail-field"><label>${t('x_zona_limpia_y_revisada')}</label><p style="font-weight:600;color:${a.zona_limpia !== false ? 'var(--green)' : 'var(--red)'}">${a.zona_limpia !== false ? '✓ Sí' : '✗ No'}</p></div>`) : ''}
+        ${a.estado === 'Cerrada' ? (a.cierre_admin ? AveriasPage._revisionHtml(a) : `<div class="detail-field"><label>${t('x_zona_limpia_y_revisada')}</label>${AveriasPage._limpiezaHtml(a)}</div>`) : ''}
         ${fotosHtml}
       </div>`,
       `<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>
@@ -6681,10 +7199,10 @@ const AveriasPage = {
         </div>
         <div class="form-field">
           <label>${t('x_zona_limpia_y_revisada')}</label>
-          <select class="form-input" id="ea-zona-limpia"${a.cierre_admin ? ' disabled' : ''}>
-            <option value="true"${a.zona_limpia !== false ? ' selected':''}>${t('x_si')}</option>
+          <select class="form-input" id="ea-zona-limpia"${a.cierre_admin || a.revisado_at ? ' disabled' : ''}>
+            <option value="true"${a.zona_limpia === true ? ' selected':''}>${t('x_si')}</option>
             <option value="false"${a.zona_limpia === false ? ' selected':''}>No</option>
-            ${a.cierre_admin && !a.revisado_at ? `<option value="" selected>${t('x_blq_rev_pend')}</option>` : ''}
+            <option value=""${a.zona_limpia == null ? ' selected':''}>${t(a.cierre_admin && !a.revisado_at ? 'x_blq_rev_pend' : 'x_lim_sin_dato')}</option>
           </select>
         </div>
       </form>`,
@@ -6719,7 +7237,7 @@ const AveriasPage = {
       solucion:    document.getElementById('ea-solucion').value.trim(),
       materiales:  document.getElementById('ea-materiales').value.trim(),
       coste:       parseFloat(document.getElementById('ea-coste').value) || 0,
-      zona_limpia: a.cierre_admin ? a.zona_limpia : document.getElementById('ea-zona-limpia').value === 'true',
+      zona_limpia: a.cierre_admin || a.revisado_at ? a.zona_limpia : ({ true: true, false: false })[document.getElementById('ea-zona-limpia').value] ?? null,
     };
     if (a.asignacion === 'Auto' && updated.tecnico !== a.tecnico) updated.asignacion = updated.tecnico ? 'Manual' : '';   // v10.16
     if (a.cierre_admin && updated.estado !== 'Cerrada') updated.cierre_admin = false;                                     // reabierta
@@ -7218,7 +7736,7 @@ const AveriasPage = {
       fecha_fin: fechaFin, hora_fin: horaFin, solucion, materiales, coste, duracion,
       ...(zonaLimpia !== undefined && { zona_limpia: zonaLimpia }),
     };
-    await DataService.saveAveria(averia);
+    await AveriasPage._guardarCierre(averia, cerrarAhora ? (UserService.getUser()?.nombre || '') : '');   // v11.2
 
     // Guardar partes de trabajo — siempre al menos uno por avería (aislado: si falla el registro continúa)
     try {
@@ -7789,7 +8307,7 @@ const AveriasPage = {
     // Técnico principal = el primero de los partes (si hay alguno)
     const tecnicoPrincipal = AveriasPage._partesSeleccionados[0]?.tecnico || a.tecnico || '';
     const zonaLimpia = document.getElementById('cl-zona-limpia')?.checked ?? true;
-    await DataService.saveAveria({
+    await AveriasPage._guardarCierre({
       ...a, estado:'Cerrada', solucion,
       tecnico: tecnicoPrincipal,
       ...(a.asignacion === 'Auto' && tecnicoPrincipal !== a.tecnico ? { asignacion: 'Manual' } : {}),
@@ -7797,7 +8315,7 @@ const AveriasPage = {
       coste: AveriasPage._repuestosSeleccionados.reduce((s,r) => s + (r.precio_unidad||0)*r.cantidad, 0),
       fecha_fin: fechaFin, hora_fin: horaFin, duracion,
       zona_limpia: zonaLimpia,
-    });
+    }, UserService.getUser()?.nombre || '');   // v11.2: quien cierra es quien confirma la limpieza
 
     // Guardar partes de trabajo — siempre al menos uno (aislado: si falla el cierre continúa)
     try {
@@ -8991,7 +9509,7 @@ const InventarioPage = {
     const prodMap = new Map(prods.map(p => [p.cod_producto, p]));
     inv.sort((a,b) => (a.almacen||'').localeCompare(b.almacen||'') || (a.cod_producto||'').localeCompare(b.cod_producto||''));
     const cab = ['ID','Cód. Producto','Nombre','Producto','Tamaño','Tamaño 2','Tamaño 3','Tamaño 4',
-                 'Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida'];
+                 'Tipo','Familia','Almacén','Unidades','Precio unidad','Unidad medida','Precio catálogo','ID catálogo'];   // v11.3: todos los campos
     const filas = inv.map(i => {
       const p = prodMap.get(i.cod_producto) || {};
       return [
@@ -8999,11 +9517,12 @@ const InventarioPage = {
         p.nombre||'', p.producto||i.producto||'',
         p.tamano||'', p.tamano2||'', p.tamano3||'', p.tamano4||'',
         p.tipo||i.tipo||'', p.familia||i.familia||'',
-        i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||''
+        i.almacen, i.unidades||0, i.precio_unidad||0, i.unidad_medida||'',
+        p.precio ?? '', p.id ?? ''
       ];
     });
     const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
-    ws['!cols'] = [20,14,25,30,12,12,12,12,15,15,12,10,12,12].map(w=>({wch:w}));
+    ws['!cols'] = [20,14,25,30,12,12,12,12,15,15,12,10,12,12,14,10].map(w=>({wch:w}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
     XLSX.writeFile(wb, `Inventario_GMAO_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -9016,7 +9535,7 @@ const InventarioPage = {
       cod_producto:'Cód. Producto', nombre:'Nombre', producto:'Producto',
       tamano:'Tamaño', tamano2:'Tamaño 2', tamano3:'Tamaño 3', tamano4:'Tamaño 4',
       tipo:'Tipo', familia:'Familia',
-      almacen:'Almacén', unidades:'Unidades', precio_unidad:'Precio unidad', unidad_medida:'Unidad medida'
+      almacen:'Almacén', unidades:'Unidades', precio_unidad:'Precio unidad', unidad_medida:'Unidad medida', precio_catalogo:'Precio catálogo'
     };
     try {
       toast('Leyendo Excel...', 'info');
@@ -9028,6 +9547,7 @@ const InventarioPage = {
       if (rows.length < 2) throw new Error('Excel sin datos');
       const _s = v => String(v ?? '').trim();
       const _n = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      const iPC = rows[0].findIndex(h => _xlNorm(h) === 'precio catalogo');   // v11.3: por nombre de cabecera; si no viene o está vacío, no se toca
       // Columnas: ID(0), Cód(1), Nombre(2), Producto(3), Tam(4), Tam2(5), Tam3(6), Tam4(7),
       //           Tipo(8), Familia(9), Almacén(10), Uds(11), Precio(12), UdMedida(13)
       const imported = rows.slice(1).filter(r => String(r[1]??'').trim() || String(r[3]??'').trim() || String(r[2]??'').trim()).map(r => ({
@@ -9045,6 +9565,7 @@ const InventarioPage = {
         unidades:      _n(r[11]),
         precio_unidad: _n(r[12]),
         unidad_medida: _s(r[13]),
+        ...(iPC >= 0 && _s(r[iPC]) !== '' ? { precio_catalogo: _n(r[iPC]) } : {}),
       }));
       const existentes = await db.inventario.toArray();
       const exMap = new Map(existentes.map(i => [`${i.cod_producto}_${normalizeAlmacen(i.almacen)}`, i]));
@@ -9087,6 +9608,10 @@ const InventarioPage = {
             const ov = String(eff[k] ?? ''); const nv = String(imp[k] ?? '');
             if (ov !== nv) fields.push({ name:k, old:ov, new:nv });
           }
+          if (imp.precio_catalogo !== undefined) {   // v11.3: solo viaja si cambia
+            if (String(prod.precio ?? '') !== String(imp.precio_catalogo)) fields.push({ name:'precio_catalogo', old:String(prod.precio ?? ''), new:String(imp.precio_catalogo) });
+            else delete imp.precio_catalogo;
+          }
           if (fields.length) changes.push({ id: `${imp.cod_producto} (${imp.almacen})`, type:'modified', fields, record: { ...ex, ...imp, id: ex.id } });
         }
       }
@@ -9123,15 +9648,16 @@ const InventarioPage = {
             const np = { id: ++maxProdId, cod_producto: codigo,
               nombre: rec.nombre || rec.producto || '', producto: rec.producto || rec.nombre || '',
               tipo: rec.tipo || '', familia: rec.familia || '',
-              tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'', precio: 0 };
+              tamano: tamano||'', tamano2: tamano2||'', tamano3: tamano3||'', tamano4: tamano4||'', precio: rec.precio_catalogo ?? 0 };
             await db.productos.put(np); prodMap.set(codigo, np); nuevos.push(codigo);
           }
           if (nuevos.length) toast(`${nuevos.length} artículo(s) nuevo(s) creado(s): ${nuevos.slice(0,6).join(', ')}${nuevos.length>6?'…':''}`, 'info');
 
           const invRecs = [];
           const prodRecs = [];
+          const precioCat = new Map(toUpsert.filter(x => x.precio_catalogo !== undefined).map(x => [x.cod_producto, x.precio_catalogo]));   // v11.3: un precio de catálogo por artículo, aunque esté en varios almacenes
           for (const rec of toUpsert) {
-            const { tamano, tamano2, tamano3, tamano4, ...invRec } = rec;
+            const { tamano, tamano2, tamano3, tamano4, precio_catalogo, ...invRec } = rec;   // v11.3: el precio de catálogo va al maestro, no al inventario
             invRecs.push(invRec);
             const prod = prodMap.get(rec.cod_producto);
             if (prod) {
@@ -9139,7 +9665,8 @@ const InventarioPage = {
                 nombre: rec.nombre||prod.nombre||'', producto: rec.producto||prod.producto||'',
                 tipo: rec.tipo || prod.tipo || '', familia: rec.familia || prod.familia || '',
                 tamano: tamano||prod.tamano||'', tamano2: tamano2||prod.tamano2||'',
-                tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'' });
+                tamano3: tamano3||prod.tamano3||'', tamano4: tamano4||prod.tamano4||'',
+                ...(precioCat.has(rec.cod_producto) ? { precio: precioCat.get(rec.cod_producto) } : {}) });
             }
           }
 
@@ -9970,7 +10497,7 @@ const ConfigPage = {
               <code>api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>
             </p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-              <button class="btn btn-secondary btn-sm" onclick="AlertService.sendMessage('✅ Conexión GMAO correcta').then(()=>toast('Mensaje enviado','success')).catch(e=>toast(e.message,'error'))">
+              <button class="btn btn-secondary btn-sm" onclick="AlertService.sendMessage('Conexión GMAO correcta').then(()=>toast('Mensaje enviado','success')).catch(e=>toast(e.message,'error'))">
                 Probar conexión
               </button>
               <button class="btn btn-secondary btn-sm" onclick="AlertService._sendResumenDiario().then(()=>toast('Resumen enviado','success')).catch(e=>toast(e.message,'error'))">
@@ -10631,21 +11158,25 @@ const ConfigPage = {
 
   async exportAverias() {
     toast('Generando Excel...', 'info');
+    const _zlTxt = av => av.estado !== 'Cerrada' ? '' : av.zona_limpia === true ? 'Sí' : av.zona_limpia === false ? 'No' : '';   // v11.2: sin dato = vacío
     const averias = await db.averias.toArray();
     averias.sort((a, b) => (a.fecha_inicio || '').localeCompare(b.fecha_inicio || ''));
     const cols = ['id','id_activo','almacen','zona','linea','equipo','tipo','criticidad','estado',
                   'descripcion','tecnico','fecha_inicio','hora_inicio','fecha_fin','hora_fin',
                   'duracion','solucion','materiales','coste','zona_limpia',
-                  'asignacion','cierre_admin','cerrado_por','revisado_por','revisado_at','obs_revision'];   // v10.16
+                  'asignacion','cierre_admin','cerrado_por','revisado_por','revisado_at','obs_revision',   // v10.16
+                  'reportado_por','cerrado_at','revisado_usuario'];   // v11.3: todos los campos
     const headers = ['ID','Activo','Almacén','Zona','Línea','Equipo','Tipo','Criticidad','Estado',
                      'Descripción','Técnico','Fecha inicio','Hora inicio','Fecha fin','Hora fin',
                      'Duración (min)','Solución','Materiales','Coste (€)','Zona limpia',
-                     'Asignación','Cierre','Cerrado por','Revisado por','Revisado el','Obs. revisión'];
+                     'Asignación','Cierre','Cerrado por','Revisado por','Revisado el','Obs. revisión',
+                     'Reportado por','Cerrado el','Revisión registrada por'];
     const rows = averias.map(av => cols.map(c => {
-      if (c === 'zona_limpia') return av.cierre_admin && !av.revisado_at ? 'Pendiente' : (av.zona_limpia === false ? 'No' : 'Sí');
+      if (c === 'zona_limpia') return av.cierre_admin && !av.revisado_at ? 'Pendiente' : _zlTxt(av);
       if (c === 'asignacion') return av.tecnico ? (av.asignacion || 'Manual') : '';
       if (c === 'cierre_admin') return av.cierre_admin ? 'Administrativo' : '';
       if (c === 'revisado_at') return av.revisado_at ? SimulacrosPage._fechaHora(av.revisado_at) : '';
+      if (c === 'cerrado_at') return av.cerrado_at ? SimulacrosPage._fechaHora(av.cerrado_at) : '';
       return av[c] ?? '';
     }));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -10665,7 +11196,9 @@ const ConfigPage = {
       id:'ID', id_activo:'Activo', almacen:'Almacén', zona:'Zona', linea:'Línea', equipo:'Equipo',
       tipo:'Tipo', criticidad:'Criticidad', estado:'Estado', descripcion:'Descripción', tecnico:'Técnico',
       fecha_inicio:'Fecha inicio', hora_inicio:'Hora inicio', fecha_fin:'Fecha fin', hora_fin:'Hora fin',
-      duracion:'Duración (min)', solucion:'Solución', materiales:'Materiales', coste:'Coste (€)', zona_limpia:'Zona limpia'
+      duracion:'Duración (min)', solucion:'Solución', materiales:'Materiales', coste:'Coste (€)', zona_limpia:'Zona limpia',
+      asignacion:'Asignación', cierre_admin:'Cierre', cerrado_por:'Cerrado por', cerrado_at:'Cerrado el',
+      revisado_por:'Revisado por', revisado_at:'Revisado el', obs_revision:'Obs. revisión', reportado_por:'Reportado por'
     };
     try {
       toast('Leyendo Excel...', 'info');
@@ -10676,34 +11209,78 @@ const ConfigPage = {
       const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
       if (rows.length < 2) throw new Error('Excel sin datos');
       const [, ...dataRows] = rows;
+      // v11.3: las columnas de cierre y revisión se localizan por su cabecera; si el Excel no trae una, ese campo no se toca
+      const _col = n => rows[0].findIndex(h => _xlNorm(h) === _xlNorm(n));
+      const iAsg = _col('Asignación'), iCie = _col('Cierre'), iCPor = _col('Cerrado por'), iCEl = _col('Cerrado el'),
+            iRPor = _col('Revisado por'), iREl = _col('Revisado el'), iObs = _col('Obs. revisión'), iRep = _col('Reportado por');
+      const _s = v => String(v ?? '').trim();
+      const _txt = v => String(v ?? '').replace(/_x000d_/gi, '').replace(/\r\n?/g, '\n').trim();   // los saltos de línea de Excel no son un cambio
+      // Fecha y hora (aaaa-mm-dd hh:mm[:ss], dd/mm/aaaa hh:mm[:ss] o celda de fecha de Excel) → instante; vacía = ''
+      const _aFecha = (v, id, col) => {
+        if (v === '' || v == null) return '';
+        let p = null, d = null;
+        if (typeof v === 'number') { const q = XLSX.SSF.parse_date_code(v); if (q) p = [q.y, q.m, q.d, q.H, q.M, Math.floor(q.S)]; }
+        else {
+          const x = String(v).trim();
+          if (/^\d{4}-\d{2}-\d{2}T.*(Z|[+-]\d{2}:?\d{2})$/.test(x)) d = new Date(x);
+          else {
+            let m = x.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+            if (m) p = [m[1], m[2], m[3], m[4] || 0, m[5] || 0, m[6] || 0];
+            else { m = x.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ ,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/); if (m) p = [m[3], m[2], m[1], m[4] || 0, m[5] || 0, m[6] || 0]; }
+          }
+        }
+        if (p) { d = new Date(+p[0], +p[1] - 1, +p[2], +p[3], +p[4], +p[5]); if (d.getMonth() !== +p[1] - 1 || d.getDate() !== +p[2]) d = null; }
+        if (!d || isNaN(d.getTime())) throw new Error(`fecha no válida en «${col}» de ${id}: ${String(v).slice(0, 30)}`);
+        return d.toISOString();
+      };
+      const _u = UserService.getUser(), _hoy = new Date();
+      const origen = `${_u ? _u.nombre : ''} · Excel ${String(_hoy.getDate()).padStart(2, '0')}/${String(_hoy.getMonth() + 1).padStart(2, '0')}/${_hoy.getFullYear()}`;   // quién carga una revisión desde Excel y cuándo
       const imported = dataRows.filter(r => r[0]).map(r => ({
         id: String(r[0]).trim(), id_activo: r[1], almacen: r[2], zona: r[3], linea: r[4], equipo: r[5],
         tipo: r[6], criticidad: r[7], estado: r[8], descripcion: r[9], tecnico: r[10],
         fecha_inicio: r[11], hora_inicio: r[12], fecha_fin: r[13], hora_fin: r[14],
         duracion: r[15], solucion: r[16], materiales: r[17], coste: r[18],
-        zona_limpia: r[19] === 'No' ? false : null
+        zona_limpia: r[19] === 'Sí' ? true : r[19] === 'No' ? false : null,
+        ...(iAsg >= 0 ? { asignacion: /^auto/i.test(_s(r[iAsg])) ? 'Auto' : /^manual/i.test(_s(r[iAsg])) ? 'Manual' : '' } : {}),
+        ...(iCie >= 0 ? { cierre_admin: /^admin/i.test(_s(r[iCie])) } : {}),
+        ...(iCPor >= 0 ? { cerrado_por: _s(r[iCPor]) } : {}),
+        ...(iCEl >= 0 ? { cerrado_at: _aFecha(r[iCEl], r[0], 'Cerrado el') } : {}),
+        ...(iRPor >= 0 ? { revisado_por: _s(r[iRPor]) } : {}),
+        ...(iREl >= 0 ? { revisado_at: _aFecha(r[iREl], r[0], 'Revisado el') } : {}),
+        ...(iObs >= 0 ? { obs_revision: _txt(r[iObs]) } : {}),
+        ...(iRep >= 0 ? { reportado_por: _s(r[iRep]) } : {}),
       }));
       const existentes = await db.averias.toArray();
       const exMap = new Map(existentes.map(a => [String(a.id), a]));
       const changes = [];
       const importedIds = new Set(imported.map(i => String(i.id)));
+      const _zl = av => av.estado !== 'Cerrada' ? '' : av.zona_limpia === true ? 'Sí' : av.zona_limpia === false ? 'No' : '';   // v11.2
+      // v11.3: cada campo, tal como sale en el Excel, para comparar lo importado con lo que hay
+      const _ver = (k, av) => k === 'zona_limpia' ? _zl(av)
+        : k === 'cierre_admin' ? (av.cierre_admin ? 'Administrativo' : '')
+        : k === 'asignacion' ? (av.tecnico ? (av.asignacion || 'Manual') : '')
+        : (k === 'cerrado_at' || k === 'revisado_at') ? SimulacrosPage._fechaHora(av[k])
+        : _txt(av[k]);
+      const CIERRE = ['asignacion', 'cierre_admin', 'cerrado_por', 'cerrado_at', 'revisado_por', 'revisado_at', 'obs_revision'];   // en estas, una celda vacía no borra lo que ya hay
+      const _vacio = v => v === '' || v === false || v == null;
       for (const imp of imported) {
         const ex = exMap.get(imp.id);
         if (!ex) {
-          changes.push({ id: imp.id, type:'new', fields:[], record: imp });
+          const rec = { ...imp };
+          ['cerrado_at', 'revisado_at'].forEach(k => { if (k in rec && !rec[k]) rec[k] = null; });
+          if (rec.revisado_por || rec.revisado_at) rec.revisado_usuario = origen;
+          changes.push({ id: imp.id, type:'new', fields:[], record: rec });
         } else {
-          const fields = Object.keys(LABELS).filter(k => k !== 'id').reduce((acc, k) => {
-            let ov, nv;
-            if (k === 'zona_limpia') {
-              ov = ex.zona_limpia === false ? 'No' : 'Sí';
-              nv = imp.zona_limpia === false ? 'No' : 'Sí';
-            } else {
-              ov = String(ex[k] ?? ''); nv = String(imp[k] ?? '');
-            }
+          const fields = Object.keys(LABELS).filter(k => k !== 'id' && imp[k] !== undefined && !(CIERRE.includes(k) && _vacio(imp[k]))).reduce((acc, k) => {
+            const ov = _ver(k, ex), nv = _ver(k, imp);
             if (ov !== nv) acc.push({ name:k, old:ov, new:nv });
             return acc;
           }, []);
-          if (fields.length) changes.push({ id: imp.id, type:'modified', fields, record: { ...ex, ...imp } });
+          if (fields.length) {
+            const cambios = {}; fields.forEach(f => { cambios[f.name] = imp[f.name]; });   // solo se escribe lo que cambia
+            if ('revisado_por' in cambios || 'revisado_at' in cambios) cambios.revisado_usuario = origen;   // la revisión cargada desde Excel lleva quién la cargó y cuándo
+            changes.push({ id: imp.id, type:'modified', fields, record: { ...ex, ...cambios } });
+          }
         }
       }
       for (const ex of existentes) {
@@ -10713,13 +11290,20 @@ const ConfigPage = {
       if (!changes.length) { toast('Sin cambios detectados', 'info'); return; }
       _showImportDiff('Validar cambios — Averías', changes, LABELS, async (toUpsert, toDelete) => {
         try {
-          for (const rec of toUpsert) await db.averias.put(rec);
+          const modif = toUpsert.filter(rec => exMap.has(String(rec.id))), nuevas = toUpsert.filter(rec => !exMap.has(String(rec.id)));
+          if (toUpsert.length > 20) toast('Guardando...', 'info');
+          for (const rec of nuevas) await db.averias.put(rec);
+          if (modif.length) await db.averias.bulkPut(modif);   // v11.3: las modificadas, en bloque (antes, una a una)
           for (const rec of toDelete) await db.averias.delete(rec.id);
           const parts = [toUpsert.length && `${toUpsert.length} actualizada${toUpsert.length!==1?'s':''}`, toDelete.length && `${toDelete.length} eliminada${toDelete.length!==1?'s':''}`].filter(Boolean).join(', ');
           toast(`${parts} ✓`, 'success');
-        } catch(e) { toast('Error al guardar: ' + e.message, 'error'); }
+          App.updateBadges();
+        } catch(e) {
+          if (/asignacion|cierre_admin|cerrado_|revisado_|obs_revision/i.test(e.message || '')) AveriasPage.verSQLBloque();   // v11.3: faltan las columnas de cierre y revisión → se enseña el SQL
+          else toast('Error al guardar: ' + e.message, 'error', 6000);
+        }
       });
-    } catch(e) { toast('Error: ' + e.message, 'error'); }
+    } catch(e) { toast('Error: ' + e.message, 'error', 6000); }
   },
 
   async exportIncidencias() {
@@ -10728,10 +11312,12 @@ const ConfigPage = {
     incidencias.sort((a, b) => (a.fecha_registro || '').localeCompare(b.fecha_registro || ''));
     const cols = ['id','id_activo','almacen','zona','linea','equipo','tipo','prioridad','estado',
                   'descripcion','reportado_por','fecha_registro','hora_registro','fecha_resolucion',
-                  'responsable','solucion','observaciones'];
+                  'responsable','solucion','observaciones',
+                  'solved_ref','solved_id','solved_status','solved_plant','solved_sync','solved_updated_at','ref_externa'];   // v11.3: todos los campos (los de Solved, solo exportación)
     const headers = ['ID','Activo','Almacén','Zona','Línea','Equipo','Tipo','Prioridad','Estado',
                      'Descripción','Reportado por','Fecha registro','Hora registro','Fecha resolución',
-                     'Responsable','Solución','Observaciones'];
+                     'Responsable','Solución','Observaciones',
+                     'Ref. Solved','ID Solved','Estado en Solved','Planta Solved','Sincronización Solved','Actualizado en Solved','Ref. externa'];
     const rows = incidencias.map(inc => cols.map(c => inc[c] ?? ''));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     const wb = XLSX.utils.book_new();
@@ -12777,7 +13363,7 @@ const PartesAnalisisPage = {
     else if (orden === 'asc') entries.sort((a,b) => a[1]-b[1]);
     else entries.sort((a,b) => a[0].localeCompare(b[0]));
     const maxH = Math.max(...entries.map(([,h])=>h), 1);
-    const colors = entries.map(([,h]) => { const r=h/maxH; return r>0.75?'rgba(39,93,58,0.85)':r>0.5?'rgba(22,100,140,0.82)':r>0.25?'rgba(184,134,11,0.78)':'rgba(22,100,140,0.45)'; });
+    const colors = entries.map(([,h]) => { const r=h/maxH; return r>0.75?'#275D3A':r>0.5?'#5E8F6B':'#A8C7B0'; });
 
     if (this._chartTec) { this._chartTec.destroy(); this._chartTec = null; }
     const ctx = document.getElementById('pa-chart-tec');
@@ -12812,7 +13398,7 @@ const PartesAnalisisPage = {
     const almList = ['Algemesi','Miramar','Xeresa','Alcacer','Murcia'];
     const horas   = almList.map(alm => rows.filter(r => normalizeAlmacen(r.almacen || r._av?.almacen || '') === normalizeAlmacen(alm)).reduce((s,r) => s+(parseFloat(r.horas)||0), 0));
     const maxH = Math.max(...horas, 1);
-    const colors = horas.map(h => { const r=h/maxH; return r>0.75?'rgba(39,93,58,0.85)':r>0.5?'rgba(22,100,140,0.82)':r>0.25?'rgba(184,134,11,0.78)':'rgba(22,100,140,0.45)'; });
+    const colors = horas.map(h => { const r=h/maxH; return r>0.75?'#275D3A':r>0.5?'#5E8F6B':'#A8C7B0'; });
 
     if (this._chartAlm) { this._chartAlm.destroy(); this._chartAlm = null; }
     const ctx = document.getElementById('pa-chart-alm');
@@ -12862,8 +13448,8 @@ const PartesAnalisisPage = {
         labels,
         datasets: [{
           data: months.map(m => +(monthMap[m]||0).toFixed(2)),
-          borderColor: 'rgba(22,100,140,0.85)', backgroundColor: 'rgba(22,100,140,0.10)',
-          fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: 'rgba(22,100,140,0.85)',
+          borderColor: '#275D3A', backgroundColor: 'rgba(39,93,58,0.10)',
+          fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: '#275D3A',
         }]
       },
       options: {
@@ -14203,8 +14789,11 @@ const ProduccionPage = {
   async confirmResuelta(id, silent = false) {
     const a = await DataService.getAveria(id);
     if (!a) { toast(t('x_prod_averia_no_encontrada'), 'error'); return false; }
+    // v11.2: producción revisa la zona antes de confirmar → zona limpia = Sí y queda como quien lo ha revisado.
+    // El cierre rápido de mantenimiento no pregunta por la limpieza → sin dato.
+    const esProd = UserService.isProduccion();
     if (!silent) {
-      const ok = await Modal.confirm(tf('x_prod_confirm_cierre', { eq: a.equipo||'', id }), { title:t('confirm_title'), okText:t('x_prod_si_ya_funciona'), danger:false });
+      const ok = await Modal.confirm(tf(esProd ? 'x_prod_confirm_limpia' : 'x_prod_confirm_cierre', { eq: a.equipo||'', id }), { title:t('confirm_title'), okText:t(esProd ? 'x_prod_si_limpia' : 'x_prod_si_ya_funciona'), danger:false });
       if (!ok) return false;
     }
     const now = new Date();
@@ -14217,8 +14806,8 @@ const ProduccionPage = {
       const min = Math.max(0, Math.round((now - ini) / 60000));
       duracion = `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}:00`;
     } catch(_) {}
-    const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por ${UserService.isProduccion() ? 'producción' : 'mantenimiento'} (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}`;
-    await DataService.saveAveria({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol });
+    const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por ${esProd ? 'producción' : 'mantenimiento'} (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}${esProd ? ' · zona limpia y revisada' : ''}`;
+    await AveriasPage._guardarCierre({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol, zona_limpia: esProd ? true : null }, esProd ? (user?.nombre || '') : '');
     if (!silent) toast(tf('x_prod_cerrada', { id }), 'success');
     await this._afterChange();
     App.updateBadges();
@@ -14264,7 +14853,7 @@ const ProduccionPage = {
         </div>
       </div>`).join('');
     Modal.open(`${t('x_prod_revision')} (${this._abiertas.length})`, `
-      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_prod_revision_txt')}</p>
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_prod_revision_txt')} ${t('x_prod_revision_limpia')}</p>
       ${rows}`,
       `<div class="prod-big-actions"><button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button></div>`);
   },
@@ -14497,7 +15086,7 @@ const SimulacrosPage = {
     { nombre: 'Noche',  ini: '22:00', fin: '06:00', activo: false },
   ],
   _N_FALLOS: 10,
-  _SQL: "-- ═══════════════════════════════════════════════════════════════════════════════════════════\n-- simulacros_setup.sql — Simulacros de avería (GMAO v10.15)                       11/11/2026\n-- Ejecutar ENTERO en Supabase → SQL Editor → Run. Idempotente: se puede repetir sin problema.\n--\n-- Qué crea:\n--   · Tabla `simulacros`, SEPARADA de `averias`: un simulacro nunca entra en indicadores, informes,\n--     correo diario ni avisos de Telegram, porque esos solo leen `averias`.\n--   · Reglas en la propia base de datos (trigger), para que el registro sea siempre el de lo que pasó:\n--       - un simulacro se crea \"Programado\", de ahora en adelante y sin datos de ejecución;\n--       - solo avanza Programado → Hecho → Revisado (o Programado → Anulado);\n--       - no se puede marcar \"Hecho\" antes de su hora programada;\n--       - la hora de \"Hecho\", \"Revisado\" y \"Anulado\" la pone el servidor en el momento en que ocurre,\n--         y lo ya firmado no se puede cambiar después.\n--   · La lista de revisores de producción y los turnos se guardan en `cae_datos`\n--     (clave `simulacros_config`); no necesita tabla.\n--\n-- Comprobar:  select id, almacen, fecha_prog, hora_prog, estado, tecnico, hecho_por, hecho_at, revisado_por, revisado_at\n--             from public.simulacros order by fecha_prog desc, hora_prog desc limit 20;\n-- ═══════════════════════════════════════════════════════════════════════════════════════════\n\ncreate table if not exists public.simulacros (\n  id                text primary key,                     -- SIM-AAAAMMDD-HHMM-xx\n  almacen           text not null,\n  zona              text,\n  linea             text,\n  equipo            text,\n  id_activo         text,\n  descripcion       text not null,                        -- fallo que se simula\n  fecha_prog        text not null,                        -- AAAA-MM-DD (hora de Madrid, como el resto de la app)\n  hora_prog         text not null,                        -- HH:MM\n  turno             text,\n  estado            text not null default 'Programado',   -- Programado | Hecho | Revisado | Anulado\n  tecnico           text,                                 -- mecánico asignado\n  asignacion        text,                                 -- Auto (reparto del sistema) | Manual (lo eligió una persona)\n  revisor           text,                                 -- revisor de producción asignado\n  hecho_por         text,\n  hecho_at          timestamptz,\n  actuacion         text,\n  duracion_min      integer,\n  revisado_por      text,\n  revisado_at       timestamptz,\n  revisado_usuario  text,                                 -- cuenta de la app desde la que se firmó la revisión\n  zona_limpia       boolean,\n  obs_revision      text,\n  creado_por        text,\n  creado_at         timestamptz not null default now(),\n  anulado_por       text,\n  anulado_at        timestamptz,\n  motivo_anulacion  text,\n  constraint simulacros_estado_ck check (estado in ('Programado', 'Hecho', 'Revisado', 'Anulado')),\n  constraint simulacros_fecha_ck  check (fecha_prog ~ '^\\d{4}-\\d{2}-\\d{2}$' and hora_prog ~ '^\\d{2}:\\d{2}$')\n);\ncreate index if not exists simulacros_almacen_estado_ix on public.simulacros (almacen, estado);\n\nalter table public.simulacros enable row level security;\ndrop policy if exists \"anon_all\" on public.simulacros;\ncreate policy \"anon_all\" on public.simulacros for all using (true) with check (true);\n\n-- Reglas de alta y de cambio de estado\ncreate or replace function public.simulacros_reglas() returns trigger\nlanguage plpgsql as $$\ndeclare\n  v_ahora text := to_char(now() at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI');\nbegin\n  if tg_op = 'INSERT' then\n    if new.estado <> 'Programado' or new.hecho_por is not null or new.hecho_at is not null\n       or new.revisado_por is not null or new.revisado_at is not null or new.anulado_at is not null then\n      raise exception 'Un simulacro se crea programado: lo marcan como hecho y revisado las personas que lo hacen.';\n    end if;\n    if (new.fecha_prog || ' ' || new.hora_prog) < to_char((now() - interval '5 minutes') at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI') then\n      raise exception 'Un simulacro no se puede programar en el pasado (% %).', new.fecha_prog, new.hora_prog;\n    end if;\n    new.creado_at := now();\n    return new;\n  end if;\n\n  -- UPDATE\n  if new.id <> old.id or new.almacen <> old.almacen or new.creado_at <> old.creado_at then\n    raise exception 'No se puede cambiar el identificador, el centro ni la fecha de alta de un simulacro.';\n  end if;\n  if new.estado is distinct from old.estado then\n    if old.estado = 'Programado' and new.estado = 'Hecho' then\n      if (new.fecha_prog || ' ' || new.hora_prog) > v_ahora then\n        raise exception 'Este simulacro está programado para el % a las %: todavía no se puede marcar como hecho.', new.fecha_prog, new.hora_prog;\n      end if;\n      if coalesce(trim(new.hecho_por), '') = '' then raise exception 'Falta quién ha hecho el simulacro.'; end if;\n      new.hecho_at := now();\n    elsif old.estado = 'Hecho' and new.estado = 'Revisado' then\n      if coalesce(trim(new.revisado_por), '') = '' then raise exception 'Falta quién ha revisado la limpieza.'; end if;\n      if new.zona_limpia is null then raise exception 'Falta indicar si la zona ha quedado limpia.'; end if;\n      new.revisado_at := now();\n    elsif old.estado = 'Programado' and new.estado = 'Anulado' then\n      new.anulado_at := now();\n    else\n      raise exception 'Cambio de estado no permitido: % → %.', old.estado, new.estado;\n    end if;\n  elsif old.estado = 'Programado' then\n    -- reprogramar o reasignar: nunca hacia el pasado\n    if (new.fecha_prog <> old.fecha_prog or new.hora_prog <> old.hora_prog) and (new.fecha_prog || ' ' || new.hora_prog) < v_ahora then\n      raise exception 'Un simulacro no se puede reprogramar hacia el pasado.';\n    end if;\n  end if;\n  -- Lo ya firmado no se cambia\n  if old.hecho_at is not null then\n    new.hecho_por := old.hecho_por; new.hecho_at := old.hecho_at; new.actuacion := old.actuacion; new.duracion_min := old.duracion_min;\n    new.fecha_prog := old.fecha_prog; new.hora_prog := old.hora_prog; new.tecnico := old.tecnico; new.asignacion := old.asignacion;\n  end if;\n  if old.revisado_at is not null then\n    new.revisado_por := old.revisado_por; new.revisado_at := old.revisado_at; new.revisado_usuario := old.revisado_usuario;\n    new.zona_limpia := old.zona_limpia; new.obs_revision := old.obs_revision;\n  end if;\n  if old.anulado_at is not null then\n    new.anulado_por := old.anulado_por; new.anulado_at := old.anulado_at; new.motivo_anulacion := old.motivo_anulacion;\n  end if;\n  return new;\nend $$;\n\ndrop trigger if exists simulacros_reglas on public.simulacros;\ncreate trigger simulacros_reglas\n  before insert or update on public.simulacros\n  for each row execute function public.simulacros_reglas();\n",
+  _SQL: "-- ═══════════════════════════════════════════════════════════════════════════════════════════\n-- simulacros_setup.sql — Simulacros de avería (GMAO v11.1)                        11/11/2026\n-- Ejecutar ENTERO en Supabase → SQL Editor → Run. Idempotente: se puede repetir sin problema.\n--\n-- Qué crea:\n--   · Tabla `simulacros`, SEPARADA de `averias`: un simulacro nunca entra en indicadores, informes,\n--     correo diario ni avisos de Telegram, porque esos solo leen `averias`.\n--   · Reglas en la propia base de datos (trigger), para que el registro sea siempre el de lo que pasó:\n--       - un simulacro se crea \"Programado\", de ahora en adelante y sin datos de ejecución;\n--       - v11.0: un simulacro que YA SE HIZO se puede registrar después (`a_posteriori`): entra como\n--         \"Hecho\" con su fecha y hora reales (siempre pasadas) y quién lo hizo, y queda marcado con\n--         quién lo registra y cuándo (la hora de registro la pone el servidor). La revisión de limpieza\n--         la firma producción aparte, como en los demás;\n--       - v11.1: un Admin o Responsable puede confirmar como hecho un simulacro en nombre de su técnico\n--         asignado: queda \"hecho por <técnico>\" y, aparte, `confirmado_por` con quien lo confirma;\n--       - solo avanza Programado → Hecho → Revisado (o Programado → Anulado);\n--       - no se puede marcar \"Hecho\" antes de su hora programada;\n--       - la hora de \"Hecho\", \"Revisado\" y \"Anulado\" la pone el servidor en el momento en que ocurre,\n--         y lo ya firmado no se puede cambiar después.\n--   · La lista de revisores de producción y los turnos se guardan en `cae_datos`\n--     (clave `simulacros_config`); no necesita tabla.\n--\n-- Comprobar:  select id, almacen, fecha_prog, hora_prog, estado, tecnico, hecho_por, hecho_at, revisado_por, revisado_at\n--             from public.simulacros order by fecha_prog desc, hora_prog desc limit 20;\n-- ═══════════════════════════════════════════════════════════════════════════════════════════\n\ncreate table if not exists public.simulacros (\n  id                text primary key,                     -- SIM-AAAAMMDD-HHMM-xx\n  almacen           text not null,\n  zona              text,\n  linea             text,\n  equipo            text,\n  id_activo         text,\n  descripcion       text not null,                        -- fallo que se simula\n  fecha_prog        text not null,                        -- AAAA-MM-DD (hora de Madrid, como el resto de la app)\n  hora_prog         text not null,                        -- HH:MM\n  turno             text,\n  estado            text not null default 'Programado',   -- Programado | Hecho | Revisado | Anulado\n  tecnico           text,                                 -- mecánico asignado\n  asignacion        text,                                 -- Auto (reparto del sistema) | Manual (lo eligió una persona)\n  revisor           text,                                 -- revisor de producción asignado\n  hecho_por         text,\n  hecho_at          timestamptz,\n  actuacion         text,\n  duracion_min      integer,\n  revisado_por      text,\n  revisado_at       timestamptz,\n  revisado_usuario  text,                                 -- cuenta de la app desde la que se firmó la revisión\n  zona_limpia       boolean,\n  obs_revision      text,\n  creado_por        text,\n  creado_at         timestamptz not null default now(),\n  anulado_por       text,\n  anulado_at        timestamptz,\n  motivo_anulacion  text,\n  constraint simulacros_estado_ck check (estado in ('Programado', 'Hecho', 'Revisado', 'Anulado')),\n  constraint simulacros_fecha_ck  check (fecha_prog ~ '^\\d{4}-\\d{2}-\\d{2}$' and hora_prog ~ '^\\d{2}:\\d{2}$')\n);\n-- v11.0: registro a posteriori de simulacros ya realizados\nalter table public.simulacros add column if not exists a_posteriori   boolean not null default false;\nalter table public.simulacros add column if not exists registrado_por text;\nalter table public.simulacros add column if not exists registrado_at  timestamptz;\n-- v11.1: quién confirma el simulacro cuando no lo marca el propio técnico\nalter table public.simulacros add column if not exists confirmado_por text;\n\ncreate index if not exists simulacros_almacen_estado_ix on public.simulacros (almacen, estado);\n\nalter table public.simulacros enable row level security;\ndrop policy if exists \"anon_all\" on public.simulacros;\ncreate policy \"anon_all\" on public.simulacros for all using (true) with check (true);\n\n-- Reglas de alta y de cambio de estado\ncreate or replace function public.simulacros_reglas() returns trigger\nlanguage plpgsql as $$\ndeclare\n  v_ahora text := to_char(now() at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI');\nbegin\n  if tg_op = 'INSERT' then\n    if coalesce(new.a_posteriori, false) then\n      -- Registro de un simulacro ya realizado: fecha real pasada, quién lo hizo y quién lo registra\n      if new.estado <> 'Hecho' or new.revisado_por is not null or new.revisado_at is not null or new.anulado_at is not null then\n        raise exception 'Un simulacro registrado a posteriori entra como hecho; la revisión la firma producción después.';\n      end if;\n      if coalesce(trim(new.hecho_por), '') = '' then raise exception 'Falta quién hizo el simulacro.'; end if;\n      if coalesce(trim(new.registrado_por), '') = '' then raise exception 'Falta quién registra el simulacro.'; end if;\n      if (new.fecha_prog || ' ' || new.hora_prog) >= v_ahora then\n        raise exception 'Solo se registran a posteriori simulacros con fecha pasada (% %).', new.fecha_prog, new.hora_prog;\n      end if;\n      begin\n        new.hecho_at := (new.fecha_prog || ' ' || new.hora_prog)::timestamp at time zone 'Europe/Madrid';\n      exception when others then\n        raise exception 'Fecha u hora no válidas (% %).', new.fecha_prog, new.hora_prog;\n      end;\n      new.registrado_at := now();\n      new.confirmado_por := null;\n      new.creado_at := now();\n      return new;\n    end if;\n    if new.estado <> 'Programado' or new.hecho_por is not null or new.hecho_at is not null\n       or new.revisado_por is not null or new.revisado_at is not null or new.anulado_at is not null then\n      raise exception 'Un simulacro se crea programado: lo marcan como hecho y revisado las personas que lo hacen.';\n    end if;\n    if (new.fecha_prog || ' ' || new.hora_prog) < to_char((now() - interval '5 minutes') at time zone 'Europe/Madrid', 'YYYY-MM-DD HH24:MI') then\n      raise exception 'Un simulacro no se puede programar en el pasado (% %).', new.fecha_prog, new.hora_prog;\n    end if;\n    new.a_posteriori := false; new.registrado_por := null; new.registrado_at := null; new.confirmado_por := null;\n    new.creado_at := now();\n    return new;\n  end if;\n\n  -- UPDATE\n  if new.id <> old.id or new.almacen <> old.almacen or new.creado_at <> old.creado_at then\n    raise exception 'No se puede cambiar el identificador, el centro ni la fecha de alta de un simulacro.';\n  end if;\n  if new.estado is distinct from old.estado then\n    if old.estado = 'Programado' and new.estado = 'Hecho' then\n      if (new.fecha_prog || ' ' || new.hora_prog) > v_ahora then\n        raise exception 'Este simulacro está programado para el % a las %: todavía no se puede marcar como hecho.', new.fecha_prog, new.hora_prog;\n      end if;\n      if coalesce(trim(new.hecho_por), '') = '' then raise exception 'Falta quién ha hecho el simulacro.'; end if;\n      if coalesce(trim(new.confirmado_por), '') = '' then\n        new.confirmado_por := null;\n      elsif coalesce(trim(new.tecnico), '') = '' or new.hecho_por is distinct from new.tecnico then\n        raise exception 'Solo se puede confirmar un simulacro en nombre de su técnico asignado.';\n      end if;\n      new.hecho_at := now();\n    elsif old.estado = 'Hecho' and new.estado = 'Revisado' then\n      if coalesce(trim(new.revisado_por), '') = '' then raise exception 'Falta quién ha revisado la limpieza.'; end if;\n      if new.zona_limpia is null then raise exception 'Falta indicar si la zona ha quedado limpia.'; end if;\n      new.revisado_at := now();\n    elsif old.estado = 'Programado' and new.estado = 'Anulado' then\n      new.anulado_at := now(); new.confirmado_por := null;\n    else\n      raise exception 'Cambio de estado no permitido: % → %.', old.estado, new.estado;\n    end if;\n  elsif old.estado = 'Programado' then\n    -- reprogramar o reasignar: nunca hacia el pasado\n    new.confirmado_por := null;\n    if (new.fecha_prog <> old.fecha_prog or new.hora_prog <> old.hora_prog) and (new.fecha_prog || ' ' || new.hora_prog) < v_ahora then\n      raise exception 'Un simulacro no se puede reprogramar hacia el pasado.';\n    end if;\n  end if;\n  -- Lo ya firmado no se cambia\n  new.a_posteriori := old.a_posteriori; new.registrado_por := old.registrado_por; new.registrado_at := old.registrado_at;\n  if old.hecho_at is not null then\n    new.hecho_por := old.hecho_por; new.hecho_at := old.hecho_at; new.actuacion := old.actuacion; new.duracion_min := old.duracion_min;\n    new.fecha_prog := old.fecha_prog; new.hora_prog := old.hora_prog; new.tecnico := old.tecnico; new.asignacion := old.asignacion;\n    new.confirmado_por := old.confirmado_por;\n  end if;\n  if old.revisado_at is not null then\n    new.revisado_por := old.revisado_por; new.revisado_at := old.revisado_at; new.revisado_usuario := old.revisado_usuario;\n    new.zona_limpia := old.zona_limpia; new.obs_revision := old.obs_revision;\n  end if;\n  if old.anulado_at is not null then\n    new.anulado_por := old.anulado_por; new.anulado_at := old.anulado_at; new.motivo_anulacion := old.motivo_anulacion;\n  end if;\n  return new;\nend $$;\n\ndrop trigger if exists simulacros_reglas on public.simulacros;\ncreate trigger simulacros_reglas\n  before insert or update on public.simulacros\n  for each row execute function public.simulacros_reglas();\n\nnotify pgrst, 'reload schema';\n",
 
   isOpen() { return window.location.hash.slice(1) === 'simulacros' && !!document.getElementById('sim-list'); },
   _esPriv() { return UserService.isAdmin() || UserService.isResponsable(); },
@@ -14570,11 +15159,14 @@ const SimulacrosPage = {
     const eff = UserService.getEffectiveAlmacen(), fijo = !!eff && eff !== 'Todos';
     const centros = this._centros();
     const centroDef = lim || localStorage.getItem('gmao_sim_centro') || centros[0] || '';
+    const nBlq = this._sinTabla ? 0 : this._bloqueItems().length;
     document.getElementById('content').innerHTML = `
       <div class="page-header">
         <div><h1>${t('nav_simulacros')}</h1><p class="page-subtitle">${t('x_sim_subtitulo')}</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${UserService.isAdmin() ? `<button class="btn btn-secondary btn-sm" id="sim-btn-cfg" onclick="SimulacrosPage.openConfig()">${t('x_sim_cfg')}</button>` : ''}
+          ${nBlq ? `<button class="btn btn-primary btn-sm" id="sim-btn-blq" onclick="SimulacrosPage.openBloque()">${tf('x_sim_blq_btn', { n: nBlq })}</button>` : ''}
+          ${priv && !this._sinTabla ? `<button class="btn btn-secondary btn-sm" id="sim-btn-imp" onclick="SimulacrosPage.openImportar()">${t('x_sim_imp_btn')}</button>` : ''}
           ${priv ? `<button class="btn btn-secondary btn-sm" id="sim-btn-excel" onclick="SimulacrosPage.exportExcel()">${t('x_sim_excel')}</button>` : ''}
           <button class="btn btn-secondary btn-sm" onclick="SimulacrosPage.render()">${t('x_prod_actualizar')}</button>
         </div>
@@ -14594,7 +15186,11 @@ const SimulacrosPage = {
               ${centros.map(c => `<option${c === centroDef ? ' selected' : ''}>${esc(c)}</option>`).join('')}
             </select></div>
           <div class="form-field"><label>${t('x_sim_numero')}</label>
-            <input class="form-input" type="number" id="sim-g-num" min="1" max="30" step="1" value="5"></div>
+            <input class="form-input" type="number" id="sim-g-num" min="1" max="100" step="1" value="5"></div>
+          <div class="form-field"><label>${t('x_sim_periodo')}</label>
+            <select class="form-input" id="sim-g-periodo">
+              <option value="semana">${t('x_sim_per_semana')}</option><option value="mes">${t('x_sim_per_mes')}</option>
+            </select></div>
           <div class="form-field"><label>${t('x_sim_semana')}</label>
             <input class="form-input" type="date" id="sim-g-semana" min="${hoy}" value="${hoy}"></div>
           <div class="form-field"><label>${t('x_sim_dias')}</label>
@@ -14624,7 +15220,7 @@ const SimulacrosPage = {
   },
   _hechoTxt(s) {
     if (!s.hecho_por) return '—';
-    return `${UI.esc(s.hecho_por)}<br><small style="color:var(--gray-muted)">${this._fechaHora(s.hecho_at)}</small>`;
+    return `${UI.esc(s.hecho_por)}<br><small style="color:var(--gray-muted)">${this._fechaHora(s.hecho_at)}</small>${s.a_posteriori ? `<br><span class="badge badge-gray sim-post">${t('x_sim_post')}</span><br><small style="color:var(--gray-muted)">${UI.esc(this._postTxt(s))}</small>` : ''}${this._confHtml(s)}`;
   },
   _revTxt(s) {
     if (s.revisado_por) {
@@ -14654,7 +15250,8 @@ const SimulacrosPage = {
       <div class="sim-card-maq">${this._limite() ? '' : `<small style="font-weight:400;color:var(--gray-muted)">${esc(s.almacen)}</small><br>`}${esc(this._maquina(s)) || esc(s.almacen)}</div>
       <div class="sim-card-desc">${esc(s.descripcion)}</div>
       <div class="sim-card-meta">${t('x_sim_col_mecanico')}: ${this._asig(s)}</div>
-      ${s.hecho_por ? `<div class="sim-card-meta">${t('x_sim_col_hecho')}: ${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}</div>` : ''}
+      ${s.hecho_por ? `<div class="sim-card-meta">${t('x_sim_col_hecho')}: ${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}${this._confHtml(s)}</div>` : ''}
+      ${s.a_posteriori ? `<div class="sim-card-meta"><span class="badge badge-gray sim-post">${t('x_sim_post')}</span> ${esc(this._postTxt(s))}</div>` : ''}
       ${s.revisado_por ? `<div class="sim-card-meta">${t('x_sim_col_revision')}: ${esc(s.revisado_por)} · ${this._fechaHora(s.revisado_at)} · 🧹 ${s.zona_limpia ? t('x_si') : t('x_no')}</div>`
         : (s.revisor ? `<div class="sim-card-meta">${t('x_sim_col_revisor')}: ${esc(s.revisor)}</div>` : '')}
       ${s.estado === 'Anulado' && s.motivo_anulacion ? `<div class="sim-card-meta">${esc(s.motivo_anulacion)}</div>` : ''}
@@ -14709,18 +15306,20 @@ const SimulacrosPage = {
   },
 
   // ── Generador ────────────────────────────────────────────────────
-  // Huecos (día + turno) de la semana elegida que todavía quedan por delante
-  _huecos(dia, dias, turnos) {
+  // Huecos (día + turno) de la semana o del mes elegido que todavía quedan por delante
+  _huecos(dia, dias, turnos, periodo) {
     const lunes = new Date(`${dia}T12:00:00`);
-    lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+    if (periodo === 'mes') lunes.setDate(1);
+    else lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+    const total = periodo === 'mes' ? new Date(lunes.getFullYear(), lunes.getMonth() + 1, 0).getDate() : 7;
     const nd = dias === 'todos' ? 7 : dias === 'ls' ? 6 : 5;
     const ahora = new Date(), hoy = this._ymd(ahora);
     const minAhora = Math.ceil((ahora.getHours() * 60 + ahora.getMinutes() + 10) / 5) * 5;
     const huecos = [];
-    for (let i = 0; i < nd; i++) {
+    for (let i = 0; i < total; i++) {
       const d = new Date(lunes); d.setDate(lunes.getDate() + i);
       const f = this._ymd(d);
-      if (f < hoy) continue;
+      if (f < hoy || (d.getDay() + 6) % 7 >= nd) continue;
       turnos.filter(tu => tu.activo).forEach(tu => {
         let ini = this._min(tu.ini), fin = this._min(tu.fin);
         if (fin <= ini) fin = 24 * 60;
@@ -14728,7 +15327,7 @@ const SimulacrosPage = {
         if (fin - ini >= 10) huecos.push({ fecha: f, turno: tu.nombre, ini, fin });
       });
     }
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + total - 1);
     return { lunes: this._ymd(lunes), domingo: this._ymd(domingo), huecos };
   },
   // Devuelve el nombre con menos simulacros acumulados (y le suma uno): reparto por rotación
@@ -14738,10 +15337,10 @@ const SimulacrosPage = {
     if (mejor) cuenta[mejor] = (cuenta[mejor] || 0) + 1;
     return mejor;
   },
-  _proponer({ centro, n, dia, dias, activos, tecnicos }) {
+  _proponer({ centro, n, dia, dias, periodo, activos, tecnicos }) {
     const turnos = this._cfg.turnos;
     if (!turnos.some(tu => tu.activo)) return { error: 'x_sim_err_turnos' };
-    const { lunes, domingo, huecos } = this._huecos(dia, dias, turnos);
+    const { lunes, domingo, huecos } = this._huecos(dia, dias, turnos, periodo);
     if (!huecos.length) return { error: 'x_sim_err_pasada' };
     let maq = activos.filter(a => normalizeAlmacen(a.almacen) === centro && a.estado !== 'Baja' && (a.equipo || a.nombre));
     const visibles = maq.filter(a => a.visible_produccion !== false);
@@ -14783,7 +15382,8 @@ const SimulacrosPage = {
     const n = parseInt(document.getElementById('sim-g-num').value, 10);
     const dia = document.getElementById('sim-g-semana').value;
     const dias = document.getElementById('sim-g-dias').value;
-    if (!(n >= 1 && n <= 30)) return toast(t('x_sim_err_num'), 'error');
+    const periodo = document.getElementById('sim-g-periodo').value;
+    if (!(n >= 1 && n <= 100)) return toast(t('x_sim_err_num'), 'error');
     if (!dia) return toast(t('x_sim_err_semana'), 'error');
     const btn = document.getElementById('sim-g-btn'); if (btn) btn.disabled = true;
     try {
@@ -14791,7 +15391,7 @@ const SimulacrosPage = {
         const [activos, tecnicos] = await Promise.all([db.activos.toArray(), db.tecnicos.toArray()]);
         this._gen = { centro, activos, tecnicos };
       }
-      Object.assign(this._gen, { n, dia, dias });
+      Object.assign(this._gen, { n, dia, dias, periodo });
       localStorage.setItem('gmao_sim_centro', centro);
       const prop = this._proponer(this._gen);
       if (prop.error) return toast(t(prop.error), 'error', 5000);
@@ -14888,6 +15488,70 @@ const SimulacrosPage = {
     return !!(data && data.length);
   },
 
+  // ── v11.1: marcar varios simulacros como hechos de una vez ───────
+  // Admin / Responsable: los pendientes con técnico asignado (los confirma en nombre del técnico).
+  // Mecánico: solo los suyos, a su nombre.
+  _bloqueItems() {
+    const u = UserService.getUser(), priv = this._esPriv();
+    if (!priv && !UserService.isMecanico()) return [];
+    return this._data.filter(s => this._toca(s) && s.tecnico && (priv || (u && s.tecnico === u.nombre)))
+      .sort((a, b) => `${a.fecha_prog} ${a.hora_prog}`.localeCompare(`${b.fecha_prog} ${b.hora_prog}`));
+  },
+  openBloque() {
+    const items = this._bloqueItems(); if (!items.length) return;
+    const esc = UI.esc, u = UserService.getUser(), priv = this._esPriv();
+    Modal.open(t('x_sim_blq_titulo'), `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:10px">${tf(priv ? 'x_sim_blq_nota_conf' : 'x_sim_blq_nota_mio', { nombre: esc(u ? u.nombre : '') })}</p>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px"><input type="checkbox" id="sim-b-todos" checked onchange="document.querySelectorAll('.sim-b-chk').forEach(c => { c.checked = this.checked; }); SimulacrosPage._bloqueCuenta()"> ${t('x_sim_blq_todos')}</label>
+      <div id="sim-b-lista" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:14px">${items.map(s => `
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" class="sim-b-chk" value="${esc(s.id)}" checked onchange="SimulacrosPage._bloqueCuenta()">
+          <span><strong>${esc(this._cuando(s))}</strong> · ${esc(this._maquina(s)) || esc(s.almacen)}${priv ? ` · ${esc(s.tecnico)}` : ''}<br><small style="color:var(--gray-muted)">${esc(s.descripcion)}</small></span>
+        </label>`).join('')}</div>
+      <div class="form-grid">
+        <div class="form-field full"><label>${t('x_sim_blq_actuacion')} *</label>
+          <textarea class="form-input" id="sim-b-act" rows="2"></textarea></div>
+        <div class="form-field"><label>${t('x_sim_blq_duracion')}</label>
+          <input class="form-input" type="number" id="sim-b-dur" min="0" step="1"></div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-b-ok" onclick="SimulacrosPage._saveBloque()">${tf('x_sim_blq_ok_btn', { n: items.length })}</button>`);
+  },
+  _bloqueCuenta() {
+    const n = document.querySelectorAll('.sim-b-chk:checked').length;
+    const b = document.getElementById('sim-b-ok'); if (b) b.textContent = tf('x_sim_blq_ok_btn', { n });
+  },
+  async _saveBloque() {
+    const ids = [...document.querySelectorAll('.sim-b-chk:checked')].map(c => c.value);
+    if (!ids.length) return toast(t('x_sim_blq_ninguno'), 'error');
+    const act = (document.getElementById('sim-b-act').value || '').trim();
+    if (!act) return toast(t('x_sim_err_actuacion'), 'error');
+    const dur = parseInt(document.getElementById('sim-b-dur').value, 10);
+    const u = UserService.getUser(), yo = u ? u.nombre : '', priv = this._esPriv();
+    const validos = new Map(this._bloqueItems().map(s => [s.id, s]));
+    const btn = document.getElementById('sim-b-ok'); if (btn) btn.disabled = true;
+    let hechos = 0;
+    for (const id of ids) {
+      const s = validos.get(id); if (!s) continue;
+      const cambios = { estado: 'Hecho', hecho_por: priv ? s.tecnico : yo, hecho_at: new Date().toISOString(), actuacion: act, duracion_min: dur >= 0 ? dur : null };
+      if (priv && s.tecnico !== yo) cambios.confirmado_por = yo;
+      const { data, error } = await sb.from('simulacros').update(cambios).eq('id', id).eq('estado', 'Programado').select('id');
+      if (error) {
+        if (hechos) await this.render();
+        // Sin las reglas de v11.1 en Supabase se enseña el SQL
+        if (/confirmado_por/i.test(error.message || '')) return this.verSQL('x_sim_blq_sql_falta');
+        if (btn) btn.disabled = false;
+        return toast(error.message, 'error', 6000);
+      }
+      if (data && data.length) hechos++;
+    }
+    Modal.close();
+    toast(hechos === ids.length ? tf('x_sim_blq_hechos', { n: hechos }) : tf('x_sim_blq_parcial', { n: hechos, m: ids.length - hechos }), hechos ? 'success' : 'error', 5000);
+    await this.render();
+    try { App.updateBadges(); } catch (_) {}
+  },
+  _confHtml(s) { return s.confirmado_por ? `<br><small style="color:var(--gray-muted)">${UI.esc(tf('x_sim_conf_por', { nombre: s.confirmado_por }))}</small>` : ''; },
+
   // ── Revisión de limpieza (la firma producción) ───────────────────
   openRevisar(id) {
     const s = this._data.find(x => x.id === id); if (!s || s.estado !== 'Hecho' || !UserService.isProduccion()) return;
@@ -14895,7 +15559,7 @@ const SimulacrosPage = {
     const nombres = [...new Set(this._revisoresDe(normalizeAlmacen(s.almacen), ''))].sort();
     Modal.open(t('x_sim_rev_titulo'), `${this._resumen(s)}
       <div class="detail-field" style="margin-bottom:14px"><label>${t('x_sim_col_hecho')}</label>
-        <p>${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}</p></div>
+        <p>${esc(s.hecho_por)} · ${this._fechaHora(s.hecho_at)}${s.actuacion ? ' — ' + esc(s.actuacion) : ''}${s.a_posteriori ? `<br><span class="badge badge-gray sim-post">${t('x_sim_post')}</span> <small style="color:var(--gray-muted)">${esc(this._postTxt(s))}</small>` : ''}${this._confHtml(s)}</p></div>
       <div class="form-grid">
         <div class="form-field"><label>${t('x_sim_rev_quien')} *</label>
           ${nombres.length ? `<select class="form-input" id="sim-r-quien" onchange="document.getElementById('sim-r-otro-w').style.display = this.value === '__otro__' ? '' : 'none'">
@@ -14961,6 +15625,146 @@ const SimulacrosPage = {
     if (ok) toast(t('x_sim_reasignado_ok'), 'success');
   },
 
+  // ── v11.0: registrar simulacros ya realizados, desde Excel (Admin / Responsable) ──
+  _IMP_COLS: ['Centro', 'Fecha', 'Hora', 'Zona', 'Línea', 'Máquina', 'Fallo simulado', 'Hecho por', 'Actuación', 'Duración (min)'],
+  _imp: null,
+  openImportar() {
+    if (!this._esPriv()) return;
+    Modal.open(t('x_sim_imp_titulo'), `
+      <p style="font-size:13px;margin-bottom:10px">${t('x_sim_imp_desc')}</p>
+      <p style="font-size:12px;color:var(--gray-muted);margin-bottom:14px">${t('x_sim_imp_cols')}</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-secondary btn-sm" id="sim-i-plantilla" onclick="SimulacrosPage.plantilla()">${t('x_sim_imp_plantilla')}</button>
+        <input type="file" id="sim-i-file" accept=".xlsx,.xls" onchange="SimulacrosPage._impLeer(this.files[0])">
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>`);
+  },
+  plantilla() {
+    const ws = XLSX.utils.aoa_to_sheet([this._IMP_COLS]);
+    ws['!cols'] = this._IMP_COLS.map(c => ({ wch: ['Fallo simulado', 'Actuación', 'Máquina'].includes(c) ? 34 : 16 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Simulacros realizados');
+    XLSX.writeFile(wb, 'Plantilla_simulacros_realizados.xlsx');
+  },
+  // Fecha de una celda (número de serie de Excel o texto dd/mm/aaaa · aaaa-mm-dd) → AAAA-MM-DD, o '' si no vale
+  _impFecha(v) {
+    let y, m, d;
+    if (typeof v === 'number') {
+      const f = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 86400000);
+      y = f.getUTCFullYear(); m = f.getUTCMonth() + 1; d = f.getUTCDate();
+    } else {
+      const s = String(v || '').trim();
+      let r = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+      if (r) { d = +r[1]; m = +r[2]; y = +r[3]; }
+      else if ((r = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) { y = +r[1]; m = +r[2]; d = +r[3]; }
+      else return '';
+    }
+    const f = new Date(y, m - 1, d);
+    if (y < 2000 || f.getFullYear() !== y || f.getMonth() !== m - 1 || f.getDate() !== d) return '';
+    return this._ymd(f);
+  },
+  _impHora(v) {
+    if (typeof v === 'number') {
+      const min = Math.round((v - Math.floor(v)) * 1440);
+      return v >= 0 && min < 1440 ? this._hm(min) : '';
+    }
+    const r = String(v || '').trim().match(/^(\d{1,2})[:.h](\d{2})(:\d{2})?$/);
+    return r && +r[1] < 24 && +r[2] < 60 ? `${this._p2(+r[1])}:${r[2]}` : '';
+  },
+  async _impLeer(file) {
+    if (!file || !this._esPriv()) return;
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+      if (!rows.length) throw new Error(t('x_sim_imp_e_vacio'));
+      const falta = this._IMP_COLS.filter(c => !(c in rows[0]));
+      if (falta.length) throw new Error(tf('x_sim_imp_e_cols', { cols: falta.join(', ') }));
+      const [activos, tecnicos] = await Promise.all([db.activos.toArray(), db.tecnicos.toArray()]);
+      await this._load();
+      this._imp = this._impValidar(rows, activos, tecnicos);
+      this._renderImp();
+    } catch (e) { toast(e.message, 'error', 6000); }
+  },
+  _impValidar(rows, activos, tecnicos) {
+    const txt = v => String(v == null ? '' : v).trim(), low = v => txt(v).toLowerCase();
+    const centros = this._centros(), lim = this._limite(), ahora = this._ahora();
+    const vistos = new Set(this._todos.filter(s => s.estado !== 'Anulado')
+      .map(s => [normalizeAlmacen(s.almacen), s.fecha_prog, s.hora_prog, low(s.equipo)].join('|')));
+    const ok = [], err = [];
+    rows.forEach((r, i) => {
+      if (!this._IMP_COLS.some(c => txt(r[c]))) return;
+      const e = [], avisos = [];
+      const centro = normalizeAlmacen(txt(r['Centro']));
+      if (!centros.includes(centro)) e.push(t('x_sim_imp_e_centro'));
+      else if (lim && centro !== lim) e.push(t('x_sim_imp_e_centro_otro'));
+      const fecha = this._impFecha(r['Fecha']), hora = this._impHora(r['Hora']);
+      if (!fecha) e.push(t('x_sim_imp_e_fecha'));
+      if (!hora) e.push(t('x_sim_imp_e_hora'));
+      if (fecha && hora && `${fecha} ${hora}` >= ahora) e.push(t('x_sim_imp_e_futuro'));
+      ['Máquina', 'Fallo simulado', 'Hecho por', 'Actuación'].forEach(c => { if (!txt(r[c])) e.push(tf('x_sim_imp_e_falta', { campo: c })); });
+      const durTxt = txt(r['Duración (min)']), dur = durTxt === '' ? null : Number(durTxt);
+      if (dur !== null && !(Number.isInteger(dur) && dur >= 0)) e.push(t('x_sim_imp_e_dur'));
+      let equipo = txt(r['Máquina']), zona = txt(r['Zona']), linea = txt(r['Línea']), id_activo = '';
+      const clave = [centro, fecha, hora, low(equipo)].join('|');
+      if (!e.length && vistos.has(clave)) e.push(t('x_sim_imp_e_dup'));
+      if (e.length) return err.push({ fila: i + 2, motivo: e.join(' · ') });
+      vistos.add(clave);
+      const cand = activos.filter(a => normalizeAlmacen(a.almacen) === centro && low(a.equipo || a.nombre) === low(equipo)
+        && (!zona || low(a.zona) === low(zona)) && (!linea || low(a.linea) === low(linea)));
+      if (cand.length === 1) { id_activo = cand[0].id_activo || ''; zona = zona || txt(cand[0].zona); linea = linea || txt(cand[0].linea); }
+      else if (!cand.length) avisos.push(t('x_sim_imp_a_maq'));
+      let hecho = txt(r['Hecho por']);
+      const tec = tecnicos.find(x => low(x.nombre) === low(hecho));
+      if (tec) hecho = tec.nombre; else avisos.push(t('x_sim_imp_a_mec'));
+      ok.push({ fila: i + 2, avisos, s: {
+        almacen: centro, zona, linea, equipo, id_activo, descripcion: txt(r['Fallo simulado']),
+        fecha_prog: fecha, hora_prog: hora, turno: '', tecnico: hecho, asignacion: 'Manual',
+        hecho_por: hecho, actuacion: txt(r['Actuación']), duracion_min: dur,
+      } });
+    });
+    return { ok, err };
+  },
+  _renderImp() {
+    const p = this._imp, esc = UI.esc, u = UserService.getUser();
+    Modal.open(t('x_sim_imp_prev_titulo'), `
+      <p style="font-size:13px;margin-bottom:10px" id="sim-i-resumen">${tf('x_sim_imp_resumen', { ok: p.ok.length, err: p.err.length })}</p>
+      ${p.err.map(x => `<div class="sim-aviso sim-i-err">✕ ${tf('x_sim_imp_fila', { n: x.fila })}: ${esc(x.motivo)}</div>`).join('')}
+      ${p.ok.length ? `<div class="table-wrap"><table class="sim-prop"><thead><tr>
+        <th>${t('x_sim_imp_col_cuando')}</th><th>${t('x_sim_col_maquina')} / ${t('x_sim_col_fallo')}</th><th>${t('x_sim_col_hecho')}</th>
+      </tr></thead><tbody id="sim-i-tbody">${p.ok.map(x => `<tr>
+        <td style="white-space:nowrap"><strong>${esc(this._cuando(x.s))}</strong><br><small style="color:var(--gray-muted)">${tf('x_sim_imp_fila', { n: x.fila })}</small></td>
+        <td><small style="color:var(--gray-muted)">${esc(x.s.almacen)}</small><br>${esc(this._maquina(x.s))}<br><small style="color:var(--gray-muted)">${esc(x.s.descripcion)}</small></td>
+        <td data-l="${t('x_sim_col_hecho')}">${esc(x.s.hecho_por)}<br><small style="color:var(--gray-muted)">${esc(x.s.actuacion)}</small>${x.avisos.map(a => `<br><small style="color:#c45a2a">⚠ ${esc(a)}</small>`).join('')}</td>
+      </tr>`).join('')}</tbody></table></div>
+      <p style="font-size:12px;color:var(--gray-muted);margin-top:12px">${tf('x_sim_imp_nota', { nombre: esc(u ? u.nombre : '') })}</p>` : ''}`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="sim-i-ok"${p.ok.length ? '' : ' disabled'} onclick="SimulacrosPage._impGuardar()">${tf('x_sim_imp_registrar', { n: p.ok.length })}</button>`);
+  },
+  async _impGuardar() {
+    const p = this._imp; if (!p || !p.ok.length || !this._esPriv()) return;
+    const btn = document.getElementById('sim-i-ok'); if (btn) btn.disabled = true;
+    const u = UserService.getUser(), quien = u ? u.nombre : '', ids = new Set();
+    const filas = p.ok.map(({ s }) => {
+      let id;
+      do { id = `SIM-${s.fecha_prog.replace(/-/g, '')}-${s.hora_prog.replace(':', '')}-${Math.random().toString(36).slice(2, 4)}`; } while (ids.has(id));
+      ids.add(id);
+      return Object.assign({ id, estado: 'Hecho', a_posteriori: true, registrado_por: quien, creado_por: quien }, s);
+    });
+    const { error } = await sb.from('simulacros').insert(filas);
+    if (error) {
+      if (btn) btn.disabled = false;
+      // Sin las reglas de v11.0 en Supabase (no se ha vuelto a ejecutar simulacros_setup.sql) se enseña el SQL
+      if (/a_posteriori|registrado_|se crea programado/i.test(error.message || '')) return this.verSQL('x_sim_imp_sql_falta');
+      return toast(error.message, 'error', 6000);
+    }
+    this._imp = null;
+    Modal.close();
+    toast(tf('x_sim_imp_ok', { n: filas.length }), 'success');
+    await this.render();
+    try { App.updateBadges(); } catch (_) {}
+  },
+  _postTxt(s) { return tf('x_sim_post_tt', { fecha: this._fechaHora(s.registrado_at), nombre: s.registrado_por || '' }); },
+
   // ── Excel ────────────────────────────────────────────────────────
   exportExcel() {
     const filas = this._filtradas();
@@ -14969,11 +15773,11 @@ const SimulacrosPage = {
     const cab = ['Tipo', 'ID', 'Centro', 'Fecha programada', 'Hora programada', 'Turno', 'Zona', 'Línea', 'Máquina', 'Fallo simulado', 'Estado',
       'Mecánico asignado', 'Asignación', 'Hecho por', 'Hecho el', 'Actuación', 'Duración (min)',
       'Revisor asignado', 'Revisado por', 'Revisado el', 'Zona limpia', 'Observaciones de la revisión', 'Cuenta que firma la revisión',
-      'Programado por', 'Programado el', 'Anulado por', 'Anulado el', 'Motivo de anulación'];
+      'Programado por', 'Programado el', 'Anulado por', 'Anulado el', 'Motivo de anulación', 'Registro', 'Registrado por', 'Registrado el', 'Confirmado por'];
     const datos = filas.slice().reverse().map(s => ['SIMULACRO', s.id, s.almacen, s.fecha_prog, s.hora_prog, s.turno || '', s.zona || '', s.linea || '', s.equipo || '', s.descripcion || '', est[s.estado] || s.estado,
       s.tecnico || '', s.asignacion || '', s.hecho_por || '', this._fechaHora(s.hecho_at), s.actuacion || '', s.duracion_min == null ? '' : s.duracion_min,
       s.revisor || '', s.revisado_por || '', this._fechaHora(s.revisado_at), s.revisado_por ? (s.zona_limpia ? 'Sí' : 'No') : '', s.obs_revision || '', s.revisado_usuario || '',
-      s.creado_por || '', this._fechaHora(s.creado_at), s.anulado_por || '', this._fechaHora(s.anulado_at), s.motivo_anulacion || '']);
+      s.creado_por || '', this._fechaHora(s.creado_at), s.anulado_por || '', this._fechaHora(s.anulado_at), s.motivo_anulacion || '', s.a_posteriori ? 'A posteriori' : '', s.registrado_por || '', this._fechaHora(s.registrado_at), s.confirmado_por || '']);
     const ws = XLSX.utils.aoa_to_sheet([cab, ...datos]);
     ws['!cols'] = cab.map((c, i) => ({ wch: [9, 15, 15, 14].includes(i) ? 34 : Math.max(12, c.length + 2) }));
     const wb = XLSX.utils.book_new();
@@ -15050,9 +15854,9 @@ const SimulacrosPage = {
     toast(t('x_sim_cfg_guardado'), 'success');
     await this.render();
   },
-  verSQL() {
+  verSQL(ayuda) {
     Modal.open(t('x_sim_sql_titulo'), `
-      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_sim_sql_ayuda')}</p>
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t(ayuda || 'x_sim_sql_ayuda')}</p>
       <textarea readonly id="sim-sql" style="width:100%;height:420px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);resize:vertical;direction:ltr">${UI.esc(this._SQL)}</textarea>`,
       `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.getElementById('sim-sql').value);toast('SQL ✓','success')">${t('x_copiar_sql')}</button>
        <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
