@@ -981,6 +981,47 @@ html.sk .prod-open-item{border-left-width:3px}
   html.sk .modal-footer .btn{min-height:40px}
   html.sk #content{padding:16px}
 }
+/* ── v11.5: peticiones de material ── */
+.pm-mat{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.pm-mini{width:40px;height:40px;object-fit:cover;flex:none;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--gray-muted)}
+.pm-muted{color:var(--gray-muted)}
+.pm-acc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pm-est{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pm-bulk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px;margin-bottom:10px;background:#E3EEE6;border:1px solid #A8C7B0;font-size:13px}
+.pm-bulk[hidden]{display:none}
+.pm-sec{font-size:13px;font-weight:600;color:var(--green);margin:20px 0 8px}
+.pm-sec:first-child{margin-top:0}
+.pm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.pm-card{border:1px solid var(--border);background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:8px;cursor:pointer;overflow-wrap:anywhere}
+.pm-card:hover{border-color:var(--green)}
+.pm-card.mio{border-color:#A8C7B0;background:#FBFDFB}
+.pm-card-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-size:12px;color:var(--gray-muted)}
+.pm-card-meta{font-size:12.5px;color:var(--gray-muted)}
+.pm-card .pm-acc{justify-content:flex-start}
+.pm-movil{display:none}
+#pm-table tbody tr{cursor:pointer}
+#pm-table td{vertical-align:top}
+#pm-table td:nth-child(3){min-width:200px}
+#pm-table td:nth-child(5){white-space:nowrap}
+#pm-table td:nth-child(7){min-width:130px}
+.pm-desk .pm-acc{flex-wrap:nowrap;align-items:center}
+.pm-cat-res{display:flex;flex-direction:column;gap:4px;margin:6px 0 4px}
+.pm-cat-it{text-align:start;padding:8px 10px;border:1px solid var(--border);background:var(--surface);font:inherit;font-size:13px;color:inherit;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.pm-cat-it:hover,.pm-cat-it:focus-visible{border-color:var(--green)}
+.pm-chip{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--green);background:#E3EEE6;margin-bottom:6px;font-size:13px}
+.pm-foto-fila{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pm-prev{width:64px;height:64px;object-fit:cover;border:1px solid var(--border)}
+.pm-foto-grande{max-width:100%;max-height:340px;border:1px solid var(--border);display:block}
+.pm-lista{margin:0 0 14px 18px;padding:0;font-size:13px;list-style:disc}
+.pm-lista li{margin:3px 0}
+html[dir="rtl"] .pm-lista{margin:0 18px 14px 0}
+@media(max-width:768px){
+  .pm-desk{display:none}
+  .pm-movil{display:grid}
+  .pm-cards{grid-template-columns:1fr}
+  .pm-acc .btn{min-height:40px}
+  .pm-bulk{position:sticky;top:0;z-index:5}
+}
 </style>
 </head>
 <body>
@@ -1190,6 +1231,11 @@ html.sk .prod-open-item{border-left-width:3px}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
             <span class="nav-label" data-i18n="nav_movimientos">Movimientos</span>
           </div>
+          <div class="nav-item" data-route="peticiones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6.2"/></svg>
+            <span class="nav-label" data-i18n="nav_peticiones">Peticiones de material</span>
+            <span class="nav-badge" id="badge-peticiones" style="display:none">0</span>
+          </div>
         </div>
       </div>
       <!-- Configuración (suelto) -->
@@ -1204,7 +1250,7 @@ html.sk .prod-open-item{border-left-width:3px}
         <button class="lang-btn" title="English"  onclick="I18N.setLang('en')">EN</button>
         <button class="lang-btn" title="العربية" onclick="I18N.setLang('ar')">AR</button>
       </div>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v11.4</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.5px">GMAO · v11.8</div>
       <div class="sidebar-user" id="sidebar-user-info" onclick="App.switchUser()">
         <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
@@ -1496,6 +1542,104 @@ const I18N = {
 
   _msgs: {
     es: {
+      // ── v11.8: tipo de avería obligatorio al cerrar ──
+      x_tipo_av_falta:'Indica el tipo de avería.',
+      // ── v11.5: peticiones de material ──
+      nav_peticiones:'Peticiones de material',
+      x_pm_subtitulo:'Los mecánicos piden el material y el encargado hace el pedido al proveedor.',
+      x_pm_nueva:'Pedir material',
+      x_pm_actualizar:'Actualizar',
+      x_pm_sin_permiso:'Esta pantalla es para mantenimiento.',
+      x_pm_sin_tabla:'Falta la tabla de peticiones de material en la base de datos. Hay que ejecutar peticiones_setup.sql en Supabase › SQL Editor y recargar.',
+      x_pm_sql_titulo:'SQL · peticiones de material',
+      x_pm_buscar:'Buscar material, persona, proveedor…',
+      x_pm_f_abiertas:'Abiertas (solicitadas y pedidas)',
+      x_pm_f_todas:'Todas',
+      x_pm_f_cerradas:'Rechazadas y anuladas',
+      x_pm_est_solicitada:'Solicitada',
+      x_pm_est_pedida:'Pedida al proveedor',
+      x_pm_est_recibida:'Recibida',
+      x_pm_est_rechazada:'Rechazada',
+      x_pm_est_anulada:'Anulada',
+      x_pm_urgente:'Urgente',
+      x_pm_normal:'Normal',
+      x_pm_col_fecha:'Fecha',
+      x_pm_col_material:'Material',
+      x_pm_col_cant:'Cant.',
+      x_pm_col_para:'Para',
+      x_pm_col_solicita:'Lo pide',
+      x_pm_col_estado:'Estado',
+      x_pm_col_pedido:'Pedido',
+      x_pm_solo_foto:'Solo foto',
+      x_pm_seleccionar:'Seleccionar',
+      x_pm_sel_n:'{n} seleccionadas',
+      x_pm_sel_quitar:'Quitar selección',
+      x_pm_vacio:'No hay peticiones',
+      x_pm_vacio_sub:'Cuando alguien pida material aparecerá aquí.',
+      x_pm_mias:'Mis peticiones abiertas',
+      x_pm_centro:'Otras abiertas del centro',
+      x_pm_ultimas:'Últimas cerradas',
+      x_pm_nada_mio:'No tienes peticiones abiertas.',
+      x_pm_lbl_catalogo:'Material del catálogo',
+      x_pm_ph_catalogo:'Escribe el código o el nombre…',
+      x_pm_cat_ayuda:'Si no lo encuentras, descríbelo o hazle una foto.',
+      x_pm_cat_nada:'No hay nada en el catálogo con ese texto.',
+      x_pm_stock:'Hay {n} en {alm}',
+      x_pm_quitar:'Quitar',
+      x_pm_lbl_desc:'Descripción',
+      x_pm_ph_desc:'Qué es, medidas, marca, referencia que se vea en la pieza…',
+      x_pm_lbl_foto:'Foto',
+      x_pm_foto_btn:'Hacer o elegir una foto',
+      x_pm_lbl_cant:'Cantidad',
+      x_pm_lbl_ud:'Unidad',
+      x_pm_lbl_urg:'Urgencia',
+      x_pm_lbl_dest:'Para qué máquina o avería',
+      x_pm_ph_dest:'Opcional',
+      x_pm_guardar:'Enviar petición',
+      x_pm_guardar_otra:'Enviar y pedir otra cosa',
+      x_pm_err_que:'Indica qué necesitas: elige un material del catálogo, escribe una descripción o añade una foto.',
+      x_pm_err_cant:'La cantidad tiene que ser mayor que cero.',
+      x_pm_err_alm:'Elige el almacén.',
+      x_pm_err_foto:'No se ha podido subir la foto: {e}',
+      x_pm_ok_nueva:'Petición enviada',
+      x_pm_ped_btn:'Hacer pedido',
+      x_pm_ped_btn_n:'Hacer pedido ({n})',
+      x_pm_ped_titulo:'Pedido al proveedor',
+      x_pm_ped_intro:'Vas a marcar como pedidas al proveedor estas {n} peticiones:',
+      x_pm_lbl_prov:'Proveedor',
+      x_pm_lbl_ref:'Número de pedido o referencia',
+      x_pm_lbl_prevista:'Fecha prevista de entrega',
+      x_pm_lbl_nota:'Nota',
+      x_pm_ped_guardar:'Marcar como pedidas',
+      x_pm_err_prov:'Indica el proveedor.',
+      x_pm_ok_pedido:'{n} marcadas como pedidas',
+      x_pm_ya_no:'{n} ya no estaban en ese estado y no se han tocado.',
+      x_pm_prevista:'previsto {f}',
+      x_pm_rec_btn:'Recibir',
+      x_pm_rec_btn_n:'Recibir ({n})',
+      x_pm_rec_conf:'¿Ha llegado el material de estas {n} peticiones? Quedarán como recibidas por ti.',
+      x_pm_rec_ok:'Sí, ha llegado',
+      x_pm_ok_recibida:'{n} marcadas como recibidas',
+      x_pm_rech_btn:'Rechazar',
+      x_pm_rech_titulo:'Rechazar la petición',
+      x_pm_lbl_motivo:'Motivo',
+      x_pm_ph_motivo:'Por ejemplo: hay en el almacén, se repara de otra forma…',
+      x_pm_err_motivo:'Escribe el motivo.',
+      x_pm_ok_rech:'Petición rechazada',
+      x_pm_anular_btn:'Anular',
+      x_pm_anular_conf:'¿Anular esta petición? Ya no se pedirá.',
+      x_pm_anular_ok:'Sí, anular',
+      x_pm_ok_anulada:'Petición anulada',
+      x_pm_deshacer_btn:'Deshacer pedido',
+      x_pm_deshacer_conf:'¿Deshacer el pedido? La petición vuelve a "Solicitada" y se borran el proveedor y la referencia.',
+      x_pm_deshacer_ok:'Sí, deshacer',
+      x_pm_ok_deshecho:'Pedido deshecho',
+      x_pm_ficha:'Petición de material',
+      x_pm_stock_ficha:'Stock en {alm}',
+      x_pm_h_pedido:'Pedido al proveedor',
+      x_pm_h_recibido:'Recibido',
+      x_pm_h_cerrado:'Rechazo o anulación',
+      x_pm_por_el:'{quien} · {cuando}',
       // ── v11.3: Excel con todos los campos, de ida y vuelta ──
       x_rev_registrado:'Registrado por',
       x_imp_elim_sin_marcar:' no están en el Excel. Vienen sin marcar: solo se borran de la base de datos los que marques.',
@@ -2009,6 +2153,104 @@ const I18N = {
       acceso_restringido_admin:'Acceso restringido a Responsables y Administradores.',
     },
     en: {
+      // ── v11.8: tipo de avería obligatorio al cerrar ──
+      x_tipo_av_falta:'Select the breakdown type.',
+      // ── v11.5: peticiones de material ──
+      nav_peticiones:'Material requests',
+      x_pm_subtitulo:'Mechanics request the material and the supervisor orders it from the supplier.',
+      x_pm_nueva:'Request material',
+      x_pm_actualizar:'Refresh',
+      x_pm_sin_permiso:'This screen is for maintenance staff.',
+      x_pm_sin_tabla:'The material requests table is missing in the database. Run peticiones_setup.sql in Supabase › SQL Editor and reload.',
+      x_pm_sql_titulo:'SQL · material requests',
+      x_pm_buscar:'Search material, person, supplier…',
+      x_pm_f_abiertas:'Open (requested and ordered)',
+      x_pm_f_todas:'All',
+      x_pm_f_cerradas:'Rejected and cancelled',
+      x_pm_est_solicitada:'Requested',
+      x_pm_est_pedida:'Ordered from supplier',
+      x_pm_est_recibida:'Received',
+      x_pm_est_rechazada:'Rejected',
+      x_pm_est_anulada:'Cancelled',
+      x_pm_urgente:'Urgent',
+      x_pm_normal:'Normal',
+      x_pm_col_fecha:'Date',
+      x_pm_col_material:'Material',
+      x_pm_col_cant:'Qty',
+      x_pm_col_para:'For',
+      x_pm_col_solicita:'Requested by',
+      x_pm_col_estado:'Status',
+      x_pm_col_pedido:'Order',
+      x_pm_solo_foto:'Photo only',
+      x_pm_seleccionar:'Select',
+      x_pm_sel_n:'{n} selected',
+      x_pm_sel_quitar:'Clear selection',
+      x_pm_vacio:'No requests',
+      x_pm_vacio_sub:'When someone requests material it will appear here.',
+      x_pm_mias:'My open requests',
+      x_pm_centro:'Other open requests at the site',
+      x_pm_ultimas:'Recently closed',
+      x_pm_nada_mio:'You have no open requests.',
+      x_pm_lbl_catalogo:'Material from the catalogue',
+      x_pm_ph_catalogo:'Type the code or the name…',
+      x_pm_cat_ayuda:'If you cannot find it, describe it or take a photo.',
+      x_pm_cat_nada:'Nothing in the catalogue matches that text.',
+      x_pm_stock:'{n} in stock at {alm}',
+      x_pm_quitar:'Remove',
+      x_pm_lbl_desc:'Description',
+      x_pm_ph_desc:'What it is, size, brand, any reference on the part…',
+      x_pm_lbl_foto:'Photo',
+      x_pm_foto_btn:'Take or choose a photo',
+      x_pm_lbl_cant:'Quantity',
+      x_pm_lbl_ud:'Unit',
+      x_pm_lbl_urg:'Urgency',
+      x_pm_lbl_dest:'For which machine or breakdown',
+      x_pm_ph_dest:'Optional',
+      x_pm_guardar:'Send request',
+      x_pm_guardar_otra:'Send and request something else',
+      x_pm_err_que:'Say what you need: pick a material from the catalogue, write a description or add a photo.',
+      x_pm_err_cant:'The quantity must be greater than zero.',
+      x_pm_err_alm:'Choose the site.',
+      x_pm_err_foto:'The photo could not be uploaded: {e}',
+      x_pm_ok_nueva:'Request sent',
+      x_pm_ped_btn:'Place order',
+      x_pm_ped_btn_n:'Place order ({n})',
+      x_pm_ped_titulo:'Order to supplier',
+      x_pm_ped_intro:'You are about to mark these {n} requests as ordered from the supplier:',
+      x_pm_lbl_prov:'Supplier',
+      x_pm_lbl_ref:'Order number or reference',
+      x_pm_lbl_prevista:'Expected delivery date',
+      x_pm_lbl_nota:'Note',
+      x_pm_ped_guardar:'Mark as ordered',
+      x_pm_err_prov:'Enter the supplier.',
+      x_pm_ok_pedido:'{n} marked as ordered',
+      x_pm_ya_no:'{n} were no longer in that status and were left untouched.',
+      x_pm_prevista:'expected {f}',
+      x_pm_rec_btn:'Receive',
+      x_pm_rec_btn_n:'Receive ({n})',
+      x_pm_rec_conf:'Has the material for these {n} requests arrived? They will be recorded as received by you.',
+      x_pm_rec_ok:'Yes, it has arrived',
+      x_pm_ok_recibida:'{n} marked as received',
+      x_pm_rech_btn:'Reject',
+      x_pm_rech_titulo:'Reject the request',
+      x_pm_lbl_motivo:'Reason',
+      x_pm_ph_motivo:'For example: it is in stock, it will be repaired another way…',
+      x_pm_err_motivo:'Enter the reason.',
+      x_pm_ok_rech:'Request rejected',
+      x_pm_anular_btn:'Cancel request',
+      x_pm_anular_conf:'Cancel this request? It will not be ordered.',
+      x_pm_anular_ok:'Yes, cancel it',
+      x_pm_ok_anulada:'Request cancelled',
+      x_pm_deshacer_btn:'Undo order',
+      x_pm_deshacer_conf:'Undo the order? The request goes back to "Requested" and the supplier and reference are cleared.',
+      x_pm_deshacer_ok:'Yes, undo',
+      x_pm_ok_deshecho:'Order undone',
+      x_pm_ficha:'Material request',
+      x_pm_stock_ficha:'Stock at {alm}',
+      x_pm_h_pedido:'Order to supplier',
+      x_pm_h_recibido:'Received',
+      x_pm_h_cerrado:'Rejection or cancellation',
+      x_pm_por_el:'{quien} · {cuando}',
       // ── v11.3: Excel con todos los campos, de ida y vuelta ──
       x_rev_registrado:'Recorded by',
       x_imp_elim_sin_marcar:' are not in the Excel file. They come unticked: only the ones you tick are deleted from the database.',
@@ -2522,6 +2764,104 @@ const I18N = {
       acceso_restringido_admin:'Restricted access: Supervisors and Administrators only.',
     },
     ar: {
+      // ── v11.8: tipo de avería obligatorio al cerrar ──
+      x_tipo_av_falta:'حدّد نوع العطل.',
+      // ── v11.5: peticiones de material ──
+      nav_peticiones:'طلبات المواد',
+      x_pm_subtitulo:'يطلب الميكانيكيون المواد ويقوم المسؤول بطلبها من المورّد.',
+      x_pm_nueva:'طلب مادة',
+      x_pm_actualizar:'تحديث',
+      x_pm_sin_permiso:'هذه الشاشة خاصة بالصيانة.',
+      x_pm_sin_tabla:'جدول طلبات المواد غير موجود في قاعدة البيانات. نفّذ peticiones_setup.sql في Supabase › SQL Editor ثم أعد التحميل.',
+      x_pm_sql_titulo:'SQL · طلبات المواد',
+      x_pm_buscar:'ابحث عن مادة أو شخص أو مورّد…',
+      x_pm_f_abiertas:'المفتوحة (المطلوبة والمُرسلة للمورّد)',
+      x_pm_f_todas:'الكل',
+      x_pm_f_cerradas:'المرفوضة والملغاة',
+      x_pm_est_solicitada:'مطلوبة',
+      x_pm_est_pedida:'طُلبت من المورّد',
+      x_pm_est_recibida:'تم الاستلام',
+      x_pm_est_rechazada:'مرفوضة',
+      x_pm_est_anulada:'ملغاة',
+      x_pm_urgente:'عاجل',
+      x_pm_normal:'عادي',
+      x_pm_col_fecha:'التاريخ',
+      x_pm_col_material:'المادة',
+      x_pm_col_cant:'الكمية',
+      x_pm_col_para:'لأجل',
+      x_pm_col_solicita:'الطالب',
+      x_pm_col_estado:'الحالة',
+      x_pm_col_pedido:'الطلبية',
+      x_pm_solo_foto:'صورة فقط',
+      x_pm_seleccionar:'تحديد',
+      x_pm_sel_n:'تم تحديد {n}',
+      x_pm_sel_quitar:'إلغاء التحديد',
+      x_pm_vacio:'لا توجد طلبات',
+      x_pm_vacio_sub:'عندما يطلب أحدهم مادة ستظهر هنا.',
+      x_pm_mias:'طلباتي المفتوحة',
+      x_pm_centro:'طلبات مفتوحة أخرى في المركز',
+      x_pm_ultimas:'آخر الطلبات المغلقة',
+      x_pm_nada_mio:'ليس لديك طلبات مفتوحة.',
+      x_pm_lbl_catalogo:'مادة من الكتالوج',
+      x_pm_ph_catalogo:'اكتب الرمز أو الاسم…',
+      x_pm_cat_ayuda:'إذا لم تجدها، صِفها أو التقط لها صورة.',
+      x_pm_cat_nada:'لا يوجد في الكتالوج ما يطابق هذا النص.',
+      x_pm_stock:'يوجد {n} في {alm}',
+      x_pm_quitar:'إزالة',
+      x_pm_lbl_desc:'الوصف',
+      x_pm_ph_desc:'ما هي، المقاسات، العلامة، أي مرجع ظاهر على القطعة…',
+      x_pm_lbl_foto:'صورة',
+      x_pm_foto_btn:'التقط أو اختر صورة',
+      x_pm_lbl_cant:'الكمية',
+      x_pm_lbl_ud:'الوحدة',
+      x_pm_lbl_urg:'الاستعجال',
+      x_pm_lbl_dest:'لأي آلة أو عطل',
+      x_pm_ph_dest:'اختياري',
+      x_pm_guardar:'إرسال الطلب',
+      x_pm_guardar_otra:'إرسال وطلب شيء آخر',
+      x_pm_err_que:'حدّد ما تحتاجه: اختر مادة من الكتالوج أو اكتب وصفًا أو أضف صورة.',
+      x_pm_err_cant:'يجب أن تكون الكمية أكبر من صفر.',
+      x_pm_err_alm:'اختر المستودع.',
+      x_pm_err_foto:'تعذّر رفع الصورة: {e}',
+      x_pm_ok_nueva:'تم إرسال الطلب',
+      x_pm_ped_btn:'إنشاء طلبية',
+      x_pm_ped_btn_n:'إنشاء طلبية ({n})',
+      x_pm_ped_titulo:'طلبية إلى المورّد',
+      x_pm_ped_intro:'ستُعلَّم هذه الطلبات ({n}) على أنها طُلبت من المورّد:',
+      x_pm_lbl_prov:'المورّد',
+      x_pm_lbl_ref:'رقم الطلبية أو المرجع',
+      x_pm_lbl_prevista:'تاريخ التسليم المتوقع',
+      x_pm_lbl_nota:'ملاحظة',
+      x_pm_ped_guardar:'تعليم كمطلوبة من المورّد',
+      x_pm_err_prov:'أدخل المورّد.',
+      x_pm_ok_pedido:'تم تعليم {n} كمطلوبة من المورّد',
+      x_pm_ya_no:'{n} لم تعد في تلك الحالة ولم يتم تغييرها.',
+      x_pm_prevista:'متوقع {f}',
+      x_pm_rec_btn:'استلام',
+      x_pm_rec_btn_n:'استلام ({n})',
+      x_pm_rec_conf:'هل وصلت مواد هذه الطلبات ({n})؟ ستُسجَّل على أنها مستلمة من قِبلك.',
+      x_pm_rec_ok:'نعم، وصلت',
+      x_pm_ok_recibida:'تم تعليم {n} كمستلمة',
+      x_pm_rech_btn:'رفض',
+      x_pm_rech_titulo:'رفض الطلب',
+      x_pm_lbl_motivo:'السبب',
+      x_pm_ph_motivo:'مثلًا: متوفرة في المستودع، سيتم الإصلاح بطريقة أخرى…',
+      x_pm_err_motivo:'اكتب السبب.',
+      x_pm_ok_rech:'تم رفض الطلب',
+      x_pm_anular_btn:'إلغاء الطلب',
+      x_pm_anular_conf:'هل تريد إلغاء هذا الطلب؟ لن يتم طلبه.',
+      x_pm_anular_ok:'نعم، إلغاء',
+      x_pm_ok_anulada:'تم إلغاء الطلب',
+      x_pm_deshacer_btn:'التراجع عن الطلبية',
+      x_pm_deshacer_conf:'هل تريد التراجع عن الطلبية؟ يعود الطلب إلى "مطلوبة" ويُحذف المورّد والمرجع.',
+      x_pm_deshacer_ok:'نعم، تراجع',
+      x_pm_ok_deshecho:'تم التراجع عن الطلبية',
+      x_pm_ficha:'طلب مادة',
+      x_pm_stock_ficha:'المخزون في {alm}',
+      x_pm_h_pedido:'الطلبية إلى المورّد',
+      x_pm_h_recibido:'الاستلام',
+      x_pm_h_cerrado:'الرفض أو الإلغاء',
+      x_pm_por_el:'{quien} · {cuando}',
       // ── v11.3: Excel con todos los campos, de ida y vuelta ──
       x_rev_registrado:'سجّله',
       x_imp_elim_sin_marcar:' غير موجودة في ملف Excel. تظهر بدون تحديد: لا يُحذف من قاعدة البيانات إلا ما تحدده.',
@@ -3146,6 +3486,7 @@ const db = {
   ordenes_trabajo: makeTable('ordenes_trabajo', 'id'),
   cae_datos:       makeTable('cae_datos',       'clave'),
   simulacros:      makeTable('simulacros',      'id'),   // v10.15: tabla propia, separada de averias
+  peticiones:      makeTable('peticiones_material', 'id'),   // v11.5: peticiones de material para compra
   // db.transaction() usado en ImportService — no necesita atomicidad real aquí,
   // simplemente ejecutamos el callback
   transaction: async (_mode, ...args) => {
@@ -4270,6 +4611,8 @@ const UI = {
     }
     return dur;
   },
+  // v11.5: icono de línea del juego propio (los dibujos están en el módulo Iconos)
+  ico(n) { return `<svg class="ico" aria-hidden="true"><use href="#sk-${n}"></use></svg>`; },
   esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   },
@@ -4359,6 +4702,11 @@ const Modal = {
 // ═══════════════════════════════════════════════════════════════════
 // ROUTER
 // ═══════════════════════════════════════════════════════════════════
+// v11.6: Simulacros desactivado para TODOS los usuarios: no sale en el menú y no se entra por enlace.
+// No se ha borrado nada (página, tabla y datos siguen ahí). Para volver a activarlo: poner true.
+const SIMULACROS_ACTIVO = false;
+if (!SIMULACROS_ACTIVO) document.querySelectorAll('.nav-item[data-route="simulacros"]').forEach(el => el.remove());
+
 const Router = {
   _routes: {},
   register(route, fn) { this._routes[route] = fn; },
@@ -4369,6 +4717,11 @@ const Router = {
     const hash = (window.location.hash || '#averias').slice(1) || 'averias';
     const [base] = hash.split('/');
 
+    // v11.6: con Simulacros desactivado, su ruta no existe para ningún rol
+    if (base === 'simulacros' && !SIMULACROS_ACTIVO) {
+      window.location.hash = UserService.isProduccion() ? 'produccion' : 'averias';
+      return;
+    }
     // Producción: solo su vista de bloques
     if (UserService.isProduccion() && base !== 'produccion' && base !== 'simulacros') {
       window.location.hash = 'produccion';
@@ -4381,7 +4734,7 @@ const Router = {
     }
     // Roles sin privilegios solo pueden ver Averías y Partes
     const _priv = UserService.isAdmin() || UserService.isResponsable();
-    if (!_priv && !UserService.isProduccion() && base !== 'averias' && base !== 'partes' && base !== 'ordenes' && base !== 'simulacros') {
+    if (!_priv && !UserService.isProduccion() && base !== 'averias' && base !== 'partes' && base !== 'ordenes' && base !== 'simulacros' && base !== 'peticiones') {
       window.location.hash = 'averias';
       return;
     }
@@ -4394,7 +4747,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.route === base);
     });
     NavGroups.refreshDots();
-    const titles = { produccion:t('x_prod_titulo'), centros:t('nav_centros'), simulacros:t('nav_simulacros'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
+    const titles = { produccion:t('x_prod_titulo'), centros:t('nav_centros'), simulacros:t('nav_simulacros'), peticiones:t('nav_peticiones'), dashboard:t('nav_dashboard'), 'partes-analisis':t('nav_analisis'), activos:t('nav_activos'), averias:t('nav_averias'), incidencias:t('nav_incidencias'), inventario:t('nav_inventario'), movimientos:t('nav_movimientos'), inspecciones:t('x_inspecciones_oca'), planes:t('x_planes_gamas'), preventivos:t('x_preventivos_pendientes'), ordenes:t('x_ordenes_de_trabajo'), partes:t('x_partes_de_trabajo'), cae:t('x_cae_empresas_externas'), config:t('nav_config') };
     document.getElementById('topbar-title').textContent = titles[base] || base;
 
     const content = document.getElementById('content');
@@ -6541,6 +6894,13 @@ const ActivosPage = {
 // PAGE: AVERÍAS
 // ═══════════════════════════════════════════════════════════════════
 const AveriasPage = {
+  _TIPOS: ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'],   // v11.7: tipos de avería (alta, edición y cierre)
+  // v11.8: opciones del tipo al cerrar. Sale marcado el que tenga; un tipo antiguo que no esté en el catálogo se conserva.
+  _optsTipoCierre(a) {
+    const tipos = a.tipo && !this._TIPOS.includes(a.tipo) ? [a.tipo, ...this._TIPOS] : this._TIPOS;
+    return (a.tipo ? '' : `<option value="">${t('seleccionar')}</option>`)
+      + tipos.map(tp => `<option value="${UI.esc(tp)}"${a.tipo === tp ? ' selected' : ''}>${UI.esc(tv('x_tav_', tp))}</option>`).join('');
+  },
   _data: [],
   _filtered: [],
   _prefillFromIncidencia: null,
@@ -7115,7 +7475,7 @@ const AveriasPage = {
     if (!a) return;
     const allTecnicos = await DataService.getTecnicos(true);
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
-    const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
+    const tipos = AveriasPage._TIPOS;
     const tecOpts = '<option value="">' + t('x_sin_asignar') + '</option>' + allTecnicos.map(t => `<option${t.nombre===a.tecnico?' selected':''}>${UI.esc(t.nombre)}</option>`).join('');
 
     Modal.open(t('x_editar_averia'), `
@@ -7256,7 +7616,7 @@ const AveriasPage = {
     const user = UserService.getUser();
     const allTecnicos = await DataService.getTecnicos(true);
     const almacenes = ['Miramar','Xeresa','Murcia','Alcacer','Algemesi'];
-    const tipos = ['Mecánica','Eléctrica','Neumática','Electrónica','Informatica','Mal uso','Ajustes máquina','Asistencia Cambio Formato','Seguridad','Productividad'];
+    const tipos = AveriasPage._TIPOS;
     // Productos para selector de materiales (cascada)
     const todosProds = await db.productos.toArray();
     todosProds.forEach(p => { if (p.tipo && p.tipo.toLowerCase()==='repuestos') p.tipo='Repuestos'; });
@@ -7658,6 +8018,7 @@ const AveriasPage = {
     if (!desc)    { toast('La descripción es obligatoria', 'error'); return; }
     if (!criticidad){ toast('Selecciona la criticidad', 'error'); return; }
     if (cerrarAhora) {
+      if (!document.getElementById('av-tipo')?.value) { toast(t('x_tipo_av_falta'), 'error'); document.getElementById('av-tipo')?.focus(); return; }   // v11.8
       const sol = document.getElementById('av-solucion')?.value.trim();
       if (!sol) { toast('Indica la solución aplicada para cerrar la avería', 'error'); return; }
       const durH = parseInt(document.getElementById('av-dur-h')?.value) || 0;
@@ -7828,6 +8189,10 @@ const AveriasPage = {
         <span style="color:var(--gray-muted)">${UI.esc(a.descripcion)}</span>
       </div>
       <form id="close-form" class="form-grid">
+        <div class="form-field full">
+          <label for="cl-tipo-av">${t('lbl_tipo_av')} *</label>
+          <select class="form-input" id="cl-tipo-av" required>${AveriasPage._optsTipoCierre(a)}</select>
+        </div>
         <div class="form-field full">
           <label>${t('lbl_solucion')} *</label>
           <textarea class="form-input" id="cl-solucion" rows="2" required placeholder="${t('x_describe_que_se_hizo_para_resolver_la_')}"></textarea>
@@ -8244,6 +8609,8 @@ const AveriasPage = {
 
   async _saveClose(id) {
     if (AveriasPage._saving) return;
+    const tipoCierre = document.getElementById('cl-tipo-av')?.value || '';   // v11.8: obligatorio (cl-tipo es el tipo de repuesto)
+    if (!tipoCierre) { toast(t('x_tipo_av_falta'), 'error'); document.getElementById('cl-tipo-av')?.focus(); return; }
     const solucion = document.getElementById('cl-solucion').value.trim();
     if (!solucion) { toast('La solución es obligatoria', 'error'); return; }
 
@@ -8309,6 +8676,7 @@ const AveriasPage = {
     const zonaLimpia = document.getElementById('cl-zona-limpia')?.checked ?? true;
     await AveriasPage._guardarCierre({
       ...a, estado:'Cerrada', solucion,
+      tipo: tipoCierre,
       tecnico: tecnicoPrincipal,
       ...(a.asignacion === 'Auto' && tecnicoPrincipal !== a.tecnico ? { asignacion: 'Manual' } : {}),
       materiales: materialesCombinados,
@@ -11902,6 +12270,7 @@ const App = {
     } catch (_) {}
     try { await CentrosPage.updateBadge(); } catch (_) {}   // v10.11
     try { await SimulacrosPage.updateBadge(); } catch (_) {}   // v10.15
+    try { await PeticionesPage.updateBadge(); } catch (_) {}   // v11.5
     NavGroups.refreshDots();
   },
 
@@ -14785,14 +15154,41 @@ const ProduccionPage = {
     }
   },
 
+  // ── v11.8: cierre rápido de mantenimiento (vista Centros, o Admin en esta vista): pide el tipo antes de cerrar ──
+  _cierreRapido(a) {
+    const esc = UI.esc;
+    Modal.open(t('btn_cerrar_av'), `
+      <p style="font-size:13px;margin-bottom:14px">${esc(tf('x_prod_confirm_cierre', { eq: a.equipo || '', id: a.id }))}</p>
+      <div class="form-field">
+        <label for="cr-tipo">${t('lbl_tipo_av')} *</label>
+        <select class="form-input" id="cr-tipo" required>${AveriasPage._optsTipoCierre(a)}</select>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="cr-ok" onclick="ProduccionPage._cierreRapidoOk('${esc(a.id)}')">${t('x_prod_si_ya_funciona')}</button>`);
+  },
+  async _cierreRapidoOk(id) {
+    const tipo = document.getElementById('cr-tipo')?.value || '';
+    if (!tipo) { toast(t('x_tipo_av_falta'), 'error'); document.getElementById('cr-tipo')?.focus(); return; }
+    const btn = document.getElementById('cr-ok'); if (btn) btn.disabled = true;
+    try {
+      const hecho = await this.confirmResuelta(id, true, tipo);
+      Modal.close();
+      if (hecho) toast(tf('x_prod_cerrada', { id }), 'success');
+    } catch (e) {
+      if (btn) btn.disabled = false;
+      toast(e.message, 'error', 6000);
+    }
+  },
+
   // ── Producción confirma que la máquina ya funciona → cierra la avería ──
-  async confirmResuelta(id, silent = false) {
+  async confirmResuelta(id, silent = false, tipo = '') {
     const a = await DataService.getAveria(id);
     if (!a) { toast(t('x_prod_averia_no_encontrada'), 'error'); return false; }
     // v11.2: producción revisa la zona antes de confirmar → zona limpia = Sí y queda como quien lo ha revisado.
     // El cierre rápido de mantenimiento no pregunta por la limpieza → sin dato.
     const esProd = UserService.isProduccion();
     if (!silent) {
+      if (!esProd) return this._cierreRapido(a);   // v11.8: mantenimiento indica el tipo; Producción sigue con su confirmación
       const ok = await Modal.confirm(tf(esProd ? 'x_prod_confirm_limpia' : 'x_prod_confirm_cierre', { eq: a.equipo||'', id }), { title:t('confirm_title'), okText:t(esProd ? 'x_prod_si_limpia' : 'x_prod_si_ya_funciona'), danger:false });
       if (!ok) return false;
     }
@@ -14807,7 +15203,7 @@ const ProduccionPage = {
       duracion = `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}:00`;
     } catch(_) {}
     const sol = (a.solucion ? a.solucion + ' · ' : '') + `Máquina operativa — confirmado por ${esProd ? 'producción' : 'mantenimiento'} (${user?.nombre || ''}) ${fechaFin} ${horaFin.slice(0,5)}${esProd ? ' · zona limpia y revisada' : ''}`;
-    await AveriasPage._guardarCierre({ ...a, estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol, zona_limpia: esProd ? true : null }, esProd ? (user?.nombre || '') : '');
+    await AveriasPage._guardarCierre({ ...a, ...(tipo ? { tipo } : {}), estado: 'Cerrada', fecha_fin: fechaFin, hora_fin: horaFin, duracion, solucion: sol, zona_limpia: esProd ? true : null }, esProd ? (user?.nombre || '') : '');
     if (!silent) toast(tf('x_prod_cerrada', { id }), 'success');
     await this._afterChange();
     App.updateBadges();
@@ -15883,9 +16279,502 @@ const SimulacrosPage = {
 // ═══════════════════════════════════════════════════════════════════
 // ROUTE REGISTRATION
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// PETICIONES DE MATERIAL (v11.5)
+// Los mecánicos piden material (código del catálogo, foto o descripción) y el encargado
+// hace el pedido al proveedor y lo recibe. Tabla propia: peticiones_material.
+// Las altas van con insert y los pasos con update condicionado al estado anterior
+// (nunca upsert: la base valida cada paso y pone la hora).
+// ═══════════════════════════════════════════════════════════════════
+const PeticionesPage = {
+  _data: [],
+  _sinTabla: '',
+  _prods: [],
+  _inv: [],
+  _sel: {},
+  _prod: null,
+  _foto: null,
+  _ids: [],
+  _f: { q: '', estado: 'abiertas' },
+  _SQL: "-- ═══════════════════════════════════════════════════════════════════════════════════════════\n-- peticiones_setup.sql — Peticiones de material para compra (GMAO v11.5)          19/11/2026\n-- Ejecutar ENTERO en Supabase → SQL Editor → Run. Idempotente: se puede repetir sin problema.\n--\n-- Qué crea:\n--   · Tabla `peticiones_material`: lo que pide un mecánico (con el código del catálogo, una foto o\n--     una descripción), el pedido que hace el encargado al proveedor y la recepción.\n--   · Reglas en la propia base de datos (trigger), para que el registro sea el de lo que pasó:\n--       - una petición nace \"Solicitada\" y tiene que decir qué se pide (código, foto o descripción);\n--       - solo avanza  Solicitada → Pedida → Recibida,  o  Solicitada → Rechazada / Anulada;\n--         un pedido marcado por error se puede deshacer (Pedida → Solicitada);\n--       - la hora de cada paso la pone el servidor, y cada paso exige decir quién lo hace;\n--       - lo ya recibido, rechazado o anulado no se cambia.\n--   · Las fotos van al mismo almacén de fotos de las averías (bucket `fotos-averias`): no hay que\n--     crear nada más.\n--\n-- Comprobar:  select id, creado_at, almacen, solicitante, producto, descripcion, cantidad, estado, proveedor\n--             from public.peticiones_material order by creado_at desc limit 20;\n-- ═══════════════════════════════════════════════════════════════════════════════════════════\n\ncreate table if not exists public.peticiones_material (\n  id              text primary key,                     -- PM-AAAAMMDD-HHMMSS-xx\n  creado_at       timestamptz not null default now(),\n  almacen         text not null,\n  solicitante     text not null,                        -- quién lo pide\n  cod_producto    text,                                 -- código del catálogo de repuestos, si lo tiene\n  producto        text,                                 -- nombre del catálogo\n  descripcion     text,                                 -- descripción libre de lo que se necesita\n  foto_url        text,\n  foto_path       text,                                 -- ruta en el bucket fotos-averias\n  cantidad        numeric not null default 1,\n  unidad          text,\n  urgencia        text not null default 'Normal',       -- Normal | Urgente\n  destino         text,                                 -- para qué máquina o avería\n  estado          text not null default 'Solicitada',   -- Solicitada | Pedida | Recibida | Rechazada | Anulada\n  pedido_por      text,                                 -- encargado que hace el pedido\n  pedido_at       timestamptz,\n  proveedor       text,\n  pedido_ref      text,                                 -- nº de pedido o referencia\n  fecha_prevista  date,\n  nota_pedido     text,\n  recibido_por    text,\n  recibido_at     timestamptz,\n  nota_recepcion  text,\n  cerrado_por     text,                                 -- quién la rechaza o la anula\n  cerrado_at      timestamptz,\n  motivo          text\n);\ncreate index if not exists peticiones_material_almacen_estado_ix on public.peticiones_material (almacen, estado);\n\nalter table public.peticiones_material enable row level security;\ndrop policy if exists \"anon_all\" on public.peticiones_material;\ncreate policy \"anon_all\" on public.peticiones_material for all using (true) with check (true);\n\ncreate or replace function public.gmao_peticiones_reglas() returns trigger\nlanguage plpgsql as $$\ndeclare v_vacio boolean;\nbegin\n  if tg_op = 'INSERT' then\n    if coalesce(new.estado, 'Solicitada') <> 'Solicitada' then raise exception 'Una petición nace como \"Solicitada\".'; end if;\n    v_vacio := coalesce(trim(new.cod_producto), '') = '' and coalesce(trim(new.descripcion), '') = '' and coalesce(trim(new.foto_path), '') = '';\n    if v_vacio then raise exception 'Falta decir qué se pide: código, foto o descripción.'; end if;\n    if coalesce(trim(new.solicitante), '') = '' then raise exception 'Falta quién lo pide.'; end if;\n    if coalesce(new.cantidad, 0) <= 0 then raise exception 'La cantidad tiene que ser mayor que cero.'; end if;\n    new.estado := 'Solicitada'; new.creado_at := now();\n    new.pedido_por := null; new.pedido_at := null; new.recibido_por := null; new.recibido_at := null; new.cerrado_por := null; new.cerrado_at := null;\n    return new;\n  end if;\n  -- UPDATE\n  if old.estado in ('Recibida', 'Rechazada', 'Anulada') then\n    raise exception 'Una petición % ya no se puede cambiar.', lower(old.estado);\n  end if;\n  new.creado_at := old.creado_at; new.solicitante := old.solicitante;\n  if new.estado is distinct from old.estado then\n    if old.estado = 'Solicitada' and new.estado = 'Pedida' then\n      if coalesce(trim(new.pedido_por), '') = '' then raise exception 'Falta quién hace el pedido.'; end if;\n      new.pedido_at := now();\n    elsif old.estado = 'Pedida' and new.estado = 'Recibida' then\n      if coalesce(trim(new.recibido_por), '') = '' then raise exception 'Falta quién lo recibe.'; end if;\n      new.recibido_at := now();\n    elsif old.estado = 'Solicitada' and new.estado in ('Rechazada', 'Anulada') then\n      if coalesce(trim(new.cerrado_por), '') = '' then raise exception 'Falta quién la rechaza o la anula.'; end if;\n      if new.estado = 'Rechazada' and coalesce(trim(new.motivo), '') = '' then raise exception 'Falta el motivo del rechazo.'; end if;\n      new.cerrado_at := now();\n    elsif old.estado = 'Pedida' and new.estado = 'Solicitada' then          -- deshacer un pedido marcado por error\n      new.pedido_por := null; new.pedido_at := null; new.proveedor := null; new.pedido_ref := null; new.fecha_prevista := null; new.nota_pedido := null;\n    else\n      raise exception 'Cambio de estado no permitido: % → %.', old.estado, new.estado;\n    end if;\n  else\n    -- sin cambio de estado: no se tocan las marcas de quién y cuándo\n    new.pedido_at := old.pedido_at; new.recibido_por := old.recibido_por; new.recibido_at := old.recibido_at;\n    new.cerrado_por := old.cerrado_por; new.cerrado_at := old.cerrado_at;\n    if old.estado = 'Solicitada' then\n      new.pedido_por := null; new.proveedor := null; new.pedido_ref := null; new.fecha_prevista := null; new.nota_pedido := null;\n      if coalesce(new.cantidad, 0) <= 0 then raise exception 'La cantidad tiene que ser mayor que cero.'; end if;\n    else                                                                     -- Pedida: solo se retocan los datos del pedido\n      new.pedido_por := old.pedido_por;\n      new.cod_producto := old.cod_producto; new.producto := old.producto; new.descripcion := old.descripcion;\n      new.cantidad := old.cantidad; new.unidad := old.unidad; new.foto_url := old.foto_url; new.foto_path := old.foto_path;\n    end if;\n  end if;\n  return new;\nend $$;\n\ndrop trigger if exists gmao_peticiones_reglas on public.peticiones_material;\ncreate trigger gmao_peticiones_reglas\n  before insert or update on public.peticiones_material\n  for each row execute function public.gmao_peticiones_reglas();\n\nnotify pgrst, 'reload schema';\n",
+
+  isOpen() { return window.location.hash.slice(1) === 'peticiones' && !!document.getElementById('pm-list'); },
+  _esPriv() { return UserService.isAdmin() || UserService.isResponsable(); },
+  _puede() { return this._esPriv() || UserService.isMecanico(); },
+  _yo() { const u = UserService.getUser(); return u ? u.nombre : ''; },
+  _centros() { return [...document.querySelectorAll('#global-almacen-filter option')].map(o => normalizeAlmacen(o.value)).filter(Boolean); },
+  // Centro al que está limitada la vista ('' = todos): el del usuario o, para Admin, el del filtro global
+  _limite() {
+    const eff = UserService.getEffectiveAlmacen();
+    if (eff && eff !== 'Todos') return eff;
+    return normalizeAlmacen(document.getElementById('global-almacen-filter')?.value || '');
+  },
+  _p2(n) { return String(n).padStart(2, '0'); },
+  _nuevoId() {
+    const d = new Date();
+    return `PM-${d.getFullYear()}${this._p2(d.getMonth() + 1)}${this._p2(d.getDate())}-${this._p2(d.getHours())}${this._p2(d.getMinutes())}${this._p2(d.getSeconds())}-${Math.random().toString(36).slice(2, 4)}`;
+  },
+  _fh(iso) { return SimulacrosPage._fechaHora(iso); },
+  _fhCorta(iso) { const f = this._fh(iso); return f.length >= 16 ? `${f.slice(0, 5)} ${f.slice(11)}` : f; },   // "19/11 18:30"; el año, al pasar el ratón
+  _dia(ymd) { const m = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; },
+  _corto(s, n) { const x = String(s || '').replace(/\s+/g, ' ').trim(); return x.length > n ? x.slice(0, n - 1).trimEnd() + '…' : x; },
+  _val(id) { const e = document.getElementById(id); return e ? e.value : ''; },
+  _prodNombre(p) { return [p.producto || p.nombre, p.tamano, p.tamano2, p.tamano3, p.tamano4].filter(Boolean).join(' '); },
+  _nombre(p) { return [p.cod_producto, p.producto].filter(Boolean).join(' · ') || this._corto(p.descripcion, 80) || t('x_pm_solo_foto'); },
+  _cant(p) { return `${String(p.cantidad == null ? 1 : +p.cantidad).replace('.', ',')}${p.unidad ? ' ' + p.unidad : ''}`; },
+  _abierta(p) { return p.estado === 'Solicitada' || p.estado === 'Pedida'; },
+  // Unidades que hay de ese código en el inventario de un centro (null si no está)
+  _stock(cod, alm) {
+    if (!cod) return null;
+    const a = normalizeAlmacen(alm), f = this._inv.find(i => i.cod_producto === cod && normalizeAlmacen(i.almacen) === a);
+    return f ? (+f.unidades || 0) : null;
+  },
+
+  // ── Datos ────────────────────────────────────────────────────────
+  async _load() {
+    this._sinTabla = '';
+    let filas = [];
+    try { filas = await db.peticiones.toArray(); }
+    catch (e) { this._sinTabla = e.message || 'error'; }
+    const lim = this._limite();
+    if (lim) filas = filas.filter(p => normalizeAlmacen(p.almacen) === lim);
+    const orden = { Solicitada: 0, Pedida: 1 };
+    this._data = filas.sort((a, b) => ((orden[a.estado] ?? 2) - (orden[b.estado] ?? 2))
+      || ((a.urgencia === 'Urgente' && this._abierta(a) ? 0 : 1) - (b.urgencia === 'Urgente' && this._abierta(b) ? 0 : 1))
+      || String(b.creado_at || '').localeCompare(String(a.creado_at || '')));
+  },
+  async _loadCat() {
+    try { [this._prods, this._inv] = await Promise.all([db.productos.toArray(), db.inventario.toArray()]); }
+    catch (e) { this._prods = []; this._inv = []; }
+  },
+  async _reload() {
+    await this._load();
+    this._sel = {};
+    if (this.isOpen()) this._renderList();
+    this._updateBadge();
+  },
+  _err(msg) {
+    if (/peticiones_material/i.test(msg || '') && /does not exist|schema cache|could not find|no existe/i.test(msg || '') && UserService.isAdmin()) return this.verSQL();
+    toast(String(msg || 'Error').replace(/^\[[^\]]+\]\s*/, ''), 'error', 6000);
+  },
+  // Paso de estado condicionado: solo cambia las que siguen en el estado de partida
+  async _cambiar(ids, desde, cambios) {
+    let ok = 0, err = '';
+    for (const id of ids) {
+      const { data, error } = await sb.from('peticiones_material').update(cambios).eq('id', id).eq('estado', desde).select('id');
+      if (error) { err = error.message; break; }
+      if (data && data.length) ok++;
+    }
+    return { ok, no: ids.length - ok, err };
+  },
+  async _trasCambio(r, claveOk) {
+    if (r.err) { this._err(r.err); return false; }
+    if (r.ok) toast(tf(claveOk, { n: r.ok }), 'success');
+    if (r.no) toast(tf('x_pm_ya_no', { n: r.no }), 'info', 5000);
+    Modal.close();
+    await this._reload();
+    return true;
+  },
+
+  // ── Pantalla ─────────────────────────────────────────────────────
+  async render() {
+    const cont = document.getElementById('content');
+    if (!this._puede()) { cont.innerHTML = UI.empty(t('x_pm_sin_permiso'), ''); return; }
+    await Promise.all([this._load(), this._loadCat()]);
+    this._sel = {};
+    const priv = this._esPriv();
+    cont.innerHTML = `
+      <div class="page-header">
+        <div><h1>${t('nav_peticiones')}</h1><p class="page-subtitle">${t('x_pm_subtitulo')}</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${priv && !this._sinTabla ? `<button class="btn btn-secondary" id="pm-btn-excel" onclick="PeticionesPage.exportExcel()">Excel</button>` : ''}
+          <button class="btn btn-secondary" onclick="PeticionesPage.render()">${UI.ico('refresh')} ${t('x_pm_actualizar')}</button>
+          ${!this._sinTabla ? `<button class="btn btn-primary" id="pm-btn-nueva" onclick="PeticionesPage.openNueva()">${UI.ico('plus')} ${t('x_pm_nueva')}</button>` : ''}
+        </div>
+      </div>
+      ${this._sinTabla ? `
+      <div class="card" id="pm-sin-tabla" style="margin-bottom:16px">
+        <p style="font-size:13px;margin-bottom:10px">${t('x_pm_sin_tabla')}</p>
+        ${UserService.isAdmin() ? `<button class="btn btn-secondary btn-sm" onclick="PeticionesPage.verSQL()">${t('x_sim_ver_sql')}</button>` : ''}
+      </div>` : ''}
+      <div id="pm-list"></div>`;
+    this._renderList();
+    this._updateBadge();
+  },
+  _filtradas() {
+    const f = this._f, q = _xlNorm(f.q);
+    return this._data.filter(p => {
+      if (f.estado === 'abiertas') { if (!this._abierta(p)) return false; }
+      else if (f.estado === 'cerradas') { if (p.estado !== 'Rechazada' && p.estado !== 'Anulada') return false; }
+      else if (f.estado && p.estado !== f.estado) return false;
+      return !q || _xlNorm([p.id, p.cod_producto, p.producto, p.descripcion, p.solicitante, p.proveedor, p.pedido_ref, p.destino, p.almacen].join(' ')).includes(q);
+    });
+  },
+  _filtro(campo, valor) { this._f[campo] = valor; this._sel = {}; this._pinta(); },
+  _renderList() {
+    const el = document.getElementById('pm-list'); if (!el) return;
+    if (this._sinTabla) { el.innerHTML = ''; return; }
+    if (!this._esPriv()) {
+      // Mecánico: lo suyo primero, luego lo demás del centro y lo último que se cerró
+      const yo = this._yo();
+      const mias = this._data.filter(p => this._abierta(p) && p.solicitante === yo);
+      const otras = this._data.filter(p => this._abierta(p) && p.solicitante !== yo);
+      const cerr = this._data.filter(p => !this._abierta(p)).sort((a, b) => String(b.creado_at || '').localeCompare(String(a.creado_at || ''))).slice(0, 10);
+      el.innerHTML = `
+        <div class="pm-sec">${t('x_pm_mias')} (${mias.length})</div>
+        ${mias.length ? `<div class="pm-cards" id="pm-mias">${mias.map(p => this._card(p)).join('')}</div>` : `<div class="card pm-muted" id="pm-mias" style="font-size:13px">${t('x_pm_nada_mio')}</div>`}
+        ${otras.length ? `<div class="pm-sec">${t('x_pm_centro')} (${otras.length})</div><div class="pm-cards" id="pm-otras">${otras.map(p => this._card(p)).join('')}</div>` : ''}
+        ${cerr.length ? `<div class="pm-sec">${t('x_pm_ultimas')}</div><div class="pm-cards" id="pm-cerr">${cerr.map(p => this._card(p)).join('')}</div>` : ''}`;
+      return;
+    }
+    const f = this._f, opt = (v, txt) => `<option value="${v}"${v === f.estado ? ' selected' : ''}>${txt}</option>`;
+    el.innerHTML = `
+      <div class="card">
+        <div class="toolbar">
+          <input class="search-box" id="pm-q" type="search" placeholder="${t('x_pm_buscar')}" value="${UI.esc(f.q)}" oninput="PeticionesPage._filtro('q', this.value)">
+          <select class="filter-select" id="pm-f-estado" onchange="PeticionesPage._filtro('estado', this.value)">
+            ${opt('abiertas', t('x_pm_f_abiertas'))}${opt('Solicitada', t('x_pm_est_solicitada'))}${opt('Pedida', t('x_pm_est_pedida'))}${opt('Recibida', t('x_pm_est_recibida'))}${opt('cerradas', t('x_pm_f_cerradas'))}${opt('', t('x_pm_f_todas'))}
+          </select>
+          <span id="pm-count" class="pm-muted" style="font-size:12px"></span>
+        </div>
+        <div class="pm-bulk" id="pm-bulk" hidden></div>
+        <div id="pm-cuerpo"></div>
+      </div>`;
+    this._pinta();
+  },
+  // Pinta la tabla (y las tarjetas del móvil) con el filtro actual, sin rehacer la barra: no se pierde el foco al buscar
+  _pinta() {
+    const el = document.getElementById('pm-cuerpo'); if (!el) return;
+    const filas = this._filtradas(), verCentro = !this._limite();
+    const n = document.getElementById('pm-count'); if (n) n.textContent = filas.length;
+    el.innerHTML = filas.length ? `
+      <div class="table-wrap pm-desk"><table id="pm-table"><thead><tr>
+        <th></th><th>${t('x_pm_col_fecha')}</th><th>${t('x_pm_col_material')}</th><th>${t('x_pm_col_cant')}</th>
+        <th>${t('x_pm_col_solicita')}</th><th>${t('x_pm_col_estado')}</th><th>${t('x_pm_col_pedido')}</th><th></th>
+      </tr></thead><tbody id="pm-tbody">${filas.map(p => this._fila(p, verCentro)).join('')}</tbody></table></div>
+      <div class="pm-cards pm-movil" id="pm-cards">${filas.map(p => this._card(p, true)).join('')}</div>`
+      : UI.empty(t('x_pm_vacio'), t('x_pm_vacio_sub'));
+    this._selUI();
+  },
+  _material(p, conDestino) {
+    const esc = UI.esc;
+    const foto = p.foto_url ? `<img class="pm-mini" src="${esc(p.foto_url)}" alt="" loading="lazy">` : (p.foto_path ? `<span class="pm-mini">${UI.ico('camera')}</span>` : '');
+    const tit = p.cod_producto ? `<strong>${esc(p.cod_producto)}</strong>${p.producto ? ' · ' + esc(p.producto) : ''}`
+      : (p.descripcion ? esc(this._corto(p.descripcion, 90)) : `<span class="pm-muted">${t('x_pm_solo_foto')}</span>`);
+    const sub = p.cod_producto && p.descripcion ? `<br><small class="pm-muted">${esc(this._corto(p.descripcion, 110))}</small>` : '';
+    const para = conDestino && p.destino ? `<br><small class="pm-muted">${t('x_pm_col_para')}: ${esc(p.destino)}</small>` : '';
+    return `<div class="pm-mat">${foto}<div>${tit}${sub}${para}</div></div>`;
+  },
+  _estado(p) {
+    const cls = { Solicitada: 'orange', Pedida: 'blue', Recibida: 'green', Rechazada: 'red', Anulada: 'gray' }[p.estado] || 'gray';
+    return `<span class="pm-est"><span class="badge badge-${cls}">${UI.esc(tv('x_pm_est_', p.estado))}</span>${p.urgencia === 'Urgente' && this._abierta(p) ? `<span class="badge badge-red">${t('x_pm_urgente')}</span>` : ''}</span>`;
+  },
+  _pedidoTxt(p) {
+    const esc = UI.esc, peq = s => `<small class="pm-muted">${s}</small>`;
+    if (p.estado === 'Rechazada' || p.estado === 'Anulada') return p.motivo ? peq(esc(this._corto(p.motivo, 90))) : '—';
+    if (!p.proveedor) return '—';
+    const l2 = [p.pedido_ref ? esc(p.pedido_ref) : '', p.estado === 'Pedida' && p.fecha_prevista ? esc(tf('x_pm_prevista', { f: this._dia(p.fecha_prevista) })) : '',
+      p.estado === 'Recibida' && p.recibido_at ? esc(`${t('x_pm_h_recibido')} ${this._fh(p.recibido_at).slice(0, 10)}`) : ''].filter(Boolean).join(' · ');
+    return `${esc(p.proveedor)}${l2 ? '<br>' + peq(l2) : ''}`;
+  },
+  _acciones(p, compacto) {
+    const id = UI.esc(p.id), priv = this._esPriv(), b = [];
+    if (priv && p.estado === 'Solicitada') {
+      b.push(`<button class="btn btn-primary btn-sm" data-acc="pedir" onclick="PeticionesPage.openPedido(['${id}'])">${t('x_pm_ped_btn')}</button>`);
+      b.push(compacto
+        ? `<button class="btn btn-secondary btn-sm sk-solo" data-acc="rechazar" title="${t('x_pm_rech_btn')}" aria-label="${t('x_pm_rech_btn')}" onclick="PeticionesPage.openRechazar('${id}')">${UI.ico('x')}</button>`
+        : `<button class="btn btn-secondary btn-sm" data-acc="rechazar" onclick="PeticionesPage.openRechazar('${id}')">${t('x_pm_rech_btn')}</button>`);
+    }
+    if (priv && p.estado === 'Pedida') b.push(`<button class="btn btn-primary btn-sm" data-acc="recibir" onclick="PeticionesPage.recibir(['${id}'])">${t('x_pm_rec_btn')}</button>`);
+    // Anular lo suyo: en la lista solo para quien no hace pedidos (el encargado lo tiene en la ficha)
+    if (!priv && p.estado === 'Solicitada' && p.solicitante === this._yo()) b.push(`<button class="btn btn-secondary btn-sm" data-acc="anular" onclick="PeticionesPage.anular('${id}')">${t('x_pm_anular_btn')}</button>`);
+    return b.join('');
+  },
+  _fila(p, verCentro) {
+    const esc = UI.esc, id = esc(p.id);
+    return `<tr data-id="${id}" onclick="PeticionesPage.openFicha('${id}')">
+      <td onclick="event.stopPropagation()">${this._abierta(p) ? `<input type="checkbox" class="pm-cb" data-id="${id}"${this._sel[p.id] ? ' checked' : ''} onchange="PeticionesPage._marca(this)" aria-label="${t('x_pm_seleccionar')}">` : ''}</td>
+      <td style="white-space:nowrap" title="${esc(this._fh(p.creado_at))}">${esc(this._fhCorta(p.creado_at))}</td>
+      <td>${this._material(p, true)}</td>
+      <td style="white-space:nowrap">${esc(this._cant(p))}</td>
+      <td>${esc(p.solicitante)}${verCentro ? `<br><small class="pm-muted">${esc(p.almacen)}</small>` : ''}</td>
+      <td>${this._estado(p)}</td>
+      <td>${this._pedidoTxt(p)}</td>
+      <td onclick="event.stopPropagation()"><div class="pm-acc">${this._acciones(p, true)}</div></td>
+    </tr>`;
+  },
+  _card(p, conMarca) {
+    const esc = UI.esc, id = esc(p.id), acc = this._acciones(p), ped = this._pedidoTxt(p);
+    return `<div class="pm-card${p.solicitante === this._yo() ? ' mio' : ''}" data-id="${id}" onclick="PeticionesPage.openFicha('${id}')">
+      <div class="pm-card-top"><span>${conMarca && this._abierta(p) ? `<input type="checkbox" class="pm-cb" data-id="${id}"${this._sel[p.id] ? ' checked' : ''} onclick="event.stopPropagation()" onchange="PeticionesPage._marca(this)" aria-label="${t('x_pm_seleccionar')}"> ` : ''}${esc(this._fh(p.creado_at))} · ${esc(p.solicitante)}</span>${this._estado(p)}</div>
+      ${this._material(p)}
+      <div class="pm-card-meta">${esc(this._cant(p))}${p.destino ? ' · ' + esc(p.destino) : ''}</div>
+      ${ped !== '—' ? `<div class="pm-card-meta">${ped}</div>` : ''}
+      ${acc ? `<div class="pm-acc" onclick="event.stopPropagation()">${acc}</div>` : ''}
+    </div>`;
+  },
+
+  // ── Selección de varias (encargado) ──────────────────────────────
+  _marca(cb) {
+    if (cb.checked) this._sel[cb.dataset.id] = true; else delete this._sel[cb.dataset.id];
+    document.querySelectorAll(`.pm-cb[data-id="${cb.dataset.id}"]`).forEach(x => { x.checked = cb.checked; });   // tabla y tarjeta, a la vez
+    this._selUI();
+  },
+  _selItems() { return this._data.filter(p => this._sel[p.id]); },
+  _selUI() {
+    const el = document.getElementById('pm-bulk'); if (!el) return;
+    const it = this._selItems(), nSol = it.filter(p => p.estado === 'Solicitada').length, nPed = it.filter(p => p.estado === 'Pedida').length;
+    el.hidden = !it.length;
+    el.innerHTML = it.length ? `<strong>${tf('x_pm_sel_n', { n: it.length })}</strong>
+      ${nSol ? `<button class="btn btn-primary btn-sm" id="pm-bulk-pedir" onclick="PeticionesPage.openPedido()">${tf('x_pm_ped_btn_n', { n: nSol })}</button>` : ''}
+      ${nPed ? `<button class="btn btn-primary btn-sm" id="pm-bulk-recibir" onclick="PeticionesPage.recibir()">${tf('x_pm_rec_btn_n', { n: nPed })}</button>` : ''}
+      <button class="btn btn-secondary btn-sm" onclick="PeticionesPage._selNada()">${t('x_pm_sel_quitar')}</button>` : '';
+  },
+  _selNada() { this._sel = {}; document.querySelectorAll('.pm-cb').forEach(x => { x.checked = false; }); this._selUI(); },
+
+  // ── Pedir material (cualquiera de mantenimiento) ─────────────────
+  openNueva(manten) {
+    if (!this._puede()) return;
+    this._prod = null; this._foto = null;
+    const eff = UserService.getEffectiveAlmacen(), fijo = !!eff && eff !== 'Todos';
+    const def = (manten && manten.alm) || (fijo ? eff : this._limite());
+    Modal.open(t('x_pm_nueva'), `
+      <form id="pm-form" class="form-grid" onsubmit="return false">
+        <div class="form-field full">
+          <label for="pm-q-cat">${t('x_pm_lbl_catalogo')}</label>
+          <div id="pm-prod-sel"></div>
+          <input class="form-input" id="pm-q-cat" type="search" autocomplete="off" placeholder="${t('x_pm_ph_catalogo')}" oninput="PeticionesPage._buscar(this.value)">
+          <div id="pm-cat-res" class="pm-cat-res"></div>
+          <small class="pm-muted">${t('x_pm_cat_ayuda')}</small>
+        </div>
+        <div class="form-field full"><label for="pm-desc">${t('x_pm_lbl_desc')}</label>
+          <textarea class="form-input" id="pm-desc" rows="3" maxlength="600" placeholder="${t('x_pm_ph_desc')}"></textarea></div>
+        <div class="form-field full"><label>${t('x_pm_lbl_foto')}</label>
+          <input type="file" id="pm-foto" accept="image/*" style="display:none" onchange="PeticionesPage._fotoSel(this)">
+          <div class="pm-foto-fila"><button type="button" class="btn btn-secondary" id="pm-foto-btn" onclick="document.getElementById('pm-foto').click()">${UI.ico('camera')} ${t('x_pm_foto_btn')}</button><span id="pm-foto-prev"></span></div></div>
+        <div class="form-field"><label for="pm-cant">${t('x_pm_lbl_cant')} *</label><input class="form-input" type="number" id="pm-cant" min="0.01" step="any" value="1" inputmode="decimal"></div>
+        <div class="form-field"><label for="pm-ud">${t('x_pm_lbl_ud')}</label><input class="form-input" id="pm-ud" value="ud" maxlength="12"></div>
+        <div class="form-field"><label for="pm-urg">${t('x_pm_lbl_urg')}</label>
+          <select class="form-input" id="pm-urg"><option value="Normal">${t('x_pm_normal')}</option><option value="Urgente"${manten && manten.urg === 'Urgente' ? ' selected' : ''}>${t('x_pm_urgente')}</option></select></div>
+        <div class="form-field"><label for="pm-alm">${t('lbl_almacen')} *</label>
+          <select class="form-input" id="pm-alm"${fijo ? ' disabled' : ''}><option value="">${t('seleccionar')}</option>${this._centros().map(c => `<option${c === def ? ' selected' : ''}>${UI.esc(c)}</option>`).join('')}</select></div>
+        <div class="form-field full"><label for="pm-dest">${t('x_pm_lbl_dest')}</label><input class="form-input" id="pm-dest" maxlength="120" placeholder="${t('x_pm_ph_dest')}" value="${UI.esc((manten && manten.dest) || '')}"></div>
+      </form>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-secondary" id="pm-save-otra" onclick="PeticionesPage._guardar(true)">${t('x_pm_guardar_otra')}</button>
+       <button class="btn btn-primary" id="pm-save" onclick="PeticionesPage._guardar(false)">${t('x_pm_guardar')}</button>`);
+  },
+  _buscar(q) {
+    const el = document.getElementById('pm-cat-res'); if (!el) return;
+    const n = _xlNorm(q);
+    if (n.length < 2) { el.innerHTML = ''; return; }
+    const partes = n.split(' '), alm = this._val('pm-alm');
+    const res = this._prods.filter(p => { const txt = _xlNorm([p.cod_producto, p.nombre, p.producto, p.tamano, p.tamano2, p.tamano3, p.tamano4, p.familia].join(' ')); return partes.every(x => txt.includes(x)); }).slice(0, 8);
+    el.innerHTML = res.length ? res.map(p => {
+      const st = alm ? this._stock(p.cod_producto, alm) : null;
+      return `<button type="button" class="pm-cat-it" data-cod="${UI.esc(p.cod_producto)}" onclick="PeticionesPage._elegir(this.dataset.cod)"><span><strong>${UI.esc(p.cod_producto)}</strong> · ${UI.esc(this._prodNombre(p))}</span>${st != null ? `<small class="pm-muted">${UI.esc(tf('x_pm_stock', { n: st, alm }))}</small>` : ''}</button>`;
+    }).join('') : `<div class="pm-muted" style="font-size:13px">${t('x_pm_cat_nada')}</div>`;
+  },
+  _elegir(cod) {
+    const p = this._prods.find(x => x.cod_producto === cod); if (!p) return;
+    this._prod = p;
+    const alm = this._val('pm-alm'), st = alm ? this._stock(cod, alm) : null;
+    document.getElementById('pm-prod-sel').innerHTML = `<div class="pm-chip" id="pm-chip"><span><strong>${UI.esc(p.cod_producto)}</strong> · ${UI.esc(this._prodNombre(p))}${st != null ? ` <small class="pm-muted">· ${UI.esc(tf('x_pm_stock', { n: st, alm }))}</small>` : ''}</span><button type="button" class="btn btn-secondary btn-sm" onclick="PeticionesPage._quitarProd()">${t('x_pm_quitar')}</button></div>`;
+    document.getElementById('pm-q-cat').value = ''; document.getElementById('pm-cat-res').innerHTML = '';
+    const inv = this._inv.find(i => i.cod_producto === cod && i.unidad_medida);
+    if (inv) document.getElementById('pm-ud').value = inv.unidad_medida;
+  },
+  _quitarProd() { this._prod = null; const e = document.getElementById('pm-prod-sel'); if (e) e.innerHTML = ''; },
+  _fotoSel(inp) {
+    const f = inp.files && inp.files[0], prev = document.getElementById('pm-foto-prev');
+    this._foto = f || null;
+    if (!prev) return;
+    prev.innerHTML = f ? `<img class="pm-prev" id="pm-prev-img" alt=""> <button type="button" class="btn btn-secondary btn-sm" onclick="PeticionesPage._fotoFuera()">${t('x_pm_quitar')}</button>` : '';
+    if (f) { try { document.getElementById('pm-prev-img').src = URL.createObjectURL(f); } catch (e) {} }
+  },
+  _fotoFuera() { this._foto = null; const i = document.getElementById('pm-foto'); if (i) i.value = ''; const p = document.getElementById('pm-foto-prev'); if (p) p.innerHTML = ''; },
+  async _subirFoto(id, file) {
+    const comp = await UI.comprimirImagen(file);
+    const cuerpo = comp || file, ext = comp ? 'jpg' : (String(file.name || '').split('.').pop() || 'jpg').toLowerCase();
+    const ruta = `${id}/${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('fotos-averias').upload(ruta, cuerpo, { contentType: comp ? 'image/jpeg' : (file.type || 'image/jpeg'), upsert: false });
+    if (error) throw new Error(error.message);
+    return { ruta, url: sb.storage.from('fotos-averias').getPublicUrl(ruta).data.publicUrl };
+  },
+  async _guardar(otra) {
+    const u = UserService.getUser(); if (!u || !this._puede()) return;
+    const desc = this._val('pm-desc').trim(), cant = parseFloat(String(this._val('pm-cant')).replace(',', '.')), alm = this._val('pm-alm');
+    if (!this._prod && !desc && !this._foto) return toast(t('x_pm_err_que'), 'error', 5000);
+    if (!(cant > 0)) return toast(t('x_pm_err_cant'), 'error', 4000);
+    if (!alm) return toast(t('x_pm_err_alm'), 'error', 4000);
+    const botones = ['pm-save', 'pm-save-otra'].map(i => document.getElementById(i)).filter(Boolean);
+    botones.forEach(b => { b.disabled = true; });
+    const id = this._nuevoId();
+    let foto = null;
+    if (this._foto) {
+      try { foto = await this._subirFoto(id, this._foto); }
+      catch (e) { botones.forEach(b => { b.disabled = false; }); return toast(tf('x_pm_err_foto', { e: e.message }), 'error', 6000); }
+    }
+    const fila = {
+      id, almacen: alm, solicitante: u.nombre,
+      cod_producto: this._prod ? this._prod.cod_producto : null, producto: this._prod ? this._prodNombre(this._prod) : null,
+      descripcion: desc || null, foto_url: foto ? foto.url : null, foto_path: foto ? foto.ruta : null,
+      cantidad: cant, unidad: this._val('pm-ud').trim() || null,
+      urgencia: this._val('pm-urg') === 'Urgente' ? 'Urgente' : 'Normal', destino: this._val('pm-dest').trim() || null,
+      estado: 'Solicitada', creado_at: new Date().toISOString(),
+    };
+    const { error } = await sb.from('peticiones_material').insert(fila);
+    botones.forEach(b => { b.disabled = false; });
+    if (error) return this._err(error.message);
+    toast(t('x_pm_ok_nueva'), 'success');
+    if (otra) this.openNueva({ alm, urg: fila.urgencia, dest: fila.destino || '' });   // misma máquina y urgencia, material nuevo
+    else Modal.close();
+    await this._reload();
+  },
+
+  // ── Ficha ────────────────────────────────────────────────────────
+  openFicha(id) {
+    const p = this._data.find(x => x.id === id); if (!p) return;
+    const esc = UI.esc, priv = this._esPriv();
+    const st = this._stock(p.cod_producto, p.almacen);
+    const campo = (l, v, full) => `<div class="detail-field${full ? ' full' : ''}"><label>${l}</label><p>${v}</p></div>`;
+    const quien = (n, at) => esc(tf('x_pm_por_el', { quien: n || '—', cuando: this._fh(at) || '—' }));
+    const b = [`<button class="btn btn-secondary" onclick="Modal.close()">${t('close')}</button>`];
+    if (p.estado === 'Solicitada' && p.solicitante === this._yo()) b.push(`<button class="btn btn-secondary" onclick="PeticionesPage.anular('${esc(p.id)}')">${t('x_pm_anular_btn')}</button>`);
+    if (priv && p.estado === 'Solicitada') b.push(`<button class="btn btn-danger" onclick="PeticionesPage.openRechazar('${esc(p.id)}')">${t('x_pm_rech_btn')}</button>`, `<button class="btn btn-primary" onclick="PeticionesPage.openPedido(['${esc(p.id)}'])">${t('x_pm_ped_btn')}</button>`);
+    if (priv && p.estado === 'Pedida') b.push(`<button class="btn btn-secondary" id="pm-deshacer" onclick="PeticionesPage.deshacer('${esc(p.id)}')">${t('x_pm_deshacer_btn')}</button>`, `<button class="btn btn-primary" onclick="PeticionesPage.recibir(['${esc(p.id)}'])">${t('x_pm_rec_btn')}</button>`);
+    Modal.open(`${t('x_pm_ficha')} — ${p.id}`, `
+      <div class="detail-grid">
+        ${campo(t('x_pm_col_estado'), this._estado(p))}
+        ${campo(t('x_pm_col_fecha'), esc(this._fh(p.creado_at)))}
+        ${campo(t('x_pm_col_solicita'), `${esc(p.solicitante)} · ${esc(p.almacen)}`)}
+        ${campo(t('x_pm_lbl_cant'), esc(this._cant(p)))}
+        ${p.cod_producto ? campo(t('x_pm_col_material'), `<strong>${esc(p.cod_producto)}</strong>${p.producto ? ' · ' + esc(p.producto) : ''}`, true) : ''}
+        ${st != null ? campo(esc(tf('x_pm_stock_ficha', { alm: p.almacen })), String(st).replace('.', ',')) : ''}
+        ${p.destino ? campo(t('x_pm_lbl_dest'), esc(p.destino)) : ''}
+        ${p.descripcion ? campo(t('x_pm_lbl_desc'), esc(p.descripcion).replace(/\n/g, '<br>'), true) : ''}
+        ${p.foto_url ? campo(t('x_pm_lbl_foto'), `<a href="${esc(p.foto_url)}" target="_blank" rel="noopener"><img class="pm-foto-grande" src="${esc(p.foto_url)}" alt=""></a>`, true) : ''}
+        ${p.proveedor ? campo(t('x_pm_h_pedido'), `${esc(p.proveedor)}${p.pedido_ref ? ' · ' + esc(p.pedido_ref) : ''}${p.fecha_prevista ? ' · ' + esc(tf('x_pm_prevista', { f: this._dia(p.fecha_prevista) })) : ''}<br><small class="pm-muted">${quien(p.pedido_por, p.pedido_at)}${p.nota_pedido ? ' · ' + esc(p.nota_pedido) : ''}</small>`, true) : ''}
+        ${p.recibido_at || p.recibido_por ? campo(t('x_pm_h_recibido'), quien(p.recibido_por, p.recibido_at), true) : ''}
+        ${p.estado === 'Rechazada' || p.estado === 'Anulada' ? campo(t('x_pm_h_cerrado'), `${quien(p.cerrado_por, p.cerrado_at)}${p.motivo ? '<br>' + esc(p.motivo) : ''}`, true) : ''}
+      </div>`, b.join(''));
+  },
+
+  // ── Pedido al proveedor, recepción, rechazo (encargado) ──────────
+  openPedido(ids) {
+    if (!this._esPriv()) return;
+    const items = (ids ? this._data.filter(p => ids.includes(p.id)) : this._selItems()).filter(p => p.estado === 'Solicitada');
+    if (!items.length) return;
+    this._ids = items.map(p => p.id);
+    const esc = UI.esc, provs = [...new Set(this._data.map(p => p.proveedor).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    Modal.open(t('x_pm_ped_titulo'), `
+      <p style="font-size:13px;margin-bottom:6px">${tf('x_pm_ped_intro', { n: items.length })}</p>
+      <ul class="pm-lista" id="pm-ped-lista">${items.map(p => `<li>${esc(this._cant(p))} · ${esc(this._nombre(p))} <small class="pm-muted">· ${esc(p.solicitante)}</small></li>`).join('')}</ul>
+      <div class="form-grid">
+        <div class="form-field"><label for="pm-prov">${t('x_pm_lbl_prov')} *</label><input class="form-input" id="pm-prov" list="pm-prov-list" maxlength="80" autocomplete="off">
+          <datalist id="pm-prov-list">${provs.map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist></div>
+        <div class="form-field"><label for="pm-ref">${t('x_pm_lbl_ref')}</label><input class="form-input" id="pm-ref" maxlength="60"></div>
+        <div class="form-field"><label for="pm-prevista">${t('x_pm_lbl_prevista')}</label><input class="form-input" type="date" id="pm-prevista"></div>
+        <div class="form-field full"><label for="pm-nota">${t('x_pm_lbl_nota')}</label><input class="form-input" id="pm-nota" maxlength="200"></div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-primary" id="pm-ped-save" onclick="PeticionesPage._savePedido()">${t('x_pm_ped_guardar')}</button>`);
+  },
+  async _savePedido() {
+    if (!this._esPriv()) return;
+    const prov = this._val('pm-prov').trim();
+    if (!prov) return toast(t('x_pm_err_prov'), 'error', 4000);
+    const b = document.getElementById('pm-ped-save'); if (b) b.disabled = true;
+    const r = await this._cambiar(this._ids, 'Solicitada', {
+      estado: 'Pedida', pedido_por: this._yo(), pedido_at: new Date().toISOString(), proveedor: prov,
+      pedido_ref: this._val('pm-ref').trim() || null, fecha_prevista: this._val('pm-prevista') || null, nota_pedido: this._val('pm-nota').trim() || null,
+    });
+    if (b) b.disabled = false;
+    await this._trasCambio(r, 'x_pm_ok_pedido');
+  },
+  async recibir(ids) {
+    if (!this._esPriv()) return;
+    const items = (ids ? this._data.filter(p => ids.includes(p.id)) : this._selItems()).filter(p => p.estado === 'Pedida');
+    if (!items.length) return;
+    if (!await Modal.confirm(tf('x_pm_rec_conf', { n: items.length }), { okText: t('x_pm_rec_ok'), danger: false })) return;
+    const r = await this._cambiar(items.map(p => p.id), 'Pedida', { estado: 'Recibida', recibido_por: this._yo(), recibido_at: new Date().toISOString() });
+    await this._trasCambio(r, 'x_pm_ok_recibida');
+  },
+  openRechazar(id) {
+    if (!this._esPriv()) return;
+    const p = this._data.find(x => x.id === id); if (!p || p.estado !== 'Solicitada') return;
+    this._ids = [id];
+    Modal.open(t('x_pm_rech_titulo'), `
+      <p style="font-size:13px;margin-bottom:12px">${UI.esc(this._cant(p))} · ${UI.esc(this._nombre(p))} <small class="pm-muted">· ${UI.esc(p.solicitante)}</small></p>
+      <div class="form-field"><label for="pm-motivo">${t('x_pm_lbl_motivo')} *</label><textarea class="form-input" id="pm-motivo" rows="3" maxlength="300" placeholder="${t('x_pm_ph_motivo')}"></textarea></div>`,
+      `<button class="btn btn-secondary" onclick="Modal.close()">${t('cancel')}</button>
+       <button class="btn btn-danger" id="pm-rech-save" onclick="PeticionesPage._saveRechazo()">${t('x_pm_rech_btn')}</button>`);
+  },
+  async _saveRechazo() {
+    if (!this._esPriv()) return;
+    const motivo = this._val('pm-motivo').trim();
+    if (!motivo) return toast(t('x_pm_err_motivo'), 'error', 4000);
+    const r = await this._cambiar(this._ids, 'Solicitada', { estado: 'Rechazada', cerrado_por: this._yo(), cerrado_at: new Date().toISOString(), motivo });
+    if (r.err) return this._err(r.err);
+    if (r.ok) toast(t('x_pm_ok_rech'), 'success'); else toast(tf('x_pm_ya_no', { n: 1 }), 'info', 5000);
+    Modal.close(); await this._reload();
+  },
+  async anular(id) {
+    const p = this._data.find(x => x.id === id);
+    if (!p || p.estado !== 'Solicitada' || p.solicitante !== this._yo()) return;
+    if (!await Modal.confirm(t('x_pm_anular_conf'), { okText: t('x_pm_anular_ok'), danger: true })) return;
+    const r = await this._cambiar([id], 'Solicitada', { estado: 'Anulada', cerrado_por: this._yo(), cerrado_at: new Date().toISOString() });
+    if (r.err) return this._err(r.err);
+    if (r.ok) toast(t('x_pm_ok_anulada'), 'success'); else toast(tf('x_pm_ya_no', { n: 1 }), 'info', 5000);
+    Modal.close(); await this._reload();
+  },
+  async deshacer(id) {
+    if (!this._esPriv()) return;
+    if (!await Modal.confirm(t('x_pm_deshacer_conf'), { okText: t('x_pm_deshacer_ok'), danger: true })) return;
+    const r = await this._cambiar([id], 'Pedida', { estado: 'Solicitada', pedido_por: null, pedido_at: null, proveedor: null, pedido_ref: null, fecha_prevista: null, nota_pedido: null });
+    if (r.err) return this._err(r.err);
+    if (r.ok) toast(t('x_pm_ok_deshecho'), 'success'); else toast(tf('x_pm_ya_no', { n: 1 }), 'info', 5000);
+    Modal.close(); await this._reload();
+  },
+
+  // ── Excel, aviso del menú y SQL ──────────────────────────────────
+  exportExcel() {
+    if (!this._esPriv()) return;
+    const cab = ['ID', 'Fecha', 'Almacén', 'Lo pide', 'Código', 'Material', 'Descripción', 'Cantidad', 'Unidad', 'Urgencia', 'Para', 'Estado',
+      'Proveedor', 'Ref. pedido', 'Pedido por', 'Pedido el', 'Fecha prevista', 'Nota del pedido', 'Recibido por', 'Recibido el', 'Rechazada/anulada por', 'Rechazada/anulada el', 'Motivo', 'Foto'];
+    const filas = this._data.slice().sort((a, b) => String(a.creado_at || '').localeCompare(String(b.creado_at || ''))).map(p => [
+      p.id, this._fh(p.creado_at), p.almacen || '', p.solicitante || '', p.cod_producto || '', p.producto || '', p.descripcion || '', p.cantidad == null ? '' : +p.cantidad, p.unidad || '', p.urgencia || '', p.destino || '', p.estado || '',
+      p.proveedor || '', p.pedido_ref || '', p.pedido_por || '', this._fh(p.pedido_at), p.fecha_prevista || '', p.nota_pedido || '', p.recibido_por || '', this._fh(p.recibido_at), p.cerrado_por || '', this._fh(p.cerrado_at), p.motivo || '', p.foto_url || '']);
+    const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
+    ws['!cols'] = [22, 16, 11, 18, 10, 30, 40, 9, 8, 9, 22, 11, 22, 14, 18, 16, 13, 26, 18, 16, 18, 16, 30, 40].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Peticiones');
+    const d = new Date();
+    XLSX.writeFile(wb, `GMAO_Peticiones_material_${d.getFullYear()}-${this._p2(d.getMonth() + 1)}-${this._p2(d.getDate())}.xlsx`);
+  },
+  _updateBadge() {
+    const b = document.getElementById('badge-peticiones'); if (!b) return;
+    const n = this._esPriv() && !this._sinTabla ? this._data.filter(p => p.estado === 'Solicitada').length : 0;
+    b.textContent = n; b.style.display = n > 0 ? '' : 'none';
+  },
+  async updateBadge() {
+    if (!document.getElementById('badge-peticiones') || !this._esPriv()) return;
+    if (!this.isOpen()) await this._load();
+    this._updateBadge();
+  },
+  verSQL() {
+    Modal.open(t('x_pm_sql_titulo'), `
+      <p style="font-size:13px;color:var(--gray-muted);margin-bottom:8px">${t('x_pm_sin_tabla')}</p>
+      <textarea readonly id="pm-sql" style="width:100%;height:300px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);padding:12px;color:var(--text);resize:vertical;direction:ltr">${UI.esc(this._SQL)}</textarea>`,
+      `<button class="btn btn-secondary" onclick="navigator.clipboard?.writeText(document.getElementById('pm-sql').value);toast('SQL','success')">${t('x_copiar_sql')}</button>
+       <button class="btn btn-primary" onclick="Modal.close()">${t('close')}</button>`);
+  },
+};
+
 Router.register('produccion',      async () => ProduccionPage.render());
 Router.register('centros',         async () => CentrosPage.render());
 Router.register('simulacros',      async () => SimulacrosPage.render());
+Router.register('peticiones',      async () => PeticionesPage.render());
 Router.register('dashboard',       async () => DashboardPage.render());
 Router.register('partes-analisis', async () => PartesAnalisisPage.render());
 Router.register('activos',         async () => ActivosPage.render());
